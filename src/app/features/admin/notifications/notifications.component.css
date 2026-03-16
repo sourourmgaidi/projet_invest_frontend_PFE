@@ -672,3 +672,800 @@ app-navbar {
     bottom: -100px;
   }
 }
+/* ================================================ */
+/* MODAL DE REJET (À AJOUTER À LA FIN DU FICHIER)  */
+/* ================================================ */
+
+/* Modal overlay */
+.reject-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+  animation: fadeIn 0.2s ease;
+}
+
+/* Modal content */
+.reject-modal .modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 500px;
+  max-width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  animation: slideIn 0.3s ease;
+}
+
+/* Modal header */
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8f9fa;
+  border-radius: 16px 16px 0 0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #f44336;
+}
+
+/* Close button */
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 4px 8px;
+  border-radius: 8px;
+  line-height: 1;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: #e5e7eb;
+  color: #333;
+}
+
+/* Modal body */
+.modal-body {
+  padding: 24px;
+}
+
+/* Service info box */
+.service-info {
+  background: #f3f4f6;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.6;
+  border-left: 4px solid #f44336;
+}
+
+.service-info strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+/* Form group */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #374151;
+  font-size: 14px;
+}
+
+.form-group .required {
+  color: #f44336;
+  margin-left: 4px;
+}
+
+.form-group textarea {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  transition: all 0.2s;
+  background: #f9fafb;
+}
+
+.form-group textarea:focus {
+  outline: none;
+  border-color: #f44336;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(244, 67, 54, 0.1);
+}
+
+.form-group textarea::placeholder {
+  color: #9ca3af;
+}
+
+/* Character counter */
+.char-counter {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #6b7280;
+  padding: 0 4px;
+}
+
+.char-counter .min-requirement {
+  color: #f44336;
+  font-weight: 500;
+}
+
+/* Modal footer */
+.modal-footer {
+  padding: 20px 24px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background: #f8f9fa;
+  border-radius: 0 0 16px 16px;
+}
+
+/* Cancel button */
+.btn-cancel {
+  padding: 10px 20px;
+  border: 2px solid #e5e7eb;
+  background: white;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #4b5563;
+}
+
+.btn-cancel:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+/* Confirm reject button */
+.btn-confirm-reject {
+  padding: 10px 24px;
+  border: none;
+  background: #f44336;
+  color: white;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(244, 67, 54, 0.2);
+}
+
+.btn-confirm-reject:hover:not(:disabled) {
+  background: #da190b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(244, 67, 54, 0.3);
+}
+
+.btn-confirm-reject:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(244, 67, 54, 0.2);
+}
+
+.btn-confirm-reject:disabled {
+  background: #ffcdd2;
+  cursor: not-allowed;
+  color: #b71c1c;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .reject-modal .modal-content {
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  .modal-body {
+    padding: 16px;
+  }
+  
+  .modal-footer {
+    padding: 16px;
+    flex-direction: column-reverse;
+  }
+  
+  .btn-cancel, .btn-confirm-reject {
+    width: 100%;
+    text-align: center;
+  }
+}
+/* ======================================== */
+/* DOCUMENTS GRID - POUR TOUS LES SERVICES */
+/* ======================================== */
+.documents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.document-item {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+
+.document-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-color: #94a3b8;
+}
+
+.image-container, .pdf-container, .file-container {
+  position: relative;
+  width: 100%;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+.document-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.image-container:hover .document-thumbnail {
+  transform: scale(1.1);
+}
+
+.image-overlay, .file-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.image-container:hover .image-overlay,
+.pdf-container:hover .file-overlay,
+.file-container:hover .file-overlay {
+  opacity: 1;
+}
+
+.zoom-icon, .download-icon {
+  color: white;
+  font-size: 1.5rem;
+  background: rgba(0,0,0,0.5);
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.document-icon {
+  font-size: 2.5rem;
+  color: #64748b;
+}
+
+.pdf-container .document-icon {
+  color: #dc2626;
+}
+
+.primary-badge-small {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: #fbbf24;
+  color: #78350f;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 12px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  z-index: 2;
+}
+
+.document-info {
+  width: 100%;
+}
+
+.document-name {
+  font-size: 0.8rem;
+  color: #334155;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.document-item:hover .document-name {
+  white-space: normal;
+  overflow: visible;
+  word-break: break-word;
+  background: white;
+  padding: 0.25rem;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  z-index: 10;
+  position: relative;
+}
+
+.document-size {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  display: block;
+  margin-top: 0.25rem;
+}
+
+/* ======================================== */
+/* IMAGE MODAL - STYLE CHAT */
+/* ======================================== */
+.image-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.image-modal .modal-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  background: transparent;
+  animation: zoomIn 0.3s ease;
+}
+
+@keyframes zoomIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.image-modal .close {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  color: white;
+  font-size: 40px;
+  cursor: pointer;
+  z-index: 2001;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.image-modal .close:hover {
+  background: rgba(255,255,255,0.3);
+  transform: rotate(90deg);
+}
+
+.image-modal img {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.image-modal .image-footer {
+  position: absolute;
+  bottom: -60px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  color: white;
+  backdrop-filter: blur(5px);
+}
+
+.image-modal .image-name {
+  font-size: 14px;
+  color: white;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.image-modal .btn-download {
+  padding: 8px 16px;
+  background: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: background 0.2s ease;
+}
+
+.image-modal .btn-download:hover {
+  background: #1565c0;
+}
+
+.image-modal .btn-icon {
+  font-size: 16px;
+}
+
+/* ======================================== */
+/* REJECT MODAL STYLES */
+/* ======================================== */
+.reject-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1500;
+  backdrop-filter: blur(5px);
+}
+
+.reject-modal .modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.reject-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  border-radius: 16px 16px 0 0;
+}
+
+.reject-modal .modal-header h3 {
+  margin: 0;
+  color: #991b1b;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.reject-modal .close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #991b1b;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.reject-modal .close-btn:hover {
+  background: rgba(255,255,255,0.3);
+  transform: rotate(90deg);
+}
+
+.reject-modal .modal-body {
+  padding: 1.5rem;
+}
+
+.reject-modal .service-info {
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid #ef4444;
+  line-height: 1.6;
+}
+
+.reject-modal .service-info strong {
+  color: #1e293b;
+}
+
+.reject-modal .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.reject-modal .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.reject-modal .form-group .required {
+  color: #ef4444;
+  font-size: 1.2rem;
+  margin-left: 4px;
+}
+
+.reject-modal .form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  resize: vertical;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.reject-modal .form-group textarea:focus {
+  outline: none;
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+}
+
+.reject-modal .char-counter {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.reject-modal .min-requirement {
+  color: #94a3b8;
+}
+
+.reject-modal .modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 0 0 16px 16px;
+}
+
+.reject-modal .btn-cancel {
+  padding: 0.6rem 1.2rem;
+  background: #f1f5f9;
+  color: #475569;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reject-modal .btn-cancel:hover {
+  background: #e2e8f0;
+  transform: translateY(-2px);
+}
+
+.reject-modal .btn-confirm-reject {
+  padding: 0.6rem 1.2rem;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(239,68,68,0.3);
+}
+
+.reject-modal .btn-confirm-reject:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(239,68,68,0.4);
+}
+
+.reject-modal .btn-confirm-reject:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ======================================== */
+/* RESPONSIVE POUR DOCUMENTS */
+/* ======================================== */
+@media (max-width: 768px) {
+  .documents-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .image-container, .pdf-container, .file-container {
+    height: 80px;
+  }
+
+  .document-icon {
+    font-size: 2rem;
+  }
+
+  .document-name {
+    font-size: 0.75rem;
+  }
+
+  .image-modal .modal-content {
+    max-width: 95vw;
+  }
+
+  .image-modal .image-footer {
+    flex-direction: column;
+    gap: 10px;
+    bottom: -80px;
+  }
+
+  .image-modal .image-name {
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .image-modal .close {
+    top: -30px;
+    right: -5px;
+    width: 35px;
+    height: 35px;
+    font-size: 30px;
+  }
+
+  .reject-modal .modal-footer {
+    flex-direction: column;
+  }
+
+  .reject-modal .btn-cancel,
+  .reject-modal .btn-confirm-reject {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .documents-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .document-item {
+    padding: 0.5rem;
+  }
+
+  .document-name {
+    font-size: 0.7rem;
+  }
+
+  .reject-modal .modal-content {
+    width: 95%;
+  }
+
+  .reject-modal .modal-header,
+  .reject-modal .modal-body,
+  .reject-modal .modal-footer {
+    padding: 1rem;
+  }
+}
+
+/* ======================================== */
+/* TAGS CONTAINER (pour les skills, etc.) */
+/* ======================================== */
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.tag {
+  background: #e2e8f0;
+  color: #1e293b;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.tag:hover {
+  background: #2563eb;
+  color: white;
+  transform: translateY(-2px);
+}

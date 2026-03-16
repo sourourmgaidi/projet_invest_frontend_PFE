@@ -1,5 +1,6 @@
-import { Component, OnInit, OnDestroy } from '@angular/core'; // ✅ Ajout OnDestroy
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms'; // ✅ AJOUT IMPORTANT
 import { RouterModule } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { NavbarComponent } from '../../../shared/navbar/navbar';
@@ -13,11 +14,11 @@ interface PendingServices {
 @Component({
   selector: 'app-admin-notifications',
   standalone: true,
-  imports: [CommonModule, RouterModule, NavbarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, NavbarComponent], // ✅ AJOUT DE FormsModule
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.css']
 })
-export class AdminNotificationsComponent implements OnInit, OnDestroy { // ✅ Ajout OnDestroy
+export class AdminNotificationsComponent implements OnInit, OnDestroy {
 
   pendingServices: PendingServices = {
     collaboration: [],
@@ -30,7 +31,13 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy { // ✅ A
   successMsg = '';
   errorMsg = '';
 
-  // ✅ AJOUT : Propriétés pour les images
+  // ✅ Propriétés pour la modal de rejet
+  showRejectModal = false;
+  selectedService: any = null;
+  selectedServiceType: 'collaboration' | 'investment' | 'tourist' | null = null;
+  rejectionReason = '';
+
+  // ✅ Propriétés pour les images
   selectedImage: { url: string; name: string; doc: any } | null = null;
   imageUrls: Map<string, string> = new Map();
   maxConcurrentLoads = 5;
@@ -39,6 +46,8 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy { // ✅ A
 
   private apiBase = 'http://localhost:8089/api/admin/services';
   private apiBaseInvestment = 'http://localhost:8089/api/investment-services';
+  private apiBaseCollaboration = 'http://localhost:8089/api/collaboration-services';
+  private apiBaseTourist = 'http://localhost:8089/api/tourist-services';
 
   constructor(private http: HttpClient) {}
 
@@ -46,7 +55,6 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy { // ✅ A
     this.loadPendingServices();
   }
 
-  // ✅ AJOUT : Nettoyer les URLs blob
   ngOnDestroy(): void {
     this.imageUrls.forEach(url => {
       if (url.startsWith('blob:')) {
@@ -56,10 +64,16 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy { // ✅ A
     this.imageUrls.clear();
   }
 
-  // ✅ AJOUT : Headers pour les requêtes
   private getHeaders(): HttpHeaders {
     const token = localStorage.getItem('auth_token') || '';
     return new HttpHeaders({ Authorization: `Bearer ${token}` });
+  }
+
+  private getJsonHeaders(): HttpHeaders {
+    const token = localStorage.getItem('auth_token') || '';
+    return new HttpHeaders()
+      .set('Authorization', `Bearer ${token}`)
+      .set('Content-Type', 'application/json');
   }
 
   get totalPending(): number {
@@ -85,7 +99,7 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy { // ✅ A
           tourist: data.tourist || []
         };
         this.loading = false;
-        this.prepareImageLoading(); // ✅ AJOUT : Préparer le chargement des images
+        this.prepareImageLoading();
       },
       error: (err) => {
         console.error('Error loading pending services:', err);
@@ -95,25 +109,29 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy { // ✅ A
     });
   }
 
-  // ✅ AJOUT : Préparer le chargement des images
-  prepareImageLoading(): void {
-    // Collecter toutes les images des services d'investissement
-    this.pendingServices.investment.forEach(service => {
-      if (service.images) {
-        service.images.forEach((doc: any) => {
-          const docId = doc.id.toString();
-          if (!this.imageUrls.has(docId)) {
-            this.imageQueue.push({ doc, docId, serviceId: service.id });
+ prepareImageLoading(): void {
+  // Charger les images pour les 3 types de services
+  const serviceTypes = ['collaboration', 'investment', 'tourist'];
+  
+  serviceTypes.forEach(type => {
+    this.pendingServices[type as keyof PendingServices].forEach((service: any) => {
+      if (service.documents && service.documents.length > 0) {
+        service.documents.forEach((doc: any) => {
+          // Ne charger que les images, pas les PDF
+          if (doc.fileType?.startsWith('image/')) {
+            const docId = doc.id.toString();
+            if (!this.imageUrls.has(docId)) {
+              this.imageQueue.push({ doc, docId, serviceId: service.id });
+            }
           }
         });
       }
     });
-    
-    // Démarrer le chargement
-    this.processQueue();
-  }
-
-  // ✅ AJOUT : Traiter la file d'attente
+  });
+  
+  console.log(`📸 ${this.imageQueue.length} images à charger`);
+  this.processQueue();
+}
   processQueue(): void {
     if (this.isLoading || this.imageQueue.length === 0) return;
     
@@ -129,7 +147,6 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy { // ✅ A
       });
   }
 
-  // ✅ AJOUT : Charger une image
   loadImage(doc: any, docId: string): Promise<void> {
     return new Promise((resolve) => {
       this.http.get(`http://localhost:8089${doc.downloadUrl}`, {
@@ -150,7 +167,6 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy { // ✅ A
     });
   }
 
-  // ✅ AJOUT : Obtenir l'URL d'une image
   getImageUrl(doc: any): string {
     const docId = doc.id.toString();
     
@@ -161,17 +177,14 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy { // ✅ A
     return this.getPlaceholderImageUrl();
   }
 
-  // ✅ AJOUT : URL du placeholder
   getPlaceholderImageUrl(): string {
     return 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f3f4f6\'/%3E%3Ctext x=\'50\' y=\'55\' font-size=\'30\' text-anchor=\'middle\' fill=\'%239ca3af\'%3E📷%3C/text%3E%3C/svg%3E';
   }
 
-  // ✅ AJOUT : URL d'erreur
   getErrorImageUrl(): string {
     return 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23fee2e2\'/%3E%3Ctext x=\'50\' y=\'55\' font-size=\'30\' text-anchor=\'middle\' fill=\'%23ef4444\'%3E❌%3C/text%3E%3C/svg%3E';
   }
 
-  // ✅ AJOUT : Ouvrir une image en grand
   openImage(doc: any): void {
     const docId = doc.id.toString();
     
@@ -192,12 +205,10 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy { // ✅ A
     }
   }
 
-  // ✅ AJOUT : Fermer l'image
   closeImage(): void {
     this.selectedImage = null;
   }
 
-  // ✅ AJOUT : Télécharger un fichier
   downloadFile(doc: any): void {
     this.http.get(`http://localhost:8089${doc.downloadUrl}`, {
       headers: this.getHeaders(),
@@ -215,7 +226,6 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy { // ✅ A
     });
   }
 
-  // ✅ AJOUT : Formater la taille du fichier
   formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -224,32 +234,48 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy { // ✅ A
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   }
 
+  // ✅ MÉTHODES POUR LA MODAL DE REJET
+  openRejectModal(type: 'collaboration' | 'investment' | 'tourist', service: any): void {
+    this.selectedService = service;
+    this.selectedServiceType = type;
+    this.rejectionReason = '';
+    this.showRejectModal = true;
+  }
+
+  closeRejectModal(): void {
+    this.showRejectModal = false;
+    this.selectedService = null;
+    this.selectedServiceType = null;
+    this.rejectionReason = '';
+  }
+
+isReasonValid(): boolean {
+  return !!(this.rejectionReason && this.rejectionReason.trim().length >= 5);
+}
+
+  // ✅ MÉTHODE APPROUVER (inchangée)
   approveService(type: 'collaboration' | 'investment' | 'tourist', id: number): void {
     this.processingId = id;
     this.clearMessages();
-
-    const token = localStorage.getItem('auth_token') || '';
-    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
 
     let endpoint = '';
     
     if (type === 'investment') {
       endpoint = `${this.apiBaseInvestment}/${id}/approve`;
-      console.log(`📝 Approbation investissement via endpoint: ${endpoint}`);
+      console.log(`📝 Approbation investissement: ${endpoint}`);
     } else if (type === 'collaboration') {
-      endpoint = `http://localhost:8089/api/collaboration-services/${id}/approve`;
-      console.log(`📝 Approbation collaboration via endpoint: ${endpoint}`);
+      endpoint = `${this.apiBaseCollaboration}/${id}/approve`;
+      console.log(`📝 Approbation collaboration: ${endpoint}`);
     } else if (type === 'tourist') {
-      endpoint = `http://localhost:8089/api/tourist-services/${id}/approve`;
+      endpoint = `${this.apiBaseTourist}/${id}/approve`;
+      console.log(`📝 Approbation touristique: ${endpoint}`);
     }
 
-    this.http.put(endpoint, {}, { headers }).subscribe({
+    this.http.put(endpoint, {}, { headers: this.getHeaders() }).subscribe({
       next: (response) => {
         console.log('✅ Réponse approbation:', response);
         this.removeServiceFromList(type, id);
-        this.successMsg = type === 'investment' 
-          ? `Service d'investissement approuvé avec succès ! Notifications envoyées à toutes les parties prenantes.` 
-          : `Service approuvé avec succès !`;
+        this.successMsg = `Service ${type} approuvé avec succès !`;
         this.processingId = null;
         this.autoHideSuccess();
       },
@@ -261,70 +287,61 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy { // ✅ A
     });
   }
 
+  // ✅ MÉTHODE REJET (modifiée pour ouvrir la modal)
   rejectService(type: 'collaboration' | 'investment' | 'tourist', id: number): void {
-    this.processingId = id;
+    let service = null;
+    if (type === 'investment') {
+      service = this.pendingServices.investment.find(s => s.id === id);
+    } else if (type === 'collaboration') {
+      service = this.pendingServices.collaboration.find(s => s.id === id);
+    } else if (type === 'tourist') {
+      service = this.pendingServices.tourist.find(s => s.id === id);
+    }
+    
+    if (service) {
+      this.openRejectModal(type, service);
+    } else {
+      console.error('Service non trouvé');
+    }
+  }
+
+  // ✅ MÉTHODE POUR CONFIRMER LE REJET AVEC RAISON
+  confirmReject(): void {
+    if (!this.selectedService || !this.selectedServiceType || !this.isReasonValid()) {
+      return;
+    }
+
+    this.processingId = this.selectedService.id;
     this.clearMessages();
 
-    const token = localStorage.getItem('auth_token') || '';
-    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
-
+    const body = { rejectionReason: this.rejectionReason.trim() };
     let endpoint = '';
-    
-    if (type === 'investment') {
-      endpoint = `${this.apiBaseInvestment}/${id}/reject`;
-      console.log(`📝 Rejet investissement via PUT: ${endpoint}`);
-      
-      this.http.put(endpoint, {}, { headers }).subscribe({
-        next: (response) => {
-          console.log('✅ Réponse rejet:', response);
-          this.removeServiceFromList(type, id);
-          this.successMsg = `Service d'investissement rejeté avec succès.`;
-          this.processingId = null;
-          this.autoHideSuccess();
-        },
-        error: (err) => {
-          console.error('❌ Error rejecting investment service:', err);
-          this.errorMsg = 'Échec du rejet du service d\'investissement.';
-          this.processingId = null;
-        }
-      });
-    } else if (type === 'collaboration') {
-      endpoint = `http://localhost:8089/api/collaboration-services/${id}/reject`;
-      console.log(`📝 Rejet collaboration via PUT: ${endpoint}`);
-      
-      this.http.put(endpoint, {}, { headers }).subscribe({
-        next: (response) => {
-          console.log('✅ Réponse rejet collaboration:', response);
-          this.removeServiceFromList(type, id);
-          this.successMsg = `Service de collaboration rejeté avec succès.`;
-          this.processingId = null;
-          this.autoHideSuccess();
-        },
-        error: (err) => {
-          console.error('❌ Error rejecting collaboration service:', err);
-          this.errorMsg = 'Échec du rejet du service de collaboration.';
-          this.processingId = null;
-        }
-      });
-    } else if (type === 'tourist') {
-      endpoint = `http://localhost:8089/api/tourist-services/${id}/reject`;
-      console.log(`📝 Rejet tourist via PUT: ${endpoint}`);
-      
-      this.http.put(endpoint, {}, { headers }).subscribe({
-        next: (response) => {
-          console.log('✅ Réponse rejet tourist:', response);
-          this.removeServiceFromList(type, id);
-          this.successMsg = `Service touristique rejeté avec succès.`;
-          this.processingId = null;
-          this.autoHideSuccess();
-        },
-        error: (err) => {
-          console.error('❌ Error rejecting tourist service:', err);
-          this.errorMsg = 'Échec du rejet du service touristique.';
-          this.processingId = null;
-        }
-      });
+
+    if (this.selectedServiceType === 'investment') {
+      endpoint = `${this.apiBaseInvestment}/${this.selectedService.id}/reject`;
+    } else if (this.selectedServiceType === 'collaboration') {
+      endpoint = `${this.apiBaseCollaboration}/${this.selectedService.id}/reject`;
+    } else if (this.selectedServiceType === 'tourist') {
+      endpoint = `${this.apiBaseTourist}/${this.selectedService.id}/reject`;
     }
+
+    console.log(`📝 Rejet ${this.selectedServiceType} avec raison:`, body);
+
+    this.http.put(endpoint, body, { headers: this.getJsonHeaders() }).subscribe({
+      next: (response: any) => {
+        console.log('✅ Réponse rejet:', response);
+        this.removeServiceFromList(this.selectedServiceType!, this.selectedService.id);
+        this.successMsg = `Service ${this.selectedServiceType} rejeté avec succès.`;
+        this.processingId = null;
+        this.closeRejectModal();
+        this.autoHideSuccess();
+      },
+      error: (err) => {
+        console.error(`❌ Erreur rejet ${this.selectedServiceType}:`, err);
+        this.errorMsg = err.error?.error || err.error?.message || 'Échec du rejet du service.';
+        this.processingId = null;
+      }
+    });
   }
 
   private removeServiceFromList(type: string, id: number): void {

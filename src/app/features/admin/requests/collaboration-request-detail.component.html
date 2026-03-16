@@ -173,20 +173,54 @@
             </span>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Admin Actions (only for PENDING requests) -->
-    <div class="admin-actions" *ngIf="request.status === 'PENDING'">
-      <button class="btn-approve" (click)="approveRequest()">
-        ✅ Approve Request
-      </button>
-      <!-- NEW BUTTON - Direct rejection -->
-      <button class="btn-reject-simple" (click)="openSimpleRejectModal()">
-        ❌ Reject Request
-      </button>
-      
-      
+        <!-- SECTION DOCUMENTS -->
+        <div class="documents-section" *ngIf="request.service.documents && request.service.documents.length > 0">
+          <h3 class="documents-title">📎 Documents ({{ request.service.documents.length }})</h3>
+          <div class="documents-grid">
+            <div *ngFor="let doc of request.service.documents" class="document-card">
+              
+              <!-- Image -->
+              <div *ngIf="doc.fileType?.startsWith('image/')" class="document-image-container" (click)="openImage(doc)">
+                <img [src]="getImageUrl(doc)" class="document-image" alt="{{ doc.fileName }}">
+                <span class="primary-badge" *ngIf="doc.isPrimary">⭐ Principal</span>
+                <div class="image-overlay">
+                  <span class="zoom-icon">🔍</span>
+                </div>
+              </div>
+              
+              <!-- PDF -->
+              <div *ngIf="doc.fileType === 'application/pdf'" class="document-pdf-container" (click)="downloadFile(doc)">
+                <div class="pdf-icon">📄</div>
+                <span class="primary-badge" *ngIf="doc.isPrimary">⭐ Principal</span>
+                <div class="file-overlay">
+                  <span class="download-icon">📥</span>
+                </div>
+              </div>
+              
+              <!-- Autres fichiers -->
+              <div *ngIf="!doc.fileType?.startsWith('image/') && doc.fileType !== 'application/pdf'" 
+                   class="document-file-container" (click)="downloadFile(doc)">
+                <div class="file-icon">📎</div>
+                <div class="file-overlay">
+                  <span class="download-icon">📥</span>
+                </div>
+              </div>
+              
+              <!-- Informations du document -->
+              <div class="document-info">
+                <span class="document-name" title="{{ doc.fileName }}">{{ doc.fileName }}</span>
+                <span class="document-size" *ngIf="doc.fileSize">{{ formatFileSize(doc.fileSize) }}</span>
+              </div>
+              
+              <!-- Bouton téléchargement -->
+              <button class="btn-download-small" (click)="downloadFile(doc)" title="Télécharger">
+                📥
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="actions" *ngIf="request.status !== 'PENDING'">
@@ -197,76 +231,19 @@
   </div>
 </div>
 
-<!-- NEW - Template with both modals (old and new) -->
-<!-- Old modal (kept for compatibility) -->
-<div class="modal-overlay" *ngIf="showRejectModal" (click)="closeRejectModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>Reject Collaboration Request</h3>
-      <button class="modal-close" (click)="closeRejectModal()">✕</button>
+<!-- FULLSCREEN IMAGE MODAL - UNIQUEMENT CELLE-CI -->
+<div class="fullscreen-image-modal" *ngIf="selectedImage" (click)="closeImage()">
+  <div class="fullscreen-overlay"></div>
+  <div class="fullscreen-container" (click)="$event.stopPropagation()">
+    <button class="fullscreen-close-btn" (click)="closeImage()">✕</button>
+    <div class="fullscreen-image-wrapper">
+      <img [src]="selectedImage.url" [alt]="selectedImage.name" class="fullscreen-image">
     </div>
-    
-    <div class="modal-body">
-      <p class="modal-service" *ngIf="request">
-        Service: <strong>{{ request.service?.name }}</strong>
-      </p>
-      <p class="modal-partner" *ngIf="request">
-        Partner: {{ request.partner?.firstName }} {{ request.partner?.lastName }}
-      </p>
-      
-      <div class="form-group">
-        <label for="rejectReason">Rejection reason <span class="required">*</span></label>
-        <textarea
-          id="rejectReason"
-          [(ngModel)]="rejectReason"
-          rows="4"
-          placeholder="Explain why you are rejecting this request..."
-          class="form-control"
-        ></textarea>
-      </div>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn-cancel" (click)="closeRejectModal()">Cancel</button>
-      <button 
-        class="btn-confirm-reject" 
-        (click)="rejectRequest()" 
-        [disabled]="!rejectReason.trim()"
-      >
-        Confirm Rejection
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- NEW MODAL - WITHOUT REASON (optional) -->
-<div class="modal-overlay" *ngIf="showSimpleRejectModal" (click)="closeSimpleRejectModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>Confirm Rejection</h3>
-      <button class="modal-close" (click)="closeSimpleRejectModal()">✕</button>
-    </div>
-    
-    <div class="modal-body">
-      <p class="modal-service" *ngIf="request">
-        Service: <strong>{{ request.service?.name }}</strong>
-      </p>
-      <p class="modal-partner" *ngIf="request">
-        Partner: {{ request.partner?.firstName }} {{ request.partner?.lastName }}
-      </p>
-      
-      <p class="confirm-message">
-        Are you sure you want to reject this request without providing a reason?
-      </p>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn-cancel" (click)="closeSimpleRejectModal()">Cancel</button>
-      <button 
-        class="btn-confirm-reject" 
-        (click)="confirmRejectWithoutReason()"
-      >
-        Confirm Rejection
+    <div class="fullscreen-footer">
+      <span class="fullscreen-filename">{{ selectedImage.name }}</span>
+      <button class="fullscreen-download-btn" (click)="downloadFile(selectedImage.doc)">
+        <span class="btn-icon">📥</span>
+        Télécharger
       </button>
     </div>
   </div>

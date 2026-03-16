@@ -1,7 +1,8 @@
 // core/services/collaboration-request.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 import { AuthService } from './auth';
 
 export interface CollaborationServiceRequest {
@@ -16,6 +17,8 @@ export interface CollaborationServiceRequest {
   service: any;
   partner: any;
   admin?: any;
+  rejectionReason?: string; // ✅ AJOUT (optionnel)
+  rejectedAt?: string;      // ✅ AJOUT (optionnel)
 }
 
 @Injectable({
@@ -155,13 +158,32 @@ export class CollaborationRequestService {
   }
 
   /**
-   * Rejeter une demande
+   * ✅ CORRIGÉ : Rejeter une demande de collaboration avec raison
+   * @param requestId ID de la demande
+   * @param rejectionReason Raison du rejet
    */
-  rejectRequest(requestId: number, reason: string): Observable<any> {
+  rejectRequest(requestId: number, rejectionReason: string): Observable<any> {
+    console.log(`📝 Rejet de la demande collaboration ID: ${requestId} avec raison:`, rejectionReason);
+    
+    if (!rejectionReason || rejectionReason.trim() === '') {
+      return throwError(() => new Error('La raison du rejet est requise'));
+    }
+    
+    // ✅ Corps avec 'rejectionReason' (attendu par le backend - RejectRequestDto)
+    const body = { rejectionReason };
+    
     return this.http.post(
       `${this.apiUrl}/admin/${requestId}/reject`,
-      { reason },
+      body,
       { headers: this.getHeaders() }
+    ).pipe(
+      tap(response => {
+        console.log('✅ Demande collaboration rejetée avec succès', response);
+      }),
+      catchError(error => {
+        console.error('❌ Erreur lors du rejet de la demande collaboration:', error);
+        return throwError(() => error);
+      })
     );
   }
 

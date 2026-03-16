@@ -85,6 +85,11 @@ export const routes: Routes = [
         .then(m => m.CollaborationRequestDetailComponent)
     },
     {
+  path: 'requests/tourist/:id',  // ✅ CORRECT: sans 'admin' car déjà dans le children
+  loadComponent: () => import('./features/admin/requests/tourist-request-detail.component')
+    .then(m => m.TouristRequestDetailComponent)
+},
+    {
   path: 'tourist-requests',
   loadComponent: () => import('./features/admin/requests/admin-tourist-requests.component')
     .then(m => m.AdminTouristRequestsComponent),

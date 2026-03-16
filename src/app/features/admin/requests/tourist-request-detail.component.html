@@ -1,0 +1,189 @@
+<div class="detail-container">
+  <!-- Header avec bouton retour -->
+  <div class="header">
+    <a routerLink="/admin/requests" class="back-link">← Retour aux demandes</a>
+    <h1>Détails de la demande touristique</h1>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Chargement des détails...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="alert alert-error">
+    <span>❌</span> {{ error }}
+  </div>
+
+  <!-- Contenu principal -->
+  <div *ngIf="!loading && request" class="detail-content">
+    
+    <!-- En-tête de la demande -->
+    <div class="request-header">
+      <div class="header-left">
+        <div class="type-badge" [class.edit]="request.requestType === 'EDIT'" [class.delete]="request.requestType === 'DELETE'">
+          {{ getTypeIcon(request.requestType) }} {{ getTypeLabel(request.requestType) }}
+        </div>
+        <div class="status-badge" [class]="getStatusClass(request.status)">
+          {{ getStatusLabel(request.status) }}
+        </div>
+      </div>
+      <div class="header-right">
+        <span class="request-date">Demande du {{ formatDate(request.requestDate) }}</span>
+        <span class="response-date" *ngIf="request.responseDate">Traitée le {{ formatDate(request.responseDate) }}</span>
+      </div>
+    </div>
+
+    <!-- Informations du partenaire -->
+    <div class="info-card">
+      <h2>Informations du partenaire</h2>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="label">Nom :</span>
+          <span class="value">{{ request.partner?.firstName }} {{ request.partner?.lastName }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Email :</span>
+          <span class="value">{{ request.partner?.email }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Détails de la demande -->
+    <div class="info-card">
+      <h2>Détails de la demande</h2>
+      <div class="info-grid">
+        <div class="info-item full-width">
+          <span class="label">Raison de la demande :</span>
+          <p class="value-text">{{ request.reason }}</p>
+        </div>
+        <div class="info-item full-width" *ngIf="request.requestedChanges">
+          <span class="label">Modifications demandées :</span>
+          <p class="value-text">{{ request.requestedChanges }}</p>
+        </div>
+        <div class="info-item" *ngIf="request.adminComment">
+          <span class="label">Commentaire admin :</span>
+          <span class="value">{{ request.adminComment }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DÉTAILS COMPLETS DU SERVICE TOURISTIQUE -->
+    <div class="info-card service-details-card">
+      <h2>Détails du service touristique</h2>
+      
+      <!-- Informations de base -->
+      <div class="details-section">
+        <h3>📋 Informations générales</h3>
+        <div class="details-grid">
+          <div class="detail-item">
+            <span class="label">Nom du service :</span>
+            <span class="value">{{ request.service?.name }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Catégorie :</span>
+            <span class="value">{{ request.service?.category || 'Non spécifié' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Région :</span>
+            <span class="value">{{ request.service?.region?.name || 'Non spécifié' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Disponibilité :</span>
+            <span class="value">{{ request.service?.availability || 'Non spécifié' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Personne de contact :</span>
+            <span class="value">{{ request.service?.contactPerson || 'Non spécifié' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Public cible :</span>
+            <span class="value">{{ request.service?.targetAudience || 'Non spécifié' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="details-section" *ngIf="request.service?.description">
+        <h3>📝 Description</h3>
+        <p class="description-full">{{ request.service.description }}</p>
+      </div>
+
+      <!-- Prix et durée -->
+      <div class="details-section">
+        <h3>💰 Prix et durée</h3>
+        <div class="details-grid">
+          <div class="detail-item" *ngIf="request.service?.price !== undefined">
+            <span class="label">Prix par personne :</span>
+            <span class="value price">{{ request.service.price | number:'1.0-2' }} TND</span>
+          </div>
+          <div class="detail-item" *ngIf="request.service?.groupPrice !== undefined">
+            <span class="label">Prix de groupe :</span>
+            <span class="value price">{{ request.service.groupPrice | number:'1.0-2' }} TND</span>
+          </div>
+          <div class="detail-item" *ngIf="request.service?.durationHours">
+            <span class="label">Durée :</span>
+            <span class="value">{{ request.service.durationHours }} heures</span>
+          </div>
+          <div class="detail-item" *ngIf="request.service?.maxCapacity">
+            <span class="label">Capacité maximale :</span>
+            <span class="value">{{ request.service.maxCapacity }} personnes</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Services inclus -->
+      <div class="details-section" *ngIf="request.service?.includedServices?.length > 0">
+        <h3>✅ Services inclus</h3>
+        <div class="tags-list">
+          <span class="tag" *ngFor="let service of request.service.includedServices">
+            ✓ {{ service }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Langues disponibles -->
+      <div class="details-section" *ngIf="request.service?.availableLanguages?.length > 0">
+        <h3>🗣️ Langues disponibles</h3>
+        <div class="tags-list">
+          <span class="tag" *ngFor="let lang of request.service.availableLanguages">
+            🌐 {{ lang }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Documents -->
+      <div class="details-section" *ngIf="request.service?.documents?.length > 0">
+        <h3>📎 Documents ({{ request.service.documents.length }})</h3>
+        <div class="documents-grid">
+          <div *ngFor="let doc of request.service.documents" class="document-item">
+            <ng-container *ngIf="doc.fileType?.startsWith('image/')">
+              <img [src]="getImageUrl(doc)" class="document-thumb" alt="{{ doc.fileName }}">
+            </ng-container>
+            <ng-container *ngIf="doc.fileType === 'application/pdf'">
+              <div class="pdf-icon">📄</div>
+            </ng-container>
+            <span class="document-name">{{ doc.fileName }}</span>
+            <button class="btn-download" (click)="downloadFile(doc)">📥</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dates système -->
+      <div class="details-section">
+        <h3>📅 Dates</h3>
+        <div class="details-grid">
+          <div class="detail-item" *ngIf="request.service?.createdAt">
+            <span class="label">Créé le :</span>
+            <span class="value">{{ formatDate(request.service.createdAt) }}</span>
+          </div>
+          <div class="detail-item" *ngIf="request.service?.updatedAt">
+            <span class="label">Mis à jour le :</span>
+            <span class="value">{{ formatDate(request.service.updatedAt) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

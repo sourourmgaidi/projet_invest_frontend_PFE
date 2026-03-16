@@ -159,6 +159,52 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- SECTION DOCUMENTS POUR COLLABORATION -->
+                <div class="details-section" *ngIf="svc.documents && svc.documents.length > 0">
+                  <h4 class="details-title">📎 Documents & Images</h4>
+                  <div class="documents-grid">
+                    <div *ngFor="let doc of svc.documents" class="document-item">
+                      
+                      <!-- Image -->
+                      <div *ngIf="doc.fileType?.startsWith('image/')" class="image-container" (click)="openImage(doc)">
+                        <img 
+                          [src]="getImageUrl(doc)" 
+                          class="document-thumbnail" 
+                          alt="{{ doc.fileName }}"
+                          loading="lazy"
+                        >
+                        <div class="image-overlay">
+                          <span class="zoom-icon">🔍</span>
+                        </div>
+                        <span class="primary-badge-small" *ngIf="doc.isPrimary">⭐</span>
+                      </div>
+                      
+                      <!-- PDF -->
+                      <div *ngIf="doc.fileType === 'application/pdf'" class="pdf-container" (click)="downloadFile(doc)">
+                        <span class="document-icon">📄</span>
+                        <div class="file-overlay">
+                          <span class="download-icon">📥</span>
+                        </div>
+                      </div>
+                      
+                      <!-- Autres fichiers -->
+                      <div *ngIf="!doc.fileType?.startsWith('image/') && doc.fileType !== 'application/pdf'" 
+                           class="file-container" (click)="downloadFile(doc)">
+                        <span class="document-icon">📎</span>
+                        <div class="file-overlay">
+                          <span class="download-icon">📥</span>
+                        </div>
+                      </div>
+                      
+                      <div class="document-info">
+                        <span class="document-name" title="{{ doc.fileName }}">{{ doc.fileName }}</span>
+                        <span class="document-size" *ngIf="doc.fileSize">{{ formatFileSize(doc.fileSize) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
               <div class="card-actions">
                 <button class="btn-reject" (click)="rejectService('collaboration', svc.id)" [disabled]="processingId === svc.id">
@@ -275,40 +321,47 @@
                   </div>
                 </div>
 
-                <!-- Documents -->
-                <div class="details-section" *ngIf="svc.attachedDocuments?.length">
-                  <h4 class="details-title">📎 Documents</h4>
-                  <div class="documents-list">
-                    <span class="document-tag" *ngFor="let doc of svc.attachedDocuments">
-                      📄 {{ doc }}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- ✅ AJOUT : SECTION POUR AFFICHER LES DOCUMENTS AVEC IMAGES -->
+                <!-- SECTION DOCUMENTS POUR INVESTMENT (CORRIGÉE) -->
                 <div class="details-section" *ngIf="svc.documents && svc.documents.length > 0">
-                  <h4 class="details-title">📸 Images & Documents</h4>
+                  <h4 class="details-title">📎 Documents & Images</h4>
                   <div class="documents-grid">
-                    <!-- Images -->
-                    <div class="document-item image-item" *ngFor="let doc of svc.images">
-                      <img 
-                        [src]="getImageUrl(doc)" 
-                        class="document-thumbnail" 
-                        alt="{{ doc.fileName }}"
-                        (click)="openImage(doc)"
-                        loading="lazy"
-                      >
-                      <span class="document-name">{{ doc.fileName }}</span>
-                      <span class="document-size" *ngIf="doc.fileSize">{{ formatFileSize(doc.fileSize) }}</span>
-                    </div>
-                    
-                    <!-- Autres documents (PDF, etc.) -->
-                    <div class="document-item" *ngFor="let doc of svc.otherDocuments">
-                      <a href="javascript:void(0)" (click)="downloadFile(doc)" class="document-link">
+                    <div *ngFor="let doc of svc.documents" class="document-item">
+                      
+                      <!-- Image -->
+                      <div *ngIf="doc.fileType?.startsWith('image/')" class="image-container" (click)="openImage(doc)">
+                        <img 
+                          [src]="getImageUrl(doc)" 
+                          class="document-thumbnail" 
+                          alt="{{ doc.fileName }}"
+                          loading="lazy"
+                        >
+                        <div class="image-overlay">
+                          <span class="zoom-icon">🔍</span>
+                        </div>
+                        <span class="primary-badge-small" *ngIf="doc.isPrimary">⭐</span>
+                      </div>
+                      
+                      <!-- PDF -->
+                      <div *ngIf="doc.fileType === 'application/pdf'" class="pdf-container" (click)="downloadFile(doc)">
                         <span class="document-icon">📄</span>
-                        <span class="document-name">{{ doc.fileName }}</span>
+                        <div class="file-overlay">
+                          <span class="download-icon">📥</span>
+                        </div>
+                      </div>
+                      
+                      <!-- Autres fichiers -->
+                      <div *ngIf="!doc.fileType?.startsWith('image/') && doc.fileType !== 'application/pdf'" 
+                           class="file-container" (click)="downloadFile(doc)">
+                        <span class="document-icon">📎</span>
+                        <div class="file-overlay">
+                          <span class="download-icon">📥</span>
+                        </div>
+                      </div>
+                      
+                      <div class="document-info">
+                        <span class="document-name" title="{{ doc.fileName }}">{{ doc.fileName }}</span>
                         <span class="document-size" *ngIf="doc.fileSize">{{ formatFileSize(doc.fileSize) }}</span>
-                      </a>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -429,6 +482,52 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- SECTION DOCUMENTS POUR TOURIST -->
+                <div class="details-section" *ngIf="svc.documents && svc.documents.length > 0">
+                  <h4 class="details-title">📸 Images & Documents</h4>
+                  <div class="documents-grid">
+                    <div *ngFor="let doc of svc.documents" class="document-item">
+                      
+                      <!-- Image -->
+                      <div *ngIf="doc.fileType?.startsWith('image/')" class="image-container" (click)="openImage(doc)">
+                        <img 
+                          [src]="getImageUrl(doc)" 
+                          class="document-thumbnail" 
+                          alt="{{ doc.fileName }}"
+                          loading="lazy"
+                        >
+                        <div class="image-overlay">
+                          <span class="zoom-icon">🔍</span>
+                        </div>
+                        <span class="primary-badge-small" *ngIf="doc.isPrimary">⭐</span>
+                      </div>
+                      
+                      <!-- PDF -->
+                      <div *ngIf="doc.fileType === 'application/pdf'" class="pdf-container" (click)="downloadFile(doc)">
+                        <span class="document-icon">📄</span>
+                        <div class="file-overlay">
+                          <span class="download-icon">📥</span>
+                        </div>
+                      </div>
+                      
+                      <!-- Autres fichiers -->
+                      <div *ngIf="!doc.fileType?.startsWith('image/') && doc.fileType !== 'application/pdf'" 
+                           class="file-container" (click)="downloadFile(doc)">
+                        <span class="document-icon">📎</span>
+                        <div class="file-overlay">
+                          <span class="download-icon">📥</span>
+                        </div>
+                      </div>
+                      
+                      <div class="document-info">
+                        <span class="document-name" title="{{ doc.fileName }}">{{ doc.fileName }}</span>
+                        <span class="document-size" *ngIf="doc.fileSize">{{ formatFileSize(doc.fileSize) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
               <div class="card-actions">
                 <button class="btn-reject" (click)="rejectService('tourist', svc.id)" [disabled]="processingId === svc.id">
@@ -444,12 +543,63 @@
           </div>
         </div>
 
+      </div> <!-- Fin services-wrapper -->
+    </div> <!-- Fin page-content -->
+  </div> <!-- Fin notifications-page -->
+</div> <!-- Fin notifications-layout -->
+
+<!-- ================================================ -->
+<!-- ✅ MODAL POUR SAISIR LA RAISON DU REJET -->
+<!-- ================================================ -->
+<div class="reject-modal" *ngIf="showRejectModal" (click)="closeRejectModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>❌ Rejeter le service</h3>
+      <button class="close-btn" (click)="closeRejectModal()">✕</button>
+    </div>
+    
+    <div class="modal-body">
+      <p class="service-info">
+        <strong>Service :</strong> {{ selectedService?.name || selectedService?.title || 'Sans titre' }}<br>
+        <strong>ID :</strong> {{ selectedService?.id }}<br>
+        <strong>Type :</strong> {{ 
+          selectedServiceType === 'investment' ? 'Investissement' : 
+          selectedServiceType === 'collaboration' ? 'Collaboration' : 'Touristique' 
+        }}
+      </p>
+      
+      <div class="form-group">
+        <label for="rejectionReason">Raison du rejet <span class="required">*</span></label>
+        <textarea 
+          id="rejectionReason"
+          [(ngModel)]="rejectionReason"
+          rows="5"
+          placeholder="Expliquez pourquoi ce service est rejeté..."
+          maxlength="1000"
+          autofocus
+        ></textarea>
+        <div class="char-counter">
+          <span>{{ rejectionReason.length }} / 1000</span>
+          <span class="min-requirement">Minimum 5 caractères</span>
+        </div>
       </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeRejectModal()">Annuler</button>
+      <button 
+        class="btn-confirm-reject" 
+        [disabled]="!isReasonValid()"
+        (click)="confirmReject()">
+        Confirmer le rejet
+      </button>
     </div>
   </div>
 </div>
 
-<!-- ✅ AJOUT : IMAGE MODAL (à la fin, en dehors de tout conteneur) -->
+<!-- ================================================ -->
+<!-- ✅ IMAGE MODAL -->
+<!-- ================================================ -->
 <div class="image-modal" *ngIf="selectedImage" (click)="closeImage()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <span class="close" (click)="closeImage()">&times;</span>

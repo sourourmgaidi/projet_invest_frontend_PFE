@@ -472,24 +472,32 @@ updateInvestmentService(id: number, service: any, files?: File[]): Observable<an
     );
   }
 
-  rejectInvestmentService(serviceId: number): Observable<any> {
-    console.log(`📝 Rejet du service d'investissement ID: ${serviceId}`);
-    
-    return this.http.put(
-      `${this.API_URL}/investment-services/${serviceId}/reject`,
-      {},
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      tap(response => {
-        console.log('✅ Service rejeté avec succès', response);
-        console.log('📬 Notification envoyée au partenaire local');
-      }),
-      catchError((error) => {
-        console.error('❌ Erreur lors du rejet:', error);
-        return throwError(() => error);
-      })
-    );
-  }
+/**
+ * ✅ Rejeter un service d'investissement avec une raison
+ * @param serviceId ID du service à rejeter
+ * @param rejectionReason Raison du rejet
+ * @returns Observable avec le service rejeté
+ */
+rejectInvestmentService(serviceId: number, rejectionReason: string): Observable<any> {
+  console.log(`📝 Rejet du service d'investissement ID: ${serviceId} avec raison:`, rejectionReason);
+  
+  const body = { rejectionReason };
+  
+  return this.http.put(
+    `${this.API_URL}/investment-services/${serviceId}/reject`,
+    body,
+    { headers: this.getJsonHeaders() }
+  ).pipe(
+    tap(response => {
+      console.log('✅ Service rejeté avec succès', response);
+      console.log('📬 Notification envoyée au partenaire local avec la raison');
+    }),
+    catchError((error) => {
+      console.error('❌ Erreur lors du rejet:', error);
+      return throwError(() => error);
+    })
+  );
+}
 
   getPendingInvestmentServices(): Observable<any[]> {
     console.log('📋 Récupération des services en attente');

@@ -245,7 +245,7 @@
             <span *ngIf="processingId !== req.id">✅ Approve</span>
             <span *ngIf="processingId === req.id" class="loading-dots">...</span>
           </button>
-          <button class="btn-reject" (click)="rejectRequestWithoutReason(req, 'investment')" [disabled]="processingId === req.id">
+         <button class="btn-reject" (click)="openRejectDialog(req, 'investment')" [disabled]="processingId === req.id">
             <span *ngIf="processingId !== req.id">❌ Reject</span>
             <span *ngIf="processingId === req.id" class="loading-dots">...</span>
           </button>
@@ -323,7 +323,7 @@
             <span *ngIf="processingId !== req.id">✅ Approve</span>
             <span *ngIf="processingId === req.id" class="loading-dots">...</span>
           </button>
-          <button class="btn-reject" (click)="rejectRequestWithoutReason(req, 'collaboration')" [disabled]="processingId === req.id">
+          <button class="btn-reject" (click)="openRejectDialog(req, 'collaboration')" [disabled]="processingId === req.id">
             <span *ngIf="processingId !== req.id">❌ Reject</span>
             <span *ngIf="processingId === req.id" class="loading-dots">...</span>
           </button>
@@ -409,7 +409,7 @@
             <span *ngIf="processingId !== req.id">✅ Approve</span>
             <span *ngIf="processingId === req.id" class="loading-dots">...</span>
           </button>
-          <button class="btn-reject" (click)="rejectRequestWithoutReason(req, 'tourist')" [disabled]="processingId === req.id">
+          <button class="btn-reject" (click)="openRejectDialog(req, 'tourist')" [disabled]="processingId === req.id">
             <span *ngIf="processingId !== req.id">❌ Reject</span>
             <span *ngIf="processingId === req.id" class="loading-dots">...</span>
           </button>
