@@ -1,0 +1,641 @@
+<div class="stats-dashboard">
+  
+  <!-- Header -->
+  <div class="dashboard-header">
+  <div class="header-left">
+    <h1>📊 Statistics Dashboard</h1>
+    <p>Track user registrations and platform activity</p>
+  </div>
+  <div class="header-actions">
+    <a routerLink="/admin/dashboard" class="back-to-dashboard">← Back to Dashboard</a>
+  </div>
+</div>
+
+  <!-- Summary Cards -->
+  <div class="summary-cards" *ngIf="summary">
+    <div class="card">
+      <div class="card-icon">👥</div>
+      <div class="card-content">
+        <div class="card-value">{{ summary.totalInvestors + summary.totalEconomicPartners + summary.totalInternationalCompanies + summary.totalTourists + summary.totalLocalPartners }}</div>
+        <div class="card-label">Total Users</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-icon">📈</div>
+      <div class="card-content">
+        <div class="card-value">{{ summary.approvedInvestmentServices + summary.approvedCollaborationServices + summary.approvedTouristServices }}</div>
+        <div class="card-label">Total Services</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🏢</div>
+      <div class="card-content">
+        <div class="card-value">{{ summary.totalInvestors }}</div>
+        <div class="card-label">Investors</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🤝</div>
+      <div class="card-content">
+        <div class="card-value">{{ summary.totalLocalPartners }}</div>
+        <div class="card-label">Local Partners</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🌍</div>
+      <div class="card-content">
+        <div class="card-value">{{ summary.totalInternationalCompanies }}</div>
+        <div class="card-label">International Companies</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-icon">✈️</div>
+      <div class="card-content">
+        <div class="card-value">{{ summary.totalTourists }}</div>
+        <div class="card-label">Tourists</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading statistics...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="hasError && !isLoading">
+    <span>⚠️ Error loading statistics</span>
+    <button (click)="loadSummary(); loadRegionStats()">Retry</button>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="charts-section" *ngIf="!isLoading && !hasError">
+    <div class="chart-row">
+      <div class="chart-card">
+        <app-monthly-registrations-chart></app-monthly-registrations-chart>
+      </div>
+    </div>
+    
+    <div class="chart-row">
+      <div class="chart-card">
+        <app-registrations-chart></app-registrations-chart>
+      </div>
+    </div>
+  </div>
+
+  <!-- Region Stats Table -->
+  <div class="region-section" *ngIf="regionStats.length > 0">
+    <h2>📍 Statistics by Region</h2>
+    <div class="region-grid">
+      <div class="region-card" *ngFor="let region of regionStats">
+        <h3>{{ region.name }}</h3>
+        <div class="region-stats">
+          <div class="region-stat">
+            <span class="stat-badge">📊</span>
+            <span> Investment Services</span>
+          </div>
+          <div class="region-stat">
+            <span class="stat-badge">🤝</span>
+            <span> Collaboration Services</span>
+          </div>
+          <div class="region-stat">
+            <span class="stat-badge">✈️</span>
+            <span> Tourist Services</span>
+          </div>
+        </div>
+        
+        <button class="view-services-btn" (click)="viewRegionServices(region.id, region.name)">
+          📋 View All Services
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ======================================== -->
+<!-- MODAL SERVICES PAR RÉGION -->
+<!-- ======================================== -->
+<div class="modal-overlay" *ngIf="showServicesModal" (click)="closeServicesModal()">
+  <div class="services-modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>📋 Services in {{ selectedRegion?.name }} Region</h3>
+      <button class="modal-close" (click)="closeServicesModal()">✕</button>
+    </div>
+    
+    <div class="modal-body">
+      <!-- Loading -->
+      <div class="loading-state" *ngIf="servicesLoading">
+        <div class="spinner"></div>
+        <p>Loading services...</p>
+      </div>
+      
+      <!-- Error -->
+      <div class="error-state" *ngIf="servicesError && !servicesLoading">
+        <span>⚠️ {{ servicesError }}</span>
+        <button (click)="loadAllRegionServices(selectedRegion.id)">Retry</button>
+      </div>
+      
+      <!-- Services Content -->
+      <div class="services-content" *ngIf="!servicesLoading && !servicesError">
+        
+        <!-- Tabs -->
+        <div class="tabs">
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab === 'investment'"
+            (click)="selectTab('investment')">
+            Investment
+            <span class="count">{{ getInvestmentCount() }}</span>
+          </button>
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab === 'collaboration'"
+            (click)="selectTab('collaboration')">
+            Collaboration
+            <span class="count">{{ getCollaborationCount() }}</span>
+          </button>
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab === 'tourist'"
+            (click)="selectTab('tourist')">
+            Tourism
+            <span class="count">{{ getTouristCount() }}</span>
+          </button>
+        </div>
+        
+        <!-- Service List View -->
+        <div class="service-list" *ngIf="!showDetail">
+          <div class="empty-state" *ngIf="getCurrentServices().length === 0">
+            <p>No services available in this category</p>
+          </div>
+          
+          <div 
+            class="service-card" 
+            [class.service-reserved]="isServiceReserved(service)"
+            [class.service-taken]="isServiceTaken(service)"
+            *ngFor="let service of getCurrentServices()"
+            (click)="viewServiceDetails(service)">
+            
+            <div class="service-header">
+              <h3>{{ getServiceTitle(service) }}</h3>
+              <span class="status-badge" [class]="getServiceStatusClass(service)">
+                {{ getServiceStatusIcon(service) }} {{ getServiceStatusText(service) }}
+              </span>
+            </div>
+            
+            <p class="service-description">{{ (service.description || '').substring(0, 100) }}{{ (service.description || '').length > 100 ? '...' : '' }}</p>
+            
+            <!-- Reserved by - LIEN VERS PROFIL -->
+            <div class="service-status-info" *ngIf="isServiceReserved(service) && service.reservedBy">
+              <div class="info-badge reserved">
+                <span class="info-icon">🕒</span>
+                <span>Reserved by: </span>
+                <a href="javascript:void(0)" class="user-profile-link" (click)="openUserProfile(service.reservedBy.email, service.reservedBy.role)">
+                  <strong>{{ service.reservedBy.firstName }} {{ service.reservedBy.lastName }}</strong>
+                  <span class="info-email">({{ service.reservedBy.email }})</span>
+                </a>
+              </div>
+            </div>
+            
+            <!-- Taken by - LIEN VERS PROFIL -->
+            <div class="service-status-info" *ngIf="isServiceTaken(service) && service.takenBy">
+              <div class="info-badge taken">
+                <span class="info-icon">🔒</span>
+                <span>Taken by: </span>
+                <a href="javascript:void(0)" class="user-profile-link" (click)="openUserProfile(service.takenBy.email, service.takenBy.role)">
+                  <strong>{{ service.takenBy.firstName }} {{ service.takenBy.lastName }}</strong>
+                  <span class="info-email">({{ service.takenBy.email }})</span>
+                </a>
+              </div>
+            </div>
+            
+            <div class="service-meta">
+              <span class="meta-item" *ngIf="activeTab === 'investment' && service.totalAmount">
+                Total: {{ service.totalAmount | number }} TND
+              </span>
+              <span class="meta-item" *ngIf="activeTab === 'collaboration' && service.requestedBudget">
+                Budget: {{ service.requestedBudget | number }} TND
+              </span>
+              <span class="meta-item" *ngIf="activeTab === 'tourist' && service.price">
+                From: {{ service.price | number }} TND
+              </span>
+              <span class="meta-item">
+                {{ service.availability || 'Available' }}
+              </span>
+            </div>
+            <div class="view-detail">Click to view details →</div>
+          </div>
+        </div>
+        
+        <!-- Service Detail View -->
+        <div class="service-detail" *ngIf="showDetail && selectedService">
+          <button class="back-btn" (click)="backToList()">
+            ← Back to list
+          </button>
+          
+          <div class="detail-content">
+            <div class="detail-header">
+              <h3>{{ getServiceTitle(selectedService) }}</h3>
+              <span class="service-type">{{ getServiceType() }}</span>
+            </div>
+            
+            <div class="detail-section">
+              <label>Description</label>
+              <p>{{ selectedService.description || 'No description available' }}</p>
+            </div>
+            
+            <div class="detail-section">
+              <label>Details</label>
+              <div class="details-grid">
+                <!-- Investment fields -->
+                <ng-container *ngIf="activeTab === 'investment'">
+                  <div class="detail-item">
+                    <span class="detail-label">Total Amount</span>
+                    <span class="detail-value">{{ formatCurrency(selectedService.totalAmount) }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Minimum Amount</span>
+                    <span class="detail-value">{{ formatCurrency(selectedService.minimumAmount) }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Economic Sector</span>
+                    <span class="detail-value">{{ selectedService.economicSector?.name || 'N/A' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Project Duration</span>
+                    <span class="detail-value">{{ selectedService.projectDuration || 'N/A' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Deadline</span>
+                    <span class="detail-value">{{ formatDate(selectedService.deadlineDate) }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Zone</span>
+                    <span class="detail-value">{{ selectedService.zone || 'N/A' }}</span>
+                  </div>
+                </ng-container>
+                
+                <!-- Collaboration fields -->
+                <ng-container *ngIf="activeTab === 'collaboration'">
+                  <div class="detail-item">
+                    <span class="detail-label">Requested Budget</span>
+                    <span class="detail-value">{{ formatCurrency(selectedService.requestedBudget) }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Collaboration Type</span>
+                    <span class="detail-value">{{ selectedService.collaborationType || 'N/A' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Activity Domain</span>
+                    <span class="detail-value">{{ selectedService.activityDomain || 'N/A' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Expected Benefits</span>
+                    <span class="detail-value">{{ selectedService.expectedBenefits || 'N/A' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Required Skills</span>
+                    <span class="detail-value">{{ selectedService.requiredSkills || 'N/A' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Duration</span>
+                    <span class="detail-value">{{ selectedService.collaborationDuration || 'N/A' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Address</span>
+                    <span class="detail-value">{{ selectedService.address || 'N/A' }}</span>
+                  </div>
+                </ng-container>
+                
+                <!-- Tourist fields -->
+                <ng-container *ngIf="activeTab === 'tourist'">
+                  <div class="detail-item">
+                    <span class="detail-label">Price</span>
+                    <span class="detail-value">{{ formatCurrency(selectedService.price) }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Group Price</span>
+                    <span class="detail-value">{{ formatCurrency(selectedService.groupPrice) }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Category</span>
+                    <span class="detail-value">{{ selectedService.category || 'N/A' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Duration</span>
+                    <span class="detail-value">{{ selectedService.durationHours || 'N/A' }} hours</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Max Capacity</span>
+                    <span class="detail-value">{{ selectedService.maxCapacity || 'N/A' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Target Audience</span>
+                    <span class="detail-value">{{ selectedService.targetAudience || 'N/A' }}</span>
+                  </div>
+                  <div class="detail-item" *ngIf="selectedService.includedServices?.length">
+                    <span class="detail-label">Included Services</span>
+                    <span class="detail-value">{{ selectedService.includedServices.join(', ') }}</span>
+                  </div>
+                  <div class="detail-item" *ngIf="selectedService.availableLanguages?.length">
+                    <span class="detail-label">Languages</span>
+                    <span class="detail-value">{{ selectedService.availableLanguages.join(', ') }}</span>
+                  </div>
+                </ng-container>
+              </div>
+            </div>
+            
+            <!-- Availability & Contact -->
+            <div class="detail-section">
+              <label>Availability & Contact</label>
+              <div class="details-grid">
+                <div class="detail-item">
+                  <span class="detail-label">Availability</span>
+                  <span class="detail-value">{{ selectedService.availability || 'N/A' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Contact Person</span>
+                  <span class="detail-value">{{ selectedService.contactPerson || 'N/A' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Region</span>
+                  <span class="detail-value">{{ selectedService.region?.name || 'N/A' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Provider</span>
+                  <span class="detail-value">
+                    <a href="javascript:void(0)" class="provider-link" (click)="openProviderProfile(selectedService)">
+                      <span class="provider-icon">👤</span>
+                      <span class="provider-name">{{ getProviderName(selectedService) }}</span>
+                      <span class="provider-email" *ngIf="selectedService.owner?.email">
+                        ({{ selectedService.owner?.email }})
+                      </span>
+                    </a>
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- TAKEN BY SECTION - AJOUTÉE -->
+            <div class="detail-section" *ngIf="isServiceTaken(selectedService) && selectedService.takenBy">
+              <label>🔒 Acquisition Information</label>
+              <div class="details-grid">
+                <div class="detail-item">
+                  <span class="detail-label">Taken by</span>
+                  <span class="detail-value">
+                    <a href="javascript:void(0)" class="user-profile-link" (click)="openUserProfile(selectedService.takenBy.email, selectedService.takenBy.role)">
+                      <span class="user-avatar-small" [style.background]="getRoleColor(selectedService.takenBy.role)">
+                        {{ getUserInitials(selectedService.takenBy.firstName, selectedService.takenBy.lastName) }}
+                      </span>
+                      <span class="user-name">{{ selectedService.takenBy.firstName }} {{ selectedService.takenBy.lastName }}</span>
+                      <span class="user-email">({{ selectedService.takenBy.email }})</span>
+                      <span class="user-role-badge-small" [style.background]="getRoleColor(selectedService.takenBy.role)">
+                        {{ getRoleLabel(selectedService.takenBy.role) }}
+                      </span>
+                    </a>
+                  </span>
+                </div>
+                <div class="detail-item" *ngIf="selectedService.acquisitionDate">
+                  <span class="detail-label">Acquisition Date</span>
+                  <span class="detail-value">{{ formatDate(selectedService.acquisitionDate) }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- RESERVED BY SECTION - AJOUTÉE -->
+            <div class="detail-section" *ngIf="isServiceReserved(selectedService) && selectedService.reservedBy">
+              <label>🕒 Reservation Information</label>
+              <div class="details-grid">
+                <div class="detail-item">
+                  <span class="detail-label">Reserved by</span>
+                  <span class="detail-value">
+                    <a href="javascript:void(0)" class="user-profile-link" (click)="openUserProfile(selectedService.reservedBy.email, selectedService.reservedBy.role)">
+                      <span class="user-avatar-small" [style.background]="getRoleColor(selectedService.reservedBy.role)">
+                        {{ getUserInitials(selectedService.reservedBy.firstName, selectedService.reservedBy.lastName) }}
+                      </span>
+                      <span class="user-name">{{ selectedService.reservedBy.firstName }} {{ selectedService.reservedBy.lastName }}</span>
+                      <span class="user-email">({{ selectedService.reservedBy.email }})</span>
+                      <span class="user-role-badge-small" [style.background]="getRoleColor(selectedService.reservedBy.role)">
+                        {{ getRoleLabel(selectedService.reservedBy.role) }}
+                      </span>
+                    </a>
+                  </span>
+                </div>
+                <div class="detail-item" *ngIf="selectedService.reservationDate">
+                  <span class="detail-label">Reservation Date</span>
+                  <span class="detail-value">{{ formatDate(selectedService.reservationDate) }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Documents Section -->
+            <div class="detail-section" *ngIf="selectedService.documents && selectedService.documents.length > 0">
+              <label>Documents ({{ selectedService.documents.length }})</label>
+              <div class="documents-grid">
+                <div class="document-item" *ngFor="let doc of selectedService.documents">
+                  <div *ngIf="doc.fileType?.startsWith('image/')" class="image-item" (click)="openImage(doc)">
+                    <img [src]="getImageUrl(doc)" class="document-thumbnail" [alt]="doc.fileName" loading="lazy">
+                    <div class="document-info">
+                      <span class="document-name">{{ doc.fileName | slice:0:20 }}{{ doc.fileName.length > 20 ? '...' : '' }}</span>
+                      <span class="document-size" *ngIf="doc.fileSize">{{ formatFileSize(doc.fileSize) }}</span>
+                      <span class="primary-badge" *ngIf="doc.isPrimary">⭐ Primary</span>
+                    </div>
+                  </div>
+                  <div *ngIf="doc.fileType === 'application/pdf'" class="pdf-item" (click)="downloadFile(doc)">
+                    <div class="pdf-preview">
+                      <span class="pdf-icon">📄</span>
+                      <span class="document-name">{{ doc.fileName | slice:0:25 }}{{ doc.fileName.length > 25 ? '...' : '' }}</span>
+                      <span class="document-size" *ngIf="doc.fileSize">{{ formatFileSize(doc.fileSize) }}</span>
+                    </div>
+                  </div>
+                  <div *ngIf="!doc.fileType?.startsWith('image/') && doc.fileType !== 'application/pdf'" class="other-item" (click)="downloadFile(doc)">
+                    <div class="file-preview">
+                      <span class="file-icon">📎</span>
+                      <span class="document-name">{{ doc.fileName | slice:0:25 }}{{ doc.fileName.length > 25 ? '...' : '' }}</span>
+                      <span class="document-size" *ngIf="doc.fileSize">{{ formatFileSize(doc.fileSize) }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-close" (click)="closeServicesModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================== -->
+<!-- MODAL USER DETAILS -->
+<!-- ======================================== -->
+<div class="modal-overlay" *ngIf="showUserDetails" (click)="closeUserDetails()">
+  <div class="modal-content user-details-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>User Details</h2>
+      <button class="close-btn" (click)="closeUserDetails()">Close</button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedUser">
+      <div class="user-header">
+        <div class="user-avatar" [style.background]="selectedUser.profilePhoto ? 'transparent' : getRoleColor(selectedUser.role)">
+          <img *ngIf="selectedUser.profilePhoto" 
+               [src]="getUserProfilePhoto(selectedUser)" 
+               class="avatar-image" 
+               alt="Profile photo"
+               (error)="selectedUser.profilePhoto = ''">
+          <span *ngIf="!selectedUser.profilePhoto" class="avatar-text">
+            {{ getUserInitials(selectedUser.firstName, selectedUser.lastName) }}
+          </span>
+        </div>
+        <div class="user-title">
+          <h3>{{ selectedUser.firstName || '' }} {{ selectedUser.lastName || '' }}</h3>
+          <span class="user-role-badge" [style.background]="getRoleColor(selectedUser.role)">
+            {{ getRoleLabel(selectedUser.role) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="details-grid">
+        <div class="detail-item">
+          <span class="detail-label">Email</span>
+          <span class="detail-value">{{ selectedUser.email }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Phone</span>
+          <span class="detail-value">{{ selectedUser.phone || 'Not Provided' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Registration Date</span>
+          <span class="detail-value">{{ formatDate(selectedUser.registrationDate) }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Status</span>
+          <span class="detail-value">
+            <span class="status-badge" [class.active]="selectedUser.active" [class.inactive]="!selectedUser.active">
+              {{ selectedUser.active ? 'Active' : 'Inactive' }}
+            </span>
+          </span>
+        </div>
+
+        <!-- Role-specific fields -->
+        <ng-container [ngSwitch]="selectedUser.role">
+          <ng-container *ngSwitchCase="'INVESTOR'">
+            <div class="detail-item">
+              <span class="detail-label">Company</span>
+              <span class="detail-value">{{ selectedUser.company || 'Not Provided' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Country of Origin</span>
+              <span class="detail-value">{{ selectedUser.originCountry || 'Not Provided' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Sector</span>
+              <span class="detail-value">{{ selectedUser.activitySector || 'Not Provided' }}</span>
+            </div>
+          </ng-container>
+
+          <ng-container *ngSwitchCase="'INTERNATIONAL_COMPANY'">
+            <div class="detail-item">
+              <span class="detail-label">Company</span>
+              <span class="detail-value">{{ selectedUser.companyName || 'Not Provided' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Country of Origin</span>
+              <span class="detail-value">{{ selectedUser.originCountry || 'Not Provided' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Sector</span>
+              <span class="detail-value">{{ selectedUser.activitySector || 'Not Provided' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">SIRET</span>
+              <span class="detail-value">{{ selectedUser.siret || 'Not Provided' }}</span>
+            </div>
+          </ng-container>
+
+          <ng-container *ngSwitchCase="'LOCAL_PARTNER'">
+            <div class="detail-item">
+              <span class="detail-label">Region</span>
+              <span class="detail-value">{{ selectedUser.region || 'Not Provided' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Address</span>
+              <span class="detail-value">{{ selectedUser.address || 'Not Provided' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Sector</span>
+              <span class="detail-value">{{ selectedUser.activityDomain || 'Not Provided' }}</span>
+            </div>
+          </ng-container>
+
+          <ng-container *ngSwitchCase="'PARTNER'">
+            <div class="detail-item">
+              <span class="detail-label">Country of Origin</span>
+              <span class="detail-value">{{ selectedUser.countryOfOrigin || 'Not Provided' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Sector</span>
+              <span class="detail-value">{{ selectedUser.businessSector || 'Not Provided' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Address</span>
+              <span class="detail-value">{{ selectedUser.headquartersAddress || 'Not Provided' }}</span>
+            </div>
+          </ng-container>
+
+          <ng-container *ngSwitchCase="'TOURIST'">
+            <div class="detail-item">
+              <span class="detail-label">Nationality</span>
+              <span class="detail-value">{{ selectedUser.nationality || 'Not Provided' }}</span>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <div class="detail-item full-width" *ngIf="selectedUser.website">
+          <span class="detail-label">Website</span>
+          <span class="detail-value">
+            <a [href]="selectedUser.website" target="_blank">{{ selectedUser.website }}</a>
+          </span>
+        </div>
+
+        <div class="detail-item full-width" *ngIf="selectedUser.linkedinProfile">
+          <span class="detail-label">LinkedIn</span>
+          <span class="detail-value">
+            <a [href]="selectedUser.linkedinProfile" target="_blank">{{ selectedUser.linkedinProfile }}</a>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeUserDetails()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================== -->
+<!-- MODAL IMAGE -->
+<!-- ======================================== -->
+<div class="modal-overlay" *ngIf="showImageModal" (click)="closeImage()">
+  <div class="image-modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ selectedImage?.name }}</h3>
+      <button class="modal-close" (click)="closeImage()">✕</button>
+    </div>
+    <div class="modal-body">
+      <img [src]="selectedImage?.url" alt="{{ selectedImage?.name }}" class="full-image">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-download" (click)="downloadFile(selectedImage?.doc)">
+        📥 Download
+      </button>
+      <button class="btn-close" (click)="closeImage()">Close</button>
+    </div>
+  </div>
+</div>

@@ -1,25 +1,25 @@
 <div class="register-page">
   <!-- Bouton Accueil -->
-  <button class="home-btn" (click)="goToHome()">Home</button>
+  <button class="home-btn" (click)="goToHome()">{{ 'REGISTER.HOME' | translate }}</button>
 
   <div class="register-container">
-    <h2>Create an account</h2>
+    <h2>{{ 'REGISTER.TITLE' | translate }}</h2>
 
     <!-- PROGRESS BAR SIMPLE -->
     <div class="progress-bar" *ngIf="step === 2">
       <div class="progress-step" [class.active]="step >= 1" [class.completed]="step > 1">
-        <span>Role</span>
+        <span>{{ 'REGISTER.STEP_ROLE' | translate }}</span>
       </div>
       <div class="progress-line" [class.active]="step > 1"></div>
       <div class="progress-step" [class.active]="step >= 2">
-        <span>Information</span>
+        <span>{{ 'REGISTER.STEP_INFO' | translate }}</span>
       </div>
     </div>
 
     <!-- ÉTAPE 1 : Choix du rôle -->
     <div *ngIf="step === 1" class="step-panel">
-      <h3>What is your profile?</h3>
-      <p class="step-desc">Select your role to create a suitable account</p>
+      <h3>{{ 'REGISTER.WHAT_PROFILE' | translate }}</h3>
+      <p class="step-desc">{{ 'REGISTER.SELECT_ROLE' | translate }}</p>
 
       <div class="error-message" *ngIf="errorMsg">{{ errorMsg }}</div>
 
@@ -29,13 +29,13 @@
           class="role-item"
           [class.selected]="selectedRole === role.value"
           (click)="selectRole(role.value)">
-          <div class="role-name">{{ role.label }}</div>
-          <div class="role-desc">{{ role.description }}</div>
+          <div class="role-name">{{ role.label | translate }}</div>
+          <div class="role-desc">{{ role.description | translate }}</div>
         </div>
       </div>
 
       <button class="continue-btn" (click)="goToStep2()" [disabled]="!selectedRole">
-        Continue →
+        {{ 'REGISTER.CONTINUE' | translate }} →
       </button>
     </div>
 
@@ -43,7 +43,7 @@
     <div *ngIf="step === 2" class="step-panel">
       
       <div class="selected-role" *ngIf="getSelectedRoleInfo()">
-        {{ getSelectedRoleInfo()?.label }}
+        {{ getSelectedRoleInfo()?.label | translate }}
       </div>
 
       <div class="error-message" *ngIf="errorMsg">{{ errorMsg }}</div>
@@ -55,9 +55,9 @@
         <!-- CHAMPS COMMUNS À TOUS LES RÔLES -->
         <!-- ======================================== -->
 
-        <!-- ✅ SECTION EMAIL AVEC VALIDATION GMAIL -->
+        <!-- SECTION EMAIL AVEC VALIDATION -->
         <div class="form-group">
-          <label for="email">Email *</label>
+          <label for="email">{{ 'REGISTER.EMAIL' | translate }} *</label>
           <input
             id="email"
             type="email"
@@ -72,7 +72,7 @@
             autocomplete="off"
           />
           <div *ngIf="email.invalid && email.touched" class="field-error">
-            Valid email required
+            {{ 'REGISTER.VALID_EMAIL' | translate }}
           </div>
           <div *ngIf="emailError && !email.invalid" class="field-error">
             {{ emailError }}
@@ -81,7 +81,7 @@
 
         <!-- Téléphone avec sélecteur de pays -->
         <div class="form-group">
-          <label for="phone">Phone *</label>
+          <label for="phone">{{ 'REGISTER.PHONE' | translate }} *</label>
           <div class="phone-input-container">
             <select 
               [(ngModel)]="selectedCountryCode" 
@@ -107,7 +107,7 @@
             />
           </div>
           <div *ngIf="phoneError" class="field-error">{{ phoneError }}</div>
-          <small class="phone-hint">Example: {{ selectedCountryCode }} 12 345 678</small>
+          <small class="phone-hint">{{ 'REGISTER.PHONE_EXAMPLE' | translate }}: {{ selectedCountryCode }} 12 345 678</small>
         </div>
 
         <!-- ======================================== -->
@@ -116,41 +116,41 @@
         <ng-container *ngIf="selectedRole === Role.INVESTOR">
           <div class="form-row">
             <div class="form-group">
-              <label for="lastName">Last Name *</label>
+              <label for="lastName">{{ 'REGISTER.LAST_NAME' | translate }} *</label>
               <input
                 id="lastName"
                 type="text"
                 [(ngModel)]="form.nom"
                 name="nom"
                 required
-                placeholder="Your last name"
+                placeholder="{{ 'REGISTER.LAST_NAME_PLACEHOLDER' | translate }}"
                 autocomplete="off"
               />
             </div>
 
             <div class="form-group">
-              <label for="firstName">First Name *</label>
+              <label for="firstName">{{ 'REGISTER.FIRST_NAME' | translate }} *</label>
               <input
                 id="firstName"
                 type="text"
                 [(ngModel)]="form.prenom"
                 name="prenom"
                 required
-                placeholder="Your first name"
+                placeholder="{{ 'REGISTER.FIRST_NAME_PLACEHOLDER' | translate }}"
                 autocomplete="off"
               />
             </div>
           </div>
 
           <div class="form-group">
-            <label for="nationality">Nationality</label>
+            <label for="nationality">{{ 'REGISTER.NATIONALITY' | translate }}</label>
             <select
               id="nationality"
               [(ngModel)]="form.nationality"
               name="nationality"
               class="country-select"
             >
-              <option value="">Select your nationality</option>
+              <option value="">{{ 'REGISTER.SELECT_NATIONALITY' | translate }}</option>
               <option *ngFor="let nation of nationalities" [value]="nation.name">
                 {{ nation.name }}
               </option>
@@ -158,20 +158,20 @@
           </div>
 
           <div class="form-group">
-            <label for="company">Company Name *</label>
+            <label for="company">{{ 'REGISTER.COMPANY_NAME' | translate }} *</label>
             <input
               id="company"
               type="text"
               [(ngModel)]="form.companyName"
               name="companyName"
               required
-              placeholder="Your company name"
+              placeholder="{{ 'REGISTER.COMPANY_NAME_PLACEHOLDER' | translate }}"
               autocomplete="off"
             />
           </div>
 
           <div class="form-group">
-            <label for="originCountry">Country of Origin *</label>
+            <label for="originCountry">{{ 'REGISTER.COUNTRY_ORIGIN' | translate }} *</label>
             <select
               id="originCountry"
               [(ngModel)]="form.paysOrigine"
@@ -179,7 +179,7 @@
               required
               class="country-select"
             >
-              <option value="">Select country</option>
+              <option value="">{{ 'REGISTER.SELECT_COUNTRY' | translate }}</option>
               <option *ngFor="let country of countryCodes" [value]="country.name">
                 {{ country.flag }} {{ country.name }}
               </option>
@@ -187,7 +187,7 @@
           </div>
 
           <div class="form-group">
-            <label for="activitySector">Activity Sector *</label>
+            <label for="activitySector">{{ 'REGISTER.ACTIVITY_SECTOR' | translate }} *</label>
             <select
               id="activitySector"
               [(ngModel)]="form.secteurActivite"
@@ -195,7 +195,7 @@
               required
               class="sector-select"
             >
-              <option value="">Select activity sector</option>
+              <option value="">{{ 'REGISTER.SELECT_SECTOR' | translate }}</option>
               <optgroup *ngFor="let category of getActivityCategories()" [label]="category">
                 <option *ngFor="let sector of getSectorsByCategory(category)" [value]="sector.value">
                   {{ sector.label }}
@@ -206,7 +206,7 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label for="website">Website</label>
+              <label for="website">{{ 'REGISTER.WEBSITE' | translate }}</label>
               <input
                 id="website"
                 type="url"
@@ -218,7 +218,7 @@
             </div>
 
             <div class="form-group">
-              <label for="linkedin">LinkedIn Profile</label>
+              <label for="linkedin">{{ 'REGISTER.LINKEDIN' | translate }}</label>
               <input
                 id="linkedin"
                 type="url"
@@ -237,41 +237,41 @@
         <ng-container *ngIf="selectedRole === Role.TOURIST">
           <div class="form-row">
             <div class="form-group">
-              <label for="lastNameTourist">Last Name *</label>
+              <label for="lastNameTourist">{{ 'REGISTER.LAST_NAME' | translate }} *</label>
               <input
                 id="lastNameTourist"
                 type="text"
                 [(ngModel)]="form.nom"
                 name="nom"
                 required
-                placeholder="Your last name"
+                placeholder="{{ 'REGISTER.LAST_NAME_PLACEHOLDER' | translate }}"
                 autocomplete="off"
               />
             </div>
 
             <div class="form-group">
-              <label for="firstNameTourist">First Name *</label>
+              <label for="firstNameTourist">{{ 'REGISTER.FIRST_NAME' | translate }} *</label>
               <input
                 id="firstNameTourist"
                 type="text"
                 [(ngModel)]="form.prenom"
                 name="prenom"
                 required
-                placeholder="Your first name"
+                placeholder="{{ 'REGISTER.FIRST_NAME_PLACEHOLDER' | translate }}"
                 autocomplete="off"
               />
             </div>
           </div>
 
           <div class="form-group">
-            <label for="nationalityTourist">Nationality</label>
+            <label for="nationalityTourist">{{ 'REGISTER.NATIONALITY' | translate }}</label>
             <select
               id="nationalityTourist"
               [(ngModel)]="form.nationality"
               name="nationality"
               class="country-select"
             >
-              <option value="">Select your nationality</option>
+              <option value="">{{ 'REGISTER.SELECT_NATIONALITY' | translate }}</option>
               <option *ngFor="let nation of nationalities" [value]="nation.name">
                 {{ nation.name }}
               </option>
@@ -280,42 +280,40 @@
         </ng-container>
 
         <!-- ======================================== -->
-        <!-- SECTION ECONOMIC PARTNER (PARTNER) - SANS COMPANY NAME -->
+        <!-- SECTION ECONOMIC PARTNER (PARTNER) -->
         <!-- ======================================== -->
         <ng-container *ngIf="selectedRole === Role.PARTNER">
           <div class="form-row">
             <div class="form-group">
-              <label for="lastNamePartner">Last Name *</label>
+              <label for="lastNamePartner">{{ 'REGISTER.LAST_NAME' | translate }} *</label>
               <input
                 id="lastNamePartner"
                 type="text"
                 [(ngModel)]="form.nom"
                 name="nom"
                 required
-                placeholder="Your last name"
+                placeholder="{{ 'REGISTER.LAST_NAME_PLACEHOLDER' | translate }}"
                 autocomplete="off"
               />
             </div>
 
             <div class="form-group">
-              <label for="firstNamePartner">First Name *</label>
+              <label for="firstNamePartner">{{ 'REGISTER.FIRST_NAME' | translate }} *</label>
               <input
                 id="firstNamePartner"
                 type="text"
                 [(ngModel)]="form.prenom"
                 name="prenom"
                 required
-                placeholder="Your first name"
+                placeholder="{{ 'REGISTER.FIRST_NAME_PLACEHOLDER' | translate }}"
                 autocomplete="off"
               />
             </div>
           </div>
 
-          <!-- ❌ CHAMP COMPANY NAME SUPPRIMÉ POUR LE PARTENAIRE ÉCONOMIQUE -->
-
           <div class="form-row">
             <div class="form-group">
-              <label for="originCountryPartner">Country of Origin *</label>
+              <label for="originCountryPartner">{{ 'REGISTER.COUNTRY_ORIGIN' | translate }} *</label>
               <select
                 id="originCountryPartner"
                 [(ngModel)]="form.paysOrigine"
@@ -323,7 +321,7 @@
                 required
                 class="country-select"
               >
-                <option value="">Select country</option>
+                <option value="">{{ 'REGISTER.SELECT_COUNTRY' | translate }}</option>
                 <option *ngFor="let country of countryCodes" [value]="country.name">
                   {{ country.flag }} {{ country.name }}
                 </option>
@@ -331,7 +329,7 @@
             </div>
 
             <div class="form-group">
-              <label for="businessSectorPartner">Business Sector *</label>
+              <label for="businessSectorPartner">{{ 'REGISTER.BUSINESS_SECTOR' | translate }} *</label>
               <select
                 id="businessSectorPartner"
                 [(ngModel)]="form.secteurActivite"
@@ -339,7 +337,7 @@
                 required
                 class="sector-select"
               >
-                <option value="">Select business sector</option>
+                <option value="">{{ 'REGISTER.SELECT_SECTOR' | translate }}</option>
                 <optgroup *ngFor="let category of getActivityCategories()" [label]="category">
                   <option *ngFor="let sector of getSectorsByCategory(category)" [value]="sector.value">
                     {{ sector.label }}
@@ -350,20 +348,20 @@
           </div>
 
           <div class="form-group">
-            <label for="headquartersAddress">Headquarters Address</label>
+            <label for="headquartersAddress">{{ 'REGISTER.HEADQUARTERS_ADDRESS' | translate }}</label>
             <input
               id="headquartersAddress"
               type="text"
               [(ngModel)]="form.adresse"
               name="adresse"
-              placeholder="Full address"
+              placeholder="{{ 'REGISTER.ADDRESS_PLACEHOLDER' | translate }}"
               autocomplete="off"
             />
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label for="websitePartner">Website</label>
+              <label for="websitePartner">{{ 'REGISTER.WEBSITE' | translate }}</label>
               <input
                 id="websitePartner"
                 type="url"
@@ -375,7 +373,7 @@
             </div>
 
             <div class="form-group">
-              <label for="linkedinPartner">LinkedIn Profile</label>
+              <label for="linkedinPartner">{{ 'REGISTER.LINKEDIN' | translate }}</label>
               <input
                 id="linkedinPartner"
                 type="url"
@@ -394,27 +392,27 @@
         <ng-container *ngIf="selectedRole === Role.LOCAL_PARTNER">
           <div class="form-row">
             <div class="form-group">
-              <label for="lastNameLocal">Last Name *</label>
+              <label for="lastNameLocal">{{ 'REGISTER.LAST_NAME' | translate }} *</label>
               <input
                 id="lastNameLocal"
                 type="text"
                 [(ngModel)]="form.nom"
                 name="nom"
                 required
-                placeholder="Your last name"
+                placeholder="{{ 'REGISTER.LAST_NAME_PLACEHOLDER' | translate }}"
                 autocomplete="off"
               />
             </div>
 
             <div class="form-group">
-              <label for="firstNameLocal">First Name *</label>
+              <label for="firstNameLocal">{{ 'REGISTER.FIRST_NAME' | translate }} *</label>
               <input
                 id="firstNameLocal"
                 type="text"
                 [(ngModel)]="form.prenom"
                 name="prenom"
                 required
-                placeholder="Your first name"
+                placeholder="{{ 'REGISTER.FIRST_NAME_PLACEHOLDER' | translate }}"
                 autocomplete="off"
               />
             </div>
@@ -422,14 +420,14 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label for="region">Region</label>
+              <label for="region">{{ 'REGISTER.REGION' | translate }}</label>
               <select
                 id="region"
                 [(ngModel)]="form.region"
                 name="region"
                 class="region-select"
               >
-                <option value="">Select a region</option>
+                <option value="">{{ 'REGISTER.SELECT_REGION' | translate }}</option>
                 <option *ngFor="let region of tunisianRegions" [value]="region.value">
                   {{ region.label }}
                 </option>
@@ -437,27 +435,27 @@
             </div>
 
             <div class="form-group">
-              <label for="addressLocal">Address</label>
+              <label for="addressLocal">{{ 'REGISTER.ADDRESS' | translate }}</label>
               <input
                 id="addressLocal"
                 type="text"
                 [(ngModel)]="form.adresse"
                 name="adresse"
-                placeholder="Full address"
+                placeholder="{{ 'REGISTER.ADDRESS_PLACEHOLDER' | translate }}"
                 autocomplete="off"
               />
             </div>
           </div>
 
           <div class="form-group">
-            <label for="activityDomainLocal">Activity Sector</label>
+            <label for="activityDomainLocal">{{ 'REGISTER.ACTIVITY_SECTOR' | translate }}</label>
             <select
               id="activityDomainLocal"
               [(ngModel)]="form.secteurActivite"
               name="secteurActivite"
               class="sector-select"
             >
-              <option value="">Select activity sector</option>
+              <option value="">{{ 'REGISTER.SELECT_SECTOR' | translate }}</option>
               <optgroup *ngFor="let category of getActivityCategories()" [label]="category">
                 <option *ngFor="let sector of getSectorsByCategory(category)" [value]="sector.value">
                   {{ sector.label }}
@@ -468,25 +466,25 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label for="businessRegNumber">Business Registration Number</label>
+              <label for="businessRegNumber">{{ 'REGISTER.BUSINESS_REG_NUMBER' | translate }}</label>
               <input
                 id="businessRegNumber"
                 type="text"
                 [(ngModel)]="form.numeroRegistreCommerce"
                 name="numeroRegistreCommerce"
-                placeholder="Registration number"
+                placeholder="{{ 'REGISTER.REG_NUMBER_PLACEHOLDER' | translate }}"
                 autocomplete="off"
               />
             </div>
 
             <div class="form-group">
-              <label for="taxNumber">Professional Tax Number</label>
+              <label for="taxNumber">{{ 'REGISTER.TAX_NUMBER' | translate }}</label>
               <input
                 id="taxNumber"
                 type="text"
                 [(ngModel)]="form.taxeProfessionnelle"
                 name="taxeProfessionnelle"
-                placeholder="Tax number"
+                placeholder="{{ 'REGISTER.TAX_NUMBER_PLACEHOLDER' | translate }}"
                 autocomplete="off"
               />
             </div>
@@ -494,7 +492,7 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label for="websiteLocal">Website</label>
+              <label for="websiteLocal">{{ 'REGISTER.WEBSITE' | translate }}</label>
               <input
                 id="websiteLocal"
                 type="url"
@@ -506,7 +504,7 @@
             </div>
 
             <div class="form-group">
-              <label for="linkedinLocal">LinkedIn Profile</label>
+              <label for="linkedinLocal">{{ 'REGISTER.LINKEDIN' | translate }}</label>
               <input
                 id="linkedinLocal"
                 type="url"
@@ -520,25 +518,25 @@
         </ng-container>
 
         <!-- ======================================== -->
-        <!-- SECTION INTERNATIONAL COMPANY - SANS PHOTO -->
+        <!-- SECTION INTERNATIONAL COMPANY -->
         <!-- ======================================== -->
         <ng-container *ngIf="selectedRole === Role.INTERNATIONAL_COMPANY">
           <div class="form-group">
-            <label for="companyNameInt">Company Name *</label>
+            <label for="companyNameInt">{{ 'REGISTER.COMPANY_NAME' | translate }} *</label>
             <input
               id="companyNameInt"
               type="text"
               [(ngModel)]="form.companyName"
               name="companyName"
               required
-              placeholder="Company name"
+              placeholder="{{ 'REGISTER.COMPANY_NAME_PLACEHOLDER' | translate }}"
               autocomplete="off"
             />
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label for="originCountryInt">Country of Origin *</label>
+              <label for="originCountryInt">{{ 'REGISTER.COUNTRY_ORIGIN' | translate }} *</label>
               <select
                 id="originCountryInt"
                 [(ngModel)]="form.paysOrigine"
@@ -546,7 +544,7 @@
                 required
                 class="country-select"
               >
-                <option value="">Select country</option>
+                <option value="">{{ 'REGISTER.SELECT_COUNTRY' | translate }}</option>
                 <option *ngFor="let country of countryCodes" [value]="country.name">
                   {{ country.flag }} {{ country.name }}
                 </option>
@@ -554,14 +552,14 @@
             </div>
 
             <div class="form-group">
-              <label for="contactLastNameInt">Contact Last Name *</label>
+              <label for="contactLastNameInt">{{ 'REGISTER.CONTACT_LAST_NAME' | translate }} *</label>
               <input
                 id="contactLastNameInt"
                 type="text"
                 [(ngModel)]="form.nom"
                 name="nom"
                 required
-                placeholder="Contact last name"
+                placeholder="{{ 'REGISTER.LAST_NAME_PLACEHOLDER' | translate }}"
                 autocomplete="off"
               />
             </div>
@@ -569,35 +567,34 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label for="contactFirstNameInt">Contact First Name *</label>
+              <label for="contactFirstNameInt">{{ 'REGISTER.CONTACT_FIRST_NAME' | translate }} *</label>
               <input
                 id="contactFirstNameInt"
                 type="text"
                 [(ngModel)]="form.prenom"
                 name="prenom"
                 required
-                placeholder="Contact first name"
+                placeholder="{{ 'REGISTER.FIRST_NAME_PLACEHOLDER' | translate }}"
                 autocomplete="off"
               />
             </div>
 
             <div class="form-group">
-              <label for="siretInt">SIRET Number *</label>
+              <label for="siretInt">{{ 'REGISTER.SIRET_NUMBER' | translate }} *</label>
               <input
                 id="siretInt"
                 type="text"
                 [(ngModel)]="form.siret"
                 name="siret"
                 required
-                placeholder="SIRET number"
+                placeholder="{{ 'REGISTER.SIRET_PLACEHOLDER' | translate }}"
                 autocomplete="off"
               />
             </div>
           </div>
 
-          <!-- ✅ SECTEUR D'ACTIVITÉ - MÊME QUE INVESTOR -->
           <div class="form-group">
-            <label for="activitySectorInt">Activity Sector *</label>
+            <label for="activitySectorInt">{{ 'REGISTER.ACTIVITY_SECTOR' | translate }} *</label>
             <select
               id="activitySectorInt"
               [(ngModel)]="form.secteurActivite"
@@ -605,7 +602,7 @@
               required
               class="sector-select"
             >
-              <option value="">Select activity sector</option>
+              <option value="">{{ 'REGISTER.SELECT_SECTOR' | translate }}</option>
               <optgroup *ngFor="let category of getActivityCategories()" [label]="category">
                 <option *ngFor="let sector of getSectorsByCategory(category)" [value]="sector.value">
                   {{ sector.label }}
@@ -616,7 +613,7 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label for="websiteInt">Website</label>
+              <label for="websiteInt">{{ 'REGISTER.WEBSITE' | translate }}</label>
               <input
                 id="websiteInt"
                 type="url"
@@ -628,7 +625,7 @@
             </div>
 
             <div class="form-group">
-              <label for="linkedinInt">LinkedIn Profile</label>
+              <label for="linkedinInt">{{ 'REGISTER.LINKEDIN' | translate }}</label>
               <input
                 id="linkedinInt"
                 type="url"
@@ -639,8 +636,6 @@
               />
             </div>
           </div>
-          
-          <!-- ❌ CHAMP PHOTO SUPPRIMÉ -->
         </ng-container>
 
         <!-- ======================================== -->
@@ -649,27 +644,27 @@
         <ng-container *ngIf="selectedRole === Role.ADMIN">
           <div class="form-row">
             <div class="form-group">
-              <label for="lastNameAdmin">Last Name *</label>
+              <label for="lastNameAdmin">{{ 'REGISTER.LAST_NAME' | translate }} *</label>
               <input
                 id="lastNameAdmin"
                 type="text"
                 [(ngModel)]="form.nom"
                 name="nom"
                 required
-                placeholder="Your last name"
+                placeholder="{{ 'REGISTER.LAST_NAME_PLACEHOLDER' | translate }}"
                 autocomplete="off"
               />
             </div>
 
             <div class="form-group">
-              <label for="firstNameAdmin">First Name *</label>
+              <label for="firstNameAdmin">{{ 'REGISTER.FIRST_NAME' | translate }} *</label>
               <input
                 id="firstNameAdmin"
                 type="text"
                 [(ngModel)]="form.prenom"
                 name="prenom"
                 required
-                placeholder="Your first name"
+                placeholder="{{ 'REGISTER.FIRST_NAME_PLACEHOLDER' | translate }}"
                 autocomplete="off"
               />
             </div>
@@ -680,7 +675,7 @@
         <!-- MOT DE PASSE (COMMUN À TOUS) -->
         <!-- ======================================== -->
         <div class="form-group">
-          <label for="password">Password *</label>
+          <label for="password">{{ 'REGISTER.PASSWORD' | translate }} *</label>
           <div class="password-wrapper">
             <input
               id="password"
@@ -689,36 +684,36 @@
               name="motDePasse"
               required
               minlength="6"
-              placeholder="Minimum 6 characters"
+              placeholder="{{ 'REGISTER.PASSWORD_PLACEHOLDER' | translate }}"
               #password="ngModel"
               autocomplete="new-password"
               class="password-input"
             />
             <button type="button" class="eye-btn" (click)="togglePassword()">
-              {{ showPassword ? 'Hide' : 'Show' }}
+              {{ showPassword ? ('REGISTER.HIDE' | translate) : ('REGISTER.SHOW' | translate) }}
             </button>
           </div>
           <div *ngIf="password.invalid && password.touched" class="field-error">
-            Minimum 6 characters required
+            {{ 'REGISTER.PASSWORD_MIN_LENGTH' | translate }}
           </div>
         </div>
 
         <div class="form-group">
-          <label for="confirmPassword">Confirm Password *</label>
+          <label for="confirmPassword">{{ 'REGISTER.CONFIRM_PASSWORD' | translate }} *</label>
           <input
             id="confirmPassword"
             [type]="showPassword ? 'text' : 'password'"
             [(ngModel)]="confirmPassword"
             name="confirmPassword"
             required
-            placeholder="Repeat your password"
+            placeholder="{{ 'REGISTER.CONFIRM_PASSWORD_PLACEHOLDER' | translate }}"
             autocomplete="new-password"
             class="password-input"
           />
         </div>
 
         <div *ngIf="form.motDePasse && confirmPassword && form.motDePasse !== confirmPassword" class="field-error">
-          Passwords do not match
+          {{ 'REGISTER.PASSWORD_MISMATCH' | translate }}
         </div>
 
         <!-- ======================================== -->
@@ -726,11 +721,11 @@
         <!-- ======================================== -->
         <div class="form-actions">
           <button type="button" class="back-btn" (click)="goBack()" *ngIf="step === 2">
-            ← Back
+            ← {{ 'REGISTER.BACK' | translate }}
           </button>
           <button type="submit" class="submit-btn" [disabled]="loading || registerForm.invalid || (form.motDePasse !== confirmPassword)">
-            <span *ngIf="!loading">Create account</span>
-            <span *ngIf="loading">Registering...</span>
+            <span *ngIf="!loading">{{ 'REGISTER.CREATE_ACCOUNT' | translate }}</span>
+            <span *ngIf="loading">{{ 'REGISTER.REGISTERING' | translate }}</span>
           </button>
         </div>
 

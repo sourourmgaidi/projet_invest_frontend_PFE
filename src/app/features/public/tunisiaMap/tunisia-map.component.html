@@ -1,0 +1,39 @@
+<div class="map-wrap">
+  <div class="map-side">
+    <svg #mapSvg id="tunisia-svg" viewBox="0 0 300 520" width="100%"></svg>
+  </div>
+  <div class="panel-side">
+    <div class="hint" *ngIf="!selectedRegion && !loading">
+      Click a governorate to view its details
+    </div>
+    <div class="hint" *ngIf="loading">Loading map data...</div>
+
+    <div class="panel-card" *ngIf="selectedRegion">
+      <div class="panel-head">
+        <div>
+          <div class="panel-name">{{ selectedRegion.name }}</div>
+          <div class="panel-zone">{{ selectedRegion.geographicalZone }}</div>
+        </div>
+        <button class="close-btn" (click)="closePanel()">✕</button>
+      </div>
+      <div class="stats-row">
+        <div class="scard"><div class="n">{{ selectedRegion.approvedInvestmentServices }}</div><div class="l">Investment</div></div>
+        <div class="scard"><div class="n">{{ selectedRegion.approvedCollaborationServices }}</div><div class="l">Collaboration</div></div>
+        <div class="scard"><div class="n">{{ selectedRegion.approvedTouristServices }}</div><div class="l">Tourism</div></div>
+        <div class="scard tot"><div class="n">{{ selectedRegion.totalApprovedServices }}</div><div class="l">Total</div></div>
+      </div>
+      <div class="info-block" *ngIf="selectedRegion.economicDescription">
+        <div class="info-title">Economic profile</div>
+        <div class="info-text">{{ selectedRegion.economicDescription }}</div>
+      </div>
+      <div class="info-block" *ngIf="selectedRegion.taxIncentives">
+        <div class="info-title">Tax incentives</div>
+        <div class="info-text">{{ selectedRegion.taxIncentives }}</div>
+      </div>
+      <div class="info-block" *ngIf="selectedRegion.infrastructure">
+        <div class="info-title">Infrastructure</div>
+        <div class="info-text">{{ selectedRegion.infrastructure }}</div>
+      </div>
+    </div>
+  </div>
+</div>

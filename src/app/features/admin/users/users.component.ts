@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { AdminService } from '../../../core/services/admin.service';  // ✅ Chemin corrigé
-import type { User, UsersResponse, StatisticsResponse } from '../../../core/services/admin.service';  // ✅ Import des types
+import { HttpClient, HttpHeaders } from '@angular/common/http'; // ✅ AJOUTER
+import { AdminService } from '../../../core/services/admin.service';
+import type { User, UsersResponse, StatisticsResponse } from '../../../core/services/admin.service';
 
 @Component({
   selector: 'app-admin-users',
@@ -12,7 +13,7 @@ import type { User, UsersResponse, StatisticsResponse } from '../../../core/serv
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.css']
 })
-export class AdminUsersComponent implements OnInit {
+export class AdminUsersComponent implements OnInit, OnDestroy {
   users: User[] = [];
   filteredUsers: User[] = [];
   statistics: StatisticsResponse | null = null;
@@ -33,6 +34,10 @@ export class AdminUsersComponent implements OnInit {
   itemsPerPage = 10;
   totalPages = 1;
 
+  // ✅ Cache pour les photos de profil
+  photoCache: Map<string, string> = new Map();
+  photoLoading: Set<string> = new Set();
+
   roleColors: { [key: string]: string } = {
     'INVESTOR': '#27AE60',
     'TOURIST': '#4A90E2',
@@ -51,11 +56,76 @@ export class AdminUsersComponent implements OnInit {
     'ADMIN': 'ADMIN'
   };
 
-  constructor(private adminService: AdminService) {}
+  constructor(
+    private adminService: AdminService,
+    private http: HttpClient // ✅ AJOUTER
+  ) {}
 
   ngOnInit() {
     this.loadUsers();
     this.loadStatistics();
+  }
+
+  ngOnDestroy(): void {
+    // ✅ Nettoyer les URLs blob
+    this.photoCache.forEach(url => {
+      if (url.startsWith('blob:')) {
+        window.URL.revokeObjectURL(url);
+      }
+    });
+    this.photoCache.clear();
+  }
+
+  // ✅ NOUVELLE MÉTHODE: Récupérer la photo de profil
+  getUserProfilePhoto(user: any): string {
+    if (!user) return '';
+    
+    const photoFilename = user.profilePhoto || user.profilePicture || user.photo || '';
+    
+    if (!photoFilename) return this.getDefaultAvatarSvg();
+    
+    let fullUrl = '';
+    if (photoFilename.startsWith('http')) {
+      fullUrl = photoFilename;
+    } else {
+      fullUrl = `http://localhost:8089/uploads/profile-photos/${photoFilename}`;
+    }
+    
+    const cacheKey = `user-${user.id || user.email}`;
+    
+    if (this.photoCache.has(cacheKey)) {
+      return this.photoCache.get(cacheKey)!;
+    }
+    
+    this.loadUserProfilePhoto(fullUrl, cacheKey);
+    return this.getDefaultAvatarSvg();
+  }
+
+  // ✅ NOUVELLE MÉTHODE: Avatar par défaut
+  private getDefaultAvatarSvg(): string {
+    return 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%239ca3af\'/%3E%3Ctext x=\'50\' y=\'65\' font-size=\'40\' text-anchor=\'middle\' fill=\'white\'%3E?%3C/text%3E%3C/svg%3E';
+  }
+
+  // ✅ NOUVELLE MÉTHODE: Charger la photo
+  loadUserProfilePhoto(photoUrl: string, cacheKey: string): void {
+    if (this.photoLoading.has(cacheKey)) return;
+    
+    this.photoLoading.add(cacheKey);
+    
+    const token = localStorage.getItem('auth_token');
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    
+    this.http.get(photoUrl, { headers, responseType: 'blob' }).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        this.photoCache.set(cacheKey, url);
+        this.photoLoading.delete(cacheKey);
+      },
+      error: (err) => {
+        console.error('❌ Erreur chargement photo:', err);
+        this.photoLoading.delete(cacheKey);
+      }
+    });
   }
 
   loadUsers() {
@@ -87,29 +157,26 @@ export class AdminUsersComponent implements OnInit {
     });
   }
 
- searchUsers() {
-  const term = this.searchTerm.trim().toLowerCase();
+  searchUsers() {
+    const term = this.searchTerm.trim().toLowerCase();
 
-  if (term) {
-    // Filter locally instead of calling the API (optional)
-    this.filteredUsers = this.users.filter(user =>
-      user.firstName?.toLowerCase() === term ||
-      user.lastName?.toLowerCase() === term ||
-      user.email?.toLowerCase() === term
-    );
+    if (term) {
+      this.filteredUsers = this.users.filter(user =>
+        user.firstName?.toLowerCase() === term ||
+        user.lastName?.toLowerCase() === term ||
+        user.email?.toLowerCase() === term
+      );
 
-    // If you also want to filter by role:
-    if (this.selectedRole !== 'ALL') {
-      this.filteredUsers = this.filteredUsers.filter(u => u.role === this.selectedRole);
+      if (this.selectedRole !== 'ALL') {
+        this.filteredUsers = this.filteredUsers.filter(u => u.role === this.selectedRole);
+      }
+
+      this.totalPages = Math.ceil(this.filteredUsers.length / this.itemsPerPage);
+      this.currentPage = 1;
+    } else {
+      this.applyFilter();
     }
-
-    this.totalPages = Math.ceil(this.filteredUsers.length / this.itemsPerPage);
-    this.currentPage = 1;
-  } else {
-    // If search is empty, reload all users
-    this.applyFilter();
   }
-}
 
   applyFilter() {
     if (this.selectedRole === 'ALL') {

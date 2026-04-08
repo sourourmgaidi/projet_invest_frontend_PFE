@@ -93,15 +93,23 @@
 
     <div class="table-body">
       <div class="table-row" *ngFor="let user of paginatedUsers">
+        <!-- AVATAR AVEC PHOTO -->
         <div class="col-avatar">
-          <div class="avatar" [style.background]="getRoleColor(user.role)">
-            {{ getUserInitials(user) }}
+          <div class="avatar" [style.background]="user.profilePhoto ? 'transparent' : (getRoleColor(user.role) || '#666')">
+            <img *ngIf="user.profilePhoto" 
+                 [src]="getUserProfilePhoto(user)" 
+                 class="avatar-image" 
+                 alt="Profile photo"
+                 (error)="user.profilePhoto = ''">
+            <span *ngIf="!user.profilePhoto" class="avatar-text">
+              {{ getUserInitials(user) }}
+            </span>
           </div>
         </div>
         <div class="col-name">{{ user.firstName || '' }} {{ user.lastName || '' }}</div>
         <div class="col-email">{{ user.email }}</div>
         <div class="col-role">
-          <span class="role-badge" [style.background]="getRoleColor(user.role)">
+          <span class="role-badge" [style.background]="getRoleColor(user.role) || '#666'">
             {{ getRoleLabel(user.role) }}
           </span>
         </div>
@@ -158,13 +166,21 @@
       </div>
 
       <div class="modal-body" *ngIf="selectedUser">
+        <!-- USER HEADER AVEC PHOTO -->
         <div class="user-header">
-          <div class="user-avatar" [style.background]="getRoleColor(selectedUser.role)">
-            {{ getUserInitials(selectedUser) }}
+          <div class="user-avatar" [style.background]="selectedUser.profilePhoto ? 'transparent' : (getRoleColor(selectedUser.role) || '#666')">
+            <img *ngIf="selectedUser.profilePhoto" 
+                 [src]="getUserProfilePhoto(selectedUser)" 
+                 class="avatar-image" 
+                 alt="Profile photo"
+                 (error)="selectedUser.profilePhoto = ''">
+            <span *ngIf="!selectedUser.profilePhoto" class="avatar-text">
+              {{ getUserInitials(selectedUser) }}
+            </span>
           </div>
           <div class="user-title">
             <h3>{{ selectedUser.firstName || '' }} {{ selectedUser.lastName || '' }}</h3>
-            <span class="user-role-badge" [style.background]="getRoleColor(selectedUser.role)">
+            <span class="user-role-badge" [style.background]="getRoleColor(selectedUser.role) || '#666'">
               {{ getRoleLabel(selectedUser.role) }}
             </span>
           </div>

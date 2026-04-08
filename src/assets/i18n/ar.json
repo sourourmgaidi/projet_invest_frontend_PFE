@@ -1,0 +1,117 @@
+{
+  "HOME": {
+    "BADGE": "المنصة الرسمية للاستثمار",
+    "TITLE": "استثمر في",
+    "TITLE_HIGHLIGHT": "تونس",
+    "DESC": "المنصة التي تربط المستثمرين والشركاء المحليين والشركات الدولية والسياح من أجل تنمية اقتصادية مستدامة.",
+    "GET_STARTED": "ابدأ الآن ←",
+    "ALREADY_ACCOUNT": "لدي حساب بالفعل"
+  },
+  "STATS": {
+    "USERS": "مستخدم مسجل",
+    "SERVICES": "خدمة نشطة",
+    "GOVERNORATES": "ولاية"
+  },
+  "MAP": {
+    "TITLE": "استكشف 24 ولاية تونسية"
+  },
+  "COMMUNITY": {
+    "TITLE": "مجتمعنا",
+    "INVESTORS": "مستثمرون",
+    "ECONOMIC_PARTNERS": "شركاء اقتصاديون",
+    "LOCAL_PARTNERS": "شركاء محليون",
+    "INTERNATIONAL": "شركات دولية",
+    "TOURISTS": "سياح"
+  },
+  "SERVICES": {
+    "TITLE": "الخدمات المتاحة",
+    "INVESTMENT": "فرص الاستثمار",
+    "COLLABORATION": "خدمات التعاون",
+    "TOURIST": "الخدمات السياحية"
+  },
+  "FOOTER": {
+    "COPYRIGHT": "© 2025 ForsaTN · جميع الحقوق محفوظة"
+  },
+  "LOGIN": {
+  "HOME": "الرئيسية",
+  "TITLE": "تسجيل الدخول",
+  "SUBTITLE": "أدخل بيانات الاعتماد الخاصة بك",
+  "EMAIL": "البريد الإلكتروني",
+  "EMAIL_PLACEHOLDER": "بريدك@example.com",
+  "PASSWORD": "كلمة المرور",
+  "PASSWORD_PLACEHOLDER": "أدخل كلمة المرور",
+  "SHOW": "إظهار",
+  "HIDE": "إخفاء",
+  "FORGOT": "نسيت كلمة المرور؟",
+  "SUBMIT": "تسجيل الدخول",
+  "SUBMITTING": "جارٍ تسجيل الدخول..."
+},
+
+  "REGISTER": {
+    "TITLE": "إنشاء حساب",
+    "STEP_ROLE": "الدور",
+    "STEP_INFO": "المعلومات",
+    "WHAT_PROFILE": "ما هو ملفك الشخصي؟",
+    "SELECT_ROLE": "اختر دورك لإنشاء حساب مناسب",
+    "CONTINUE": "متابعة",
+    "EMAIL": "البريد الإلكتروني",
+    "VALID_EMAIL": "البريد الإلكتروني مطلوب",
+    "PHONE": "الهاتف",
+    "PHONE_EXAMPLE": "مثال",
+    "LAST_NAME": "الاسم العائلي",
+    "FIRST_NAME": "الاسم الشخصي",
+    "LAST_NAME_PLACEHOLDER": "اسم العائلة",
+    "FIRST_NAME_PLACEHOLDER": "الاسم الشخصي",
+    "NATIONALITY": "الجنسية",
+    "SELECT_NATIONALITY": "اختر جنسيتك",
+    "COMPANY_NAME": "اسم الشركة",
+    "COMPANY_NAME_PLACEHOLDER": "اسم شركتك",
+    "COUNTRY_ORIGIN": "بلد المنشأ",
+    "SELECT_COUNTRY": "اختر البلد",
+    "ACTIVITY_SECTOR": "قطاع النشاط",
+    "SELECT_SECTOR": "اختر قطاع النشاط",
+    "BUSINESS_SECTOR": "قطاع الأعمال",
+    "WEBSITE": "الموقع الإلكتروني",
+    "LINKEDIN": "ملف LinkedIn",
+    "HEADQUARTERS_ADDRESS": "عنوان المقر الرئيسي",
+    "ADDRESS": "العنوان",
+    "ADDRESS_PLACEHOLDER": "العنوان الكامل",
+    "REGION": "الجهة",
+    "SELECT_REGION": "اختر جهة",
+    "BUSINESS_REG_NUMBER": "رقم السجل التجاري",
+    "REG_NUMBER_PLACEHOLDER": "رقم التسجيل",
+    "TAX_NUMBER": "الرقم الضريبي المهني",
+    "TAX_NUMBER_PLACEHOLDER": "الرقم الضريبي",
+    "CONTACT_LAST_NAME": "اسم العائلة لجهة الاتصال",
+    "CONTACT_FIRST_NAME": "الاسم الشخصي لجهة الاتصال",
+    "SIRET_NUMBER": "رقم SIRET",
+    "SIRET_PLACEHOLDER": "رقم SIRET",
+    "PASSWORD": "كلمة المرور",
+    "PASSWORD_PLACEHOLDER": "الحد الأدنى 6 أحرف",
+    "PASSWORD_MIN_LENGTH": "الحد الأدنى 6 أحرف مطلوبة",
+    "CONFIRM_PASSWORD": "تأكيد كلمة المرور",
+    "CONFIRM_PASSWORD_PLACEHOLDER": "أعد كتابة كلمة المرور",
+    "PASSWORD_MISMATCH": "كلمات المرور غير متطابقة",
+    "BACK": "رجوع",
+    "CREATE_ACCOUNT": "إنشاء حساب",
+    "REGISTERING": "جاري التسجيل...",
+    "SHOW": "إظهار",
+    "HIDE": "إخفاء"
+  },
+  "ROLES": {
+    "INVESTOR": "مستثمر",
+    "TOURIST": "سائح",
+    "PARTNER": "شريك اقتصادي",
+    "LOCAL_PARTNER": "شريك محلي",
+    "INTERNATIONAL_COMPANY": "شركة دولية",
+    "ADMIN": "مدير"
+  },
+  "ROLES_DESC": {
+    "INVESTOR": "اكتشف فرص الاستثمار في تونس",
+    "TOURIST": "استكشف عجائب تونس",
+    "PARTNER": "طور شراكاتك الاقتصادية",
+    "LOCAL_PARTNER": "انخرط في التنمية المحلية",
+    "INTERNATIONAL_COMPANY": "أسس حضورك الدولي",
+    "ADMIN": "إدارة المنصة"
+  }
+}

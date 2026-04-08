@@ -758,3 +758,8 @@ app-navbar {
     border: 1px solid #ddd;
   }
 }
+.currency-converter-wrap {
+  margin: 0.75rem 0;
+  padding-top: 0.5rem;
+  border-top: 1px dashed #e2e8f0;
+}

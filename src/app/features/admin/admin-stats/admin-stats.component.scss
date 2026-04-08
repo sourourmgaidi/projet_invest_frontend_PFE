@@ -1,0 +1,312 @@
+.page {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-family: var(--font-sans, sans-serif);
+}
+
+// ── Header ──────────────────────────────────────
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h2 {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+  }
+}
+
+.back-to-dashboard {
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 0.5px solid #C8E6C9;
+  color: #5a8a5e;
+  text-decoration: none;
+  background: #F1F8F1;
+  transition: background 0.15s;
+
+  &:hover { background: #E4F7EF; }
+}
+
+// ── States ───────────────────────────────────────
+.loading, .error {
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 14px;
+  border-radius: 12px;
+  color: var(--color-text-secondary);
+  background: var(--color-background-secondary);
+}
+.error { color: #9a3a46; background: #FDF0F1; }
+
+// ── Metric cards ─────────────────────────────────
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.metric-card {
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .label {
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .value {
+    font-size: 24px;
+    font-weight: 500;
+  }
+}
+
+// ── Main layout ──────────────────────────────────
+.main-row {
+  display: grid;
+  grid-template-columns: 1fr 270px;
+  gap: 16px;
+  align-items: start;
+}
+
+.card {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: 14px;
+  padding: 16px;
+
+  h3 {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    margin-bottom: 14px;
+  }
+}
+
+.right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// ── Table ────────────────────────────────────────
+.table-wrap { overflow-x: auto; }
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+
+  th {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 6px 8px;
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  td {
+    padding: 9px 8px;
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--color-background-secondary); }
+
+  .col-total { text-align: right; }
+  .col-total-val {
+    text-align: right;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+  }
+}
+
+// ── User cell ────────────────────────────────────
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.avatar-placeholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.user-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.user-email {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+// ── Role badge ───────────────────────────────────
+.role-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+// ── Day bars ─────────────────────────────────────
+.days-bars {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 30px;
+}
+
+.day-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  flex: 1;
+  cursor: default;
+}
+
+.day-bar {
+  width: 100%;
+  border-radius: 2px;
+  min-height: 2px;
+  transition: opacity 0.15s;
+
+  &:hover { opacity: 0.75; }
+}
+
+.day-lbl {
+  font-size: 8px;
+  color: var(--color-text-secondary);
+}
+
+// ── Pie chart ────────────────────────────────────
+.pie-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-bottom: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pie-wrap {
+  position: relative;
+  height: 170px;
+}
+
+// ── Horizontal bars (top 10) ─────────────────────
+.hbar-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+
+  &:last-child { margin-bottom: 0; }
+}
+
+.hbar-rank {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  width: 14px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.hbar-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.hbar-name {
+  font-size: 11px;
+  color: var(--color-text-primary);
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hbar-track {
+  height: 6px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.hbar-fill {
+  height: 100%;
+  border-radius: 4px;
+  min-width: 2px;
+}
+
+.hbar-value {
+  font-size: 11px;
+  font-weight: 500;
+  width: 42px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+// ── Responsive ───────────────────────────────────
+@media (max-width: 900px) {
+  .main-row {
+    grid-template-columns: 1fr;
+  }
+  .cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

@@ -11,6 +11,12 @@
       </div>
 
       <div class="header-actions">
+ <!-- Remplacez le routerLink par (click) -->
+<a href="javascript:void(0)" class="btn-acquisition-requests" (click)="navigateToAcquisitionRequests()">
+  <span class="btn-icon">💰</span>
+  <span>Acquisition Requests</span>
+  <span class="acquisition-badge" *ngIf="pendingAcquisitionCount > 0">{{ pendingAcquisitionCount }}</span>
+</a>
 <a href="javascript:void(0)" class="btn-requests" (click)="navigateToRequests()">
   <span class="btn-icon">📋</span>
   <span>My Requests</span>
@@ -1303,13 +1309,33 @@
     </div>
   </div>
 </div>
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- IMAGE MODAL — CENTRÉE CORRECTEMENT                              -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- IMAGE MODAL - CENTRÉE CORRECTEMENT                              -->
+<!-- ════════════════════════════════════════════════════════════════ -->
 <div class="image-modal" *ngIf="selectedImage" (click)="closeImage()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <span class="close" (click)="closeImage()">&times;</span>
-    <img [src]="selectedImage.url" alt="{{ selectedImage.name }}">
-    <div class="image-footer">
+  <div class="image-modal-content" (click)="$event.stopPropagation()">
+    <button class="image-modal-close" (click)="closeImage()">✕</button>
+
+    <!-- État de chargement -->
+    <div class="image-modal-loading" *ngIf="selectedImage.url === 'loading'">
+      <div class="spinner-ring"></div>
+      <p>Chargement de l'image...</p>
+    </div>
+
+    <!-- Image affichée -->
+    <div class="image-modal-body" *ngIf="selectedImage.url !== 'loading'">
+      <img [src]="selectedImage.url" [alt]="selectedImage.name" class="image-modal-img">
+    </div>
+
+    <!-- Footer -->
+    <div class="image-modal-footer">
       <p class="image-name">{{ selectedImage.name }}</p>
-      <button class="btn-download" (click)="downloadFile(selectedImage.doc)">
+      <button class="btn-download"
+              *ngIf="selectedImage.url !== 'loading'"
+              (click)="downloadFile(selectedImage.doc)">
         <span class="btn-icon">📥</span> Télécharger
       </button>
     </div>

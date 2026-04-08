@@ -1,10 +1,11 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';  // ✅ Ajout de Router
+import { RouterModule, Router } from '@angular/router';
 import { NavbarComponent } from '../../../shared/navbar/navbar';
 import { NotificationBellComponent } from '../../../shared/notification-bell/notification-bell.component';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MessagerieService } from '../../../core/services/messagerie.service';
+import { AcquisitionService } from '../../../core/services/acquisition.service'; // ✅ Ajout
 
 @Component({
   selector: 'app-international-company-dashboard',
@@ -18,23 +19,57 @@ export class DashboardComponent implements OnInit {
   investmentCount = 0;
   unreadCount = 0;
   
-  // ✅ Nouveaux compteurs pour les favoris
+  // Compteurs pour les favoris
   investmentFavCount = 0;
   collaborationFavCount = 0;
 
+  // ✅ NOUVEAUX COMPTEURS
+  pendingRequestsCount = 0;
+  takenServicesCount = 0;
+
+  private currentUserId: number | null = null;
+
   private http = inject(HttpClient);
   private messagerieService = inject(MessagerieService);
-  private router = inject(Router);  // ✅ Injection du Router
+  private router = inject(Router);
+  private acquisitionService = inject(AcquisitionService); // ✅ Injection
 
   private getHeaders(): HttpHeaders {
     const token = localStorage.getItem('auth_token') || '';
     return new HttpHeaders({ Authorization: `Bearer ${token}` });
   }
 
-  ngOnInit(): void {
+  private decodeJwt(token: string): any {
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, '=');
+      return JSON.parse(atob(padded));
+    } catch (e) { return null; }
+  }
+
+  private loadUserId(): Promise<void> {
+    return new Promise((resolve) => {
+      const token = localStorage.getItem('auth_token');
+      if (!token) { resolve(); return; }
+      
+      this.http.get<any>('http://localhost:8089/api/auth/me', { headers: this.getHeaders() }).subscribe({
+        next: (profile) => { 
+          this.currentUserId = profile.id ?? profile.userId ?? null;
+          resolve();
+        },
+        error: () => resolve()
+      });
+    });
+  }
+
+  async ngOnInit(): Promise<void> {
+    await this.loadUserId();
     this.loadStats();
     this.loadUnreadCount();
-    this.loadFavoritesCount(); // ✅ Charger les compteurs de favoris
+    this.loadFavoritesCount();
+    this.loadRequestsCount(); // ✅ Charger les compteurs de demandes
   }
 
   loadStats(): void {
@@ -62,7 +97,32 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // ✅ Méthode pour charger les compteurs de favoris
+  // ✅ Méthode pour charger les compteurs de demandes
+ loadRequestsCount(): void {
+  this.acquisitionService.getMyServices().subscribe({
+    next: (data) => {
+      this.pendingRequestsCount = data.filter(a =>
+        a.paymentStatus === 'PENDING_PARTNER_APPROVAL' ||
+        a.paymentStatus === 'AWAITING_PAYMENT'
+      ).length;
+
+      this.takenServicesCount = data.filter(a =>
+        a.paymentStatus === 'COMPLETED'
+      ).length;
+
+      console.log('✅ Requests count loaded:', {
+        pending: this.pendingRequestsCount,
+        taken: this.takenServicesCount
+      });
+    },
+    error: (err) => {
+      console.error('❌ Error loading requests count:', err);
+      this.pendingRequestsCount = 0;
+      this.takenServicesCount = 0;
+    }
+  });
+}
+
   loadFavoritesCount(): void {
     // Compter les favoris investment
     this.http.get<any>('http://localhost:8089/api/international-companies/favorites/count',
@@ -70,7 +130,6 @@ export class DashboardComponent implements OnInit {
     ).subscribe({
       next: (res) => {
         this.investmentFavCount = res.count || 0;
-        console.log('✅ Investment favorites count:', this.investmentFavCount);
       },
       error: (err) => {
         console.error('❌ Error loading investment favorites count:', err);
@@ -84,7 +143,6 @@ export class DashboardComponent implements OnInit {
     ).subscribe({
       next: (res) => {
         this.collaborationFavCount = res.count || 0;
-        console.log('✅ Collaboration favorites count:', this.collaborationFavCount);
       },
       error: (err) => {
         console.error('❌ Error loading collaboration favorites count:', err);
@@ -93,21 +151,14 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // ✅ Méthode pour rafraîchir tous les compteurs
-  refreshCounts(): void {
-    this.loadStats();
-    this.loadUnreadCount();
-    this.loadFavoritesCount();
+  // ✅ NAVIGATION VERS LES DEMANDES
+  navigateToMyRequests(): void {
+    this.router.navigate(['/societe-international/my-requests']);
   }
 
-  // ✅ Méthode pour obtenir le total des favoris
-  getTotalFavorites(): number {
-    return this.investmentFavCount + this.collaborationFavCount;
-  }
-
-  // ✅ Méthode pour vérifier s'il y a des favoris
-  hasFavorites(): boolean {
-    return this.getTotalFavorites() > 0;
+  // ✅ NAVIGATION VERS LES SERVICES ACQUIS
+  navigateToMyTakenServices(): void {
+    this.router.navigate(['/societe-international/my-taken-services']);
   }
 
   // ✅ Navigation vers les services collaboration
@@ -115,9 +166,9 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/societe-international/collaboration-services']);
   }
 
- navigateToInvestmentServices(): void {
-  this.router.navigate(['/societe-international/services']);  // Route correcte
-}
+  navigateToInvestmentServices(): void {
+    this.router.navigate(['/societe-international/services']);
+  }
 
   // ✅ Navigation vers les favoris investment
   navigateToInvestmentFavorites(): void {
@@ -132,5 +183,13 @@ export class DashboardComponent implements OnInit {
   // ✅ Navigation vers la messagerie
   navigateToMessages(): void {
     this.router.navigate(['/societe-international/messagerie']);
+  }
+
+  // ✅ Rafraîchir tous les compteurs
+  refreshCounts(): void {
+    this.loadStats();
+    this.loadUnreadCount();
+    this.loadFavoritesCount();
+    this.loadRequestsCount();
   }
 }

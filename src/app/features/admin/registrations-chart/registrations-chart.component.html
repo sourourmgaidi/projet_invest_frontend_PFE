@@ -1,0 +1,57 @@
+<div class="chart-container">
+
+  <!-- En-tête style health app -->
+  <div class="chart-header">
+    <div class="header-left">
+      <span class="heart-badge">♥</span>
+      Read <strong>registration data</strong>
+    </div>
+    <span class="arrow">▶</span>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="isLoading">
+    <span>Chargement...</span>
+  </div>
+
+  <!-- Erreur -->
+  <div class="error-state" *ngIf="hasError && !isLoading">
+    <span>⚠️ Impossible de charger les données</span>
+    <button (click)="loadData()">Réessayer</button>
+  </div>
+
+  <ng-container *ngIf="!isLoading && !hasError">
+
+    <!-- Navigation mois/année -->
+    <div class="month-nav">
+      <button class="nav-btn" (click)="prevMonth()">‹</button>
+      <span class="month-label">
+        {{ months[currentMonth - 1].label }} {{ currentYear }}
+      </span>
+      <button class="nav-btn" (click)="nextMonth()">›</button>
+    </div>
+
+    <!-- Métriques -->
+    <div class="stats-row">
+      <div class="stat">
+        <span class="stat-val">{{ totalInscrits }}</span>
+        <span class="stat-lbl">Total</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val">{{ maxJour }}</span>
+        <span class="stat-lbl">Pic / jour</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val">{{ moyenneJour }}</span>
+        <span class="stat-lbl">Moy / jour</span>
+      </div>
+    </div>
+
+    <!-- Graphique -->
+    <div class="canvas-wrapper">
+      <canvas #chartCanvas></canvas>
+    </div>
+
+  </ng-container>
+
+</div>

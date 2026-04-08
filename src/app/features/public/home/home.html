@@ -1,42 +1,106 @@
 <div class="home-page">
+
   <!-- PUBLIC NAVBAR -->
   <nav class="public-nav">
     <div class="nav-brand">
       <span class="brand-name">Forsa<strong>TN</strong></span>
     </div>
+
+    <!-- Composant langue réutilisable -->
+    <app-language-switcher></app-language-switcher>
   </nav>
 
   <!-- HERO SECTION -->
   <section class="hero">
-    <!-- IMAGE À GAUCHE -->
     <div class="hero-visual">
       <img src="assets/images/tunisia.jpg" alt="Tunisia" class="hero-image">
     </div>
 
-    <!-- TEXTE À DROITE -->
     <div class="hero-content">
-      <div class="hero-badge">Official Investment Platform</div>
-      <h1>Invest in<br><span class="highlight">Tunisia</span></h1>
-      <p class="hero-desc">
-        The platform that connects investors, local partners,
-        international companies and tourists for sustainable economic development.
-      </p>
+      <div class="hero-badge">{{ 'HOME.BADGE' | translate }}</div>
+      <h1>{{ 'HOME.TITLE' | translate }}<br>
+        <span class="highlight">{{ 'HOME.TITLE_HIGHLIGHT' | translate }}</span>
+      </h1>
+      <p class="hero-desc">{{ 'HOME.DESC' | translate }}</p>
+
       <div class="hero-cta">
-        <a routerLink="/register" class="btn-hero-primary">Get Started →</a>
-        <a routerLink="/login" class="btn-hero-secondary">I already have an account</a>
+        <a routerLink="/register" class="btn-hero-primary">{{ 'HOME.GET_STARTED' | translate }}</a>
+        <a routerLink="/login" class="btn-hero-secondary">{{ 'HOME.ALREADY_ACCOUNT' | translate }}</a>
       </div>
+
       <div class="hero-stats">
-        <div class="stat"><strong>500+</strong><span>Active Projects</span></div>
+        <div class="stat">
+          <strong>{{ stats?.totalUsers ?? '…' }}+</strong>
+          <span>{{ 'STATS.USERS' | translate }}</span>
+        </div>
         <div class="stat-divider"></div>
-        <div class="stat"><strong>1200+</strong><span>Partners</span></div>
+        <div class="stat">
+          <strong>{{ stats?.totalApprovedServices ?? '…' }}+</strong>
+          <span>{{ 'STATS.SERVICES' | translate }}</span>
+        </div>
         <div class="stat-divider"></div>
-        <div class="stat"><strong>24</strong><span>Governorates</span></div>
+        <div class="stat">
+          <strong>24</strong>
+          <span>{{ 'STATS.GOVERNORATES' | translate }}</span>
+        </div>
       </div>
     </div>
   </section>
 
+  <!-- MAP SECTION -->
+  <section class="map-section">
+    <h2 class="map-section-title">{{ 'MAP.TITLE' | translate }}</h2>
+    <app-tunisia-mapbox></app-tunisia-mapbox>
+  </section>
+
+  <!-- STATS DÉTAILLÉES -->
+  <section class="stats-section" *ngIf="!loading && stats">
+
+    <h2 class="stats-section-title">{{ 'COMMUNITY.TITLE' | translate }}</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-number">{{ stats.totalInvestors }}+</span>
+        <span class="stat-label">{{ 'COMMUNITY.INVESTORS' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number">{{ stats.totalEconomicPartners }}+</span>
+        <span class="stat-label">{{ 'COMMUNITY.ECONOMIC_PARTNERS' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number">{{ stats.totalLocalPartners }}+</span>
+        <span class="stat-label">{{ 'COMMUNITY.LOCAL_PARTNERS' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number">{{ stats.totalInternationalCompanies }}+</span>
+        <span class="stat-label">{{ 'COMMUNITY.INTERNATIONAL' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number">{{ stats.totalTourists }}+</span>
+        <span class="stat-label">{{ 'COMMUNITY.TOURISTS' | translate }}</span>
+      </div>
+    </div>
+
+    <h2 class="stats-section-title">{{ 'SERVICES.TITLE' | translate }}</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-number">{{ stats.approvedInvestmentServices }}+</span>
+        <span class="stat-label">{{ 'SERVICES.INVESTMENT' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number">{{ stats.approvedCollaborationServices }}+</span>
+        <span class="stat-label">{{ 'SERVICES.COLLABORATION' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number">{{ stats.approvedTouristServices }}+</span>
+        <span class="stat-label">{{ 'SERVICES.TOURIST' | translate }}</span>
+      </div>
+    </div>
+
+  </section>
+
   <!-- FOOTER -->
   <footer class="public-footer">
-    <p>© 2025 InvestPlatform Tunisia · All rights reserved</p>
+    <p>{{ 'FOOTER.COPYRIGHT' | translate }}</p>
   </footer>
+
 </div>

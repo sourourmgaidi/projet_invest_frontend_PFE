@@ -17,7 +17,13 @@
         <h3>Saved Destinations</h3>
         <p class="stat-number">{{ savedCount }}</p>
       </div>
-      
+      <a routerLink="/my-stats" class="stat-card" style="text-decoration: none; display: block; cursor: pointer;">
+          <div class="stat-details">
+            <h3>My Activity</h3>
+            <p class="stat-value">Stats</p>
+            <span class="stat-trend">View my session stats</span>
+          </div>
+        </a>
       <!-- Tourist Services Card avec lien et compteur -->
       <a routerLink="/touriste/services" class="stat-card" style="text-decoration: none; display: block; cursor: pointer;">
         <h3>Tourist Services</h3>

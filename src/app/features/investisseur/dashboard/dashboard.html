@@ -12,31 +12,85 @@
       </header>
 
       <div class="stats-grid">
-        <!-- Opportunities Card avec lien et compteur dynamique -->
+
+        <!-- Opportunities -->
         <a routerLink="/investisseur/services" class="stat-card" style="text-decoration: none; display: block; cursor: pointer;">
           <div class="stat-details">
-            <h3>Opportunities</h3>
+            <h3>🔍 Opportunities</h3>
             <p class="stat-value">{{ opportunitiesCount }}</p>
             <span class="stat-trend">{{ opportunitiesCount > 0 ? opportunitiesCount + ' available' : 'No opportunities' }}</span>
           </div>
         </a>
+
+        <!-- My Requests = PENDING_PARTNER_APPROVAL + AWAITING_PAYMENT -->
+        <a routerLink="/investisseur/my-requests" class="stat-card" style="text-decoration: none; display: block; cursor: pointer;">
+          <div class="stat-details">
+            <h3>📋 My Requests</h3>
+            <p class="stat-value">{{ pendingRequestsCount }}</p>
+            <span class="stat-trend">{{ pendingRequestsCount > 0 ? pendingRequestsCount + ' active' : 'No active requests' }}</span>
+          </div>
+        </a>
+
+        <!-- My Services = uniquement COMPLETED (payés) -->
+        <a routerLink="/investisseur/my-taken-services" class="stat-card" style="text-decoration: none; display: block; cursor: pointer;">
+          <div class="stat-details">
+            <h3>✅ My Services</h3>
+            <p class="stat-value">{{ takenServicesCount }}</p>
+            <span class="stat-trend">{{ takenServicesCount > 0 ? takenServicesCount + ' acquired' : 'No acquired services' }}</span>
+          </div>
+        </a>
+
+        <!-- Pending Payment -->
+        <a routerLink="/investisseur/my-requests" class="stat-card" style="text-decoration: none; display: block; cursor: pointer;">
+          <div class="stat-details">
+            <h3>⏳ Pending Payment</h3>
+            <p class="stat-value">{{ pendingPaymentCount }}</p>
+            <span class="stat-trend">{{ pendingPaymentCount > 0 ? pendingPaymentCount + ' waiting' : 'No pending' }}</span>
+          </div>
+        </a>
+
+        <!-- My Activity -->
+        <a routerLink="/my-stats" class="stat-card" style="text-decoration: none; display: block; cursor: pointer;">
+          <div class="stat-details">
+            <h3>📊 My Activity</h3>
+            <p class="stat-value">Stats</p>
+            <span class="stat-trend">View my session stats</span>
+          </div>
+        </a>
+
       </div>
 
-      <!-- Lien vers les favoris (optionnel) -->
-      <div style="margin-top: 1rem; text-align: right;">
+      <!-- Liens rapides -->
+      <div style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: flex-end; flex-wrap: wrap;">
         <a routerLink="/investisseur/favorites" style="color: #2563eb; text-decoration: none; font-size: 0.9rem;">
-          ⭐ View my favorites
+          ⭐ My Favorites
+        </a>
+        <a routerLink="/investisseur/my-requests" style="color: #6366f1; text-decoration: none; font-size: 0.9rem;">
+          📋 My Requests
+        </a>
+        <a routerLink="/investisseur/my-taken-services" style="color: #059669; text-decoration: none; font-size: 0.9rem;">
+          ✅ My Services (Acquired)
+        </a>
+        <a routerLink="/my-stats" style="color: #7c3aed; text-decoration: none; font-size: 0.9rem;">
+          📊 My Activity Stats
         </a>
       </div>
 
       <section class="recent-activity">
         <h2>Recent Activity</h2>
         <div class="activity-list">
-          <div class="activity-item">
+          <div class="activity-item" *ngIf="recentActivities.length === 0">
             <div class="activity-dot"></div>
             <div class="activity-content">
               <p>No recent activity</p>
               <span class="activity-time">Start exploring opportunities</span>
+            </div>
+          </div>
+          <div class="activity-item" *ngFor="let activity of recentActivities">
+            <div class="activity-dot" [class]="activity.type"></div>
+            <div class="activity-content">
+              <p>{{ activity.message }}</p>
+              <span class="activity-time">{{ activity.date | date:'dd/MM/yyyy HH:mm' }}</span>
             </div>
           </div>
         </div>

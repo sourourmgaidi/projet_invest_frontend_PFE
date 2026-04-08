@@ -1,0 +1,198 @@
+.user-stats {
+  padding: 1.5rem;
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  font-family: inherit;
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem;
+  color: #888;
+}
+
+.error {
+  text-align: center;
+  padding: 2rem;
+  color: #A32D2D;
+  background: #FCEBEB;
+  border-radius: 8px;
+}
+
+// ── CARDS ─────────────────────────────────────────
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.metric-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1.2rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+
+  .label {
+    font-size: 0.75rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .value {
+    font-size: 1.6rem;
+    font-weight: 500;
+    color: #1a1a1a;
+  }
+}
+
+// ── NOTIFICATION ──────────────────────────────────
+.notification-bar {
+  background: #EBF4FF;
+  color: #1e4d8c;
+  border-radius: 8px;
+  padding: 0.9rem 1.2rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+// ── CHART ─────────────────────────────────────────
+.chart-section {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1.4rem;
+
+  h3 {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #888;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1.2rem;
+  }
+}
+
+.empty-chart {
+  text-align: center;
+  padding: 3rem;
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+// ── SESSIONS ──────────────────────────────────────
+.sessions-section {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1.4rem;
+
+  h3 {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #888;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+}
+
+.empty {
+  text-align: center;
+  padding: 2rem;
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+.day-group {
+  margin-bottom: 1.2rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
+  border-bottom: 1px solid #f0f0f0;
+
+  .day-label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #1a1a1a;
+    text-transform: capitalize;
+  }
+
+  .day-total {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: #1a1a1a;
+  }
+}
+
+.session-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid #f9f9f9;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .session-time {
+    font-size: 0.85rem;
+    color: #555;
+
+    .arrow {
+      margin: 0 0.4rem;
+      color: #aaa;
+    }
+  }
+
+  .session-duration {
+    font-size: 0.85rem;
+    color: #555;
+    font-weight: 400;
+  }
+}
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.dashboard-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #4A90D9;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.dashboard-btn:hover {
+  background: #357ABD;
+}

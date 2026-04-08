@@ -40,13 +40,46 @@
         </a>
 
         <!-- Manage Appointments Card -->
-        <a routerLink="/admin/appointments" class="admin-card">
-          <div class="card-content">
-            <h3>Manage Appointments</h3>
-            <p>Schedule and track all appointments</p>
-            <span class="card-link">Access →</span>
+  <a routerLink="/admin/admin-stats" class="admin-card">
+  <div class="card-content">
+    <h3>Statistics</h3>
+    <p>View platform analytics and user activity</p>
+    <span class="card-link">Access →</span>
+  </div>
+</a>
+<a routerLink="/my-stats" class="stat-card" style="text-decoration: none; display: block; cursor: pointer;">
+          <div class="stat-details">
+            <h3>My Activity</h3>
+            <p class="stat-value">Stats</p>
+            <span class="stat-trend">View my session stats</span>
           </div>
         </a>
+
+          <a routerLink="/admin/stats" class="admin-card stats-card">
+    <div class="card-content">
+      <div class="stats-card-header">
+        <h3>Statistics</h3>
+        <span class="stats-icon">📊</span>
+      </div>
+      <p>View platform analytics, user registrations, and service statistics</p>
+      <div class="stats-preview" *ngIf="!isLoadingStats">
+        <div class="stat-preview-item">
+          <span class="stat-preview-value">{{ totalUsers }}</span>
+          <span class="stat-preview-label">Total Users</span>
+        </div>
+        <div class="stat-preview-item">
+          <span class="stat-preview-value">{{ totalServices }}</span>
+          <span class="stat-preview-label">Total Services</span>
+        </div>
+        <div class="stat-preview-item">
+          <span class="stat-preview-value trend-{{ monthlyTrend }}">{{ monthlyTrend }}%</span>
+          <span class="stat-preview-label">Monthly Trend</span>
+        </div>
+      </div>
+      <span class="card-link">View Analytics →</span>
+    </div>
+  </a>
+
 
         <!-- Manage Services Card (fusionnée) -->
         <a routerLink="/admin/notifications" class="admin-card services-card">

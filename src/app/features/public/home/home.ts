@@ -1,24 +1,42 @@
-// ============================================================
-// src/app/features/public/home/home.ts
-// ============================================================
-
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
+
+import { StatsService } from '../../../core/services/stats.service';
+import { StatsSummary } from '../../../shared/models/stats.model';
+import { TunisiaMapboxComponent } from '../tunisia-mapbox/tunisia-mapbox.component';
+import { LanguageSwitcherComponent } from '../../../shared/language-switcher/language-switcher.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, CommonModule],
+  imports: [
+    RouterLink,
+    CommonModule,
+    TranslateModule,
+    TunisiaMapboxComponent,
+    LanguageSwitcherComponent   // ← importer le composant
+  ],
   templateUrl: './home.html',
   styleUrls: ['./home.css']
 })
-export class HomeComponent {
-  roles = [
-    { label: 'Investisseur', icon: '💼', description: 'Découvrez les opportunités d\'investissement en Tunisie', route: '/register', color: '#1e3a5f' },
-    { label: 'Partenaire Économique', icon: '🤝', description: 'Développez vos partenariats économiques', route: '/register', color: '#2d6a4f' },
-    { label: 'Partenaire Local', icon: '🏘️', description: 'Engagez-vous dans le développement local', route: '/register', color: '#7b2d8b' },
-    { label: 'Touriste', icon: '✈️', description: 'Explorez les merveilles de la Tunisie', route: '/register', color: '#b5451b' },
-    { label: 'Société Internationale', icon: '🌍', description: 'Établissez votre présence internationale', route: '/register', color: '#1a6b8a' },
-  ];
+export class HomeComponent implements OnInit, OnDestroy {
+  private statsService = inject(StatsService);
+
+  stats: StatsSummary | null = null;
+  loading = true;
+  private statsSub: Subscription | null = null;
+
+  ngOnInit(): void {
+    this.statsSub = this.statsService.getSummary().subscribe({
+      next: (data) => { this.stats = data; this.loading = false; },
+      error: () => { this.loading = false; }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.statsSub?.unsubscribe();
+  }
 }

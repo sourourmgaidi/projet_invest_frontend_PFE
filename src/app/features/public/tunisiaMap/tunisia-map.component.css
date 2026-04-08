@@ -1,0 +1,386 @@
+/* tunisia-map.component.css */
+
+/* ===== CONTENEUR PRINCIPAL ===== */
+:host {
+  display: block;
+  width: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ===== WRAPPER DE LA CARTE ===== */
+.map-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== CÔTÉ CARTE SVG ===== */
+.map-side {
+  flex: 1;
+  min-width: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: white;
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+#tunisia-svg {
+  width: 100%;
+  height: auto;
+  background: #ffffff;
+  border-radius: 12px;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1));
+}
+
+/* ===== STYLES DES RÉGIONS (PATH) ===== */
+.region-path {
+  stroke: white;
+  stroke-width: 1.5px;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+/* Effet au survol */
+.region-path:hover {
+  filter: brightness(0.92) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  stroke-width: 2px;
+  stroke: #fff;
+}
+
+/* Région sélectionnée */
+.region-path.selected {
+  stroke: #ff6b6b;
+  stroke-width: 3px;
+  filter: brightness(1.02) drop-shadow(0 0 8px rgba(255, 107, 107, 0.5));
+  animation: pulseStroke 0.5s ease;
+}
+
+@keyframes pulseStroke {
+  0% {
+    stroke-width: 3px;
+    stroke: #ff6b6b;
+  }
+  50% {
+    stroke-width: 4px;
+    stroke: #ff8787;
+  }
+  100% {
+    stroke-width: 3px;
+    stroke: #ff6b6b;
+  }
+}
+
+/* ===== STYLES DES LABELS (TEXTES DES RÉGIONS) ===== */
+.region-label {
+  font-size: 6px;
+  font-weight: 600;
+  fill: #1e3a5f;
+  pointer-events: none;
+  text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.8);
+  font-family: 'Segoe UI', sans-serif;
+  transition: font-size 0.2s ease;
+}
+
+/* ===== LÉGENDE DES COULEURS ===== */
+.legend-container {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', sans-serif;
+  z-index: 10;
+}
+
+.legend-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #2d6a4f;
+  margin-bottom: 8px;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.legend-gradient-bar {
+  width: 200px;
+  height: 20px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.legend-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #2d6a4f;
+  font-weight: 500;
+  gap: 10px;
+}
+
+.legend-min, .legend-max {
+  background: rgba(45, 106, 79, 0.1);
+  padding: 2px 6px;
+  border-radius: 12px;
+}
+
+/* ===== CÔTÉ PANNEAU D'INFORMATION ===== */
+.panel-side {
+  flex: 0.8;
+  min-width: 280px;
+  max-width: 380px;
+}
+
+.hint {
+  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  color: #6c757d;
+  font-size: 0.9rem;
+  font-weight: 500;
+  animation: fadeIn 0.5s ease;
+}
+
+/* ===== CARTE DU PANNEAU ===== */
+.panel-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  animation: slideInRight 0.4s ease;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* En-tête du panneau */
+.panel-head {
+  background: linear-gradient(135deg, #2d6a4f 0%, #1e3a5f 100%);
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  color: white;
+}
+
+.panel-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  letter-spacing: -0.5px;
+}
+
+.panel-zone {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+/* Statistiques en cartes */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+}
+
+.scard {
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.scard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.scard .n {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #2d6a4f;
+  margin-bottom: 0.25rem;
+}
+
+.scard .l {
+  font-size: 0.7rem;
+  color: #6c757d;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.scard.tot {
+  grid-column: span 2;
+  background: linear-gradient(135deg, #2d6a4f 0%, #1e3a5f 100%);
+  color: white;
+}
+
+.scard.tot .n {
+  color: white;
+  font-size: 2rem;
+}
+
+.scard.tot .l {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Blocs d'information */
+.info-block {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.info-block:last-child {
+  border-bottom: none;
+}
+
+.info-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #2d6a4f;
+  margin-bottom: 0.5rem;
+}
+
+.info-text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #495057;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .map-wrap {
+    flex-direction: column;
+    padding: 1rem;
+  }
+
+  .panel-side {
+    max-width: 100%;
+  }
+
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+
+  .scard.tot {
+    grid-column: span 1;
+  }
+
+  .legend-container {
+    position: static;
+    margin-top: 1rem;
+    width: 100%;
+  }
+
+  .legend-gradient-bar {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .panel-name {
+    font-size: 1.2rem;
+  }
+
+  .scard .n {
+    font-size: 1.2rem;
+  }
+
+  .info-text {
+    font-size: 0.85rem;
+  }
+}
+
+/* ===== LOADER ===== */
+.loader {
+  text-align: center;
+  padding: 3rem;
+  color: #2d6a4f;
+  font-weight: 500;
+  animation: pulse 1.5s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ===== SCROLLBAR PERSONNALISÉE ===== */
+.panel-side::-webkit-scrollbar {
+  width: 6px;
+}
+
+.panel-side::-webkit-scrollbar-track {
+  background: #e9ecef;
+  border-radius: 10px;
+}
+
+.panel-side::-webkit-scrollbar-thumb {
+  background: #2d6a4f;
+  border-radius: 10px;
+}
+
+.panel-side::-webkit-scrollbar-thumb:hover {
+  background: #1e3a5f;
+}

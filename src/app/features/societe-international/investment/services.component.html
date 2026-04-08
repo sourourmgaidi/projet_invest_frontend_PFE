@@ -99,6 +99,7 @@
               <span class="meta-label">📊 Min Investment:</span>
               <span>{{ s.minimumAmount | number }} TND</span>
             </div>
+
             <div class="card-meta" *ngIf="s.deadlineDate">
               <span class="meta-label">📅 Deadline:</span>
               <span>{{ s.deadlineDate | date }}</span>
@@ -119,6 +120,12 @@
               <span class="meta-label">🏢 Provider:</span>
               <span>{{ s.provider.firstName }} {{ s.provider.lastName }}</span>
             </div>
+            <div class="currency-converter-wrap" *ngIf="s.totalAmount">
+  <app-currency-converter
+    [initialAmount]="s.totalAmount"
+    [initialCurrency]="'TND'">
+  </app-currency-converter>
+</div>
 
             <!-- ✅ SECTION POUR AFFICHER LES DOCUMENTS -->
             <div class="documents-section" *ngIf="s.documents && s.documents.length > 0">

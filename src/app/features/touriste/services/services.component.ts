@@ -6,11 +6,12 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { NavbarComponent } from '../../../shared/navbar/navbar';
 import { NotificationBellComponent } from '../../../shared/notification-bell/notification-bell.component';
 import { FavoriteTouristService } from '../../../core/services/favorite-tourist.service';
+import { CurrencyConverterComponent } from '../../public/currency-converter/currency-converter.component';
 
 @Component({
   selector: 'app-tourist-services',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, NavbarComponent, NotificationBellComponent],
+  imports: [CommonModule, FormsModule, RouterModule, NavbarComponent, NotificationBellComponent , CurrencyConverterComponent],
   template: `
     <div class="page-layout">
       <app-navbar></app-navbar>
@@ -105,10 +106,17 @@ import { FavoriteTouristService } from '../../../core/services/favorite-tourist.
                   <span class="meta-label">👨‍👩‍👧 Group Price:</span>
                   <span>{{ s.groupPrice | number }} TND</span>
                 </div>
+   
                 <div class="card-meta" *ngIf="s.availableLanguages?.length">
                   <span class="meta-label">🌐 Languages:</span>
                   <span>{{ s.availableLanguages.join(', ') }}</span>
                 </div>
+                             <div class="currency-converter-wrap" *ngIf="s.price">
+  <app-currency-converter
+    [initialAmount]="s.price"
+    [initialCurrency]="'TND'">
+  </app-currency-converter>
+</div>
 
                 <!-- ✅ SECTION DOCUMENTS - AJOUTÉE ICI -->
                 <div class="documents-section" *ngIf="s.documents && s.documents.length > 0">
@@ -196,6 +204,11 @@ import { FavoriteTouristService } from '../../../core/services/favorite-tourist.
     </div>
   `,
   styles: [`
+  .currency-converter-wrap {
+  margin: 0.75rem 0;
+  padding-top: 0.5rem;
+  border-top: 1px dashed #e2e8f0;
+}
     .page-layout { display: flex; min-height: 100vh; background: linear-gradient(135deg, #f8fafc, #f1f5f9); font-family: 'Inter', sans-serif; }
     app-navbar { width: 280px; flex-shrink: 0; position: sticky; top: 0; height: 100vh; z-index: 100; }
     .page-main { flex: 1; padding: 2rem; overflow-y: auto; }

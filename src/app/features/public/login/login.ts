@@ -1,17 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';  
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [
-    CommonModule, 
-    FormsModule,
-    RouterModule  
-  ],
+  imports: [CommonModule, FormsModule, RouterModule ,TranslateModule],
   templateUrl: './login.html',
   styleUrls: ['./login.css']
 })
@@ -23,7 +20,10 @@ export class LoginComponent implements OnInit {
   showPassword = false;
   rememberMe = false;
 
-  constructor(private authService: AuthService, private router: Router) {
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {
     if (this.authService.isLoggedIn()) {
       const role = this.authService.getUserRole();
       if (role) this.router.navigate([`/${role.toLowerCase().replace('_', '-')}/dashboard`]);
@@ -50,17 +50,16 @@ export class LoginComponent implements OnInit {
     this.loading = true;
     this.errorMsg = '';
 
-    console.log('Remember me:', this.rememberMe);
-
     this.authService.login(this.email, this.password).subscribe({
       next: () => {
         this.loading = false;
-        console.log('Login successful');
+        console.log('✅ Login successful');
+        // ✅ La session est automatiquement démarrée dans AuthService.handleLoginSuccess()
       },
       error: (err) => {
         this.loading = false;
         this.errorMsg = err.message || 'Invalid credentials';
-        console.error('Login error:', err);
+        console.error('❌ Login error:', err);
       }
     });
   }

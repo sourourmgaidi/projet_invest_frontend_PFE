@@ -4,6 +4,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap, catchError, throwError } from 'rxjs';
 import { KeycloakService } from './keycloak';
+import { SessionService } from './session.service';
 import {
   Role,
   RegisterRequest,
@@ -56,7 +57,8 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private keycloakService: KeycloakService,
-    private router: Router
+    private router: Router,
+    private sessionService: SessionService 
   ) {}
 
   // ========================================
@@ -112,60 +114,69 @@ export class AuthService {
   // ========================================
   // GESTION DE LA CONNEXION RÉUSSIE (AVEC RÔLE OPTIONNEL)
   // ========================================
-  private handleLoginSuccess(response: AuthResponse, providedRole?: Role): void {
-    let roles: string[] = [];
-    let role: Role | null = null;
+ // ========================================
+// GESTION DE LA CONNEXION RÉUSSIE (AVEC RÔLE OPTIONNEL)
+// ========================================
+private handleLoginSuccess(response: AuthResponse, providedRole?: Role): void {
+  let roles: string[] = [];
+  let role: Role | null = null;
 
-    // Si un rôle est fourni, l'utiliser directement
-    if (providedRole) {
-      role = providedRole;
-      console.log(`🎯 Rôle fourni: ${role}`);
-    } else {
-      // Sinon, extraire les rôles du token
-      roles = this.keycloakService.extractRoles(response.access_token);
-      console.log('🔑 Rôles extraits:', roles);
-      role = this.determinePrimaryRole(roles);
-    }
-
-    if (!role) {
-      console.error('❌ Aucun rôle valide trouvé');
-      throw new Error('Rôle utilisateur non détecté');
-    }
-
-    console.log(`🎯 Rôle final: ${role}`);
-
-    const tokenPayload = this.keycloakService.decodeToken(response.access_token);
-    const email = this.keycloakService.extractEmail(response.access_token);
-
-    // ✅ AJOUTER TOUS LES CHAMPS PHOTO (même vides au départ)
-    const user: CurrentUser = {
-      email: email,
-      role: role,
-      token: response.access_token,
-      firstName: tokenPayload?.given_name || '',
-      lastName: tokenPayload?.family_name || '',
-      prenom: tokenPayload?.given_name || '',
-      nom: tokenPayload?.family_name || '',
-      
-      // ✅ AJOUT CRUCIAL : Initialiser tous les champs photo
-      profilePhoto: '',
-      profilePicture: '',
-      photo: '',
-      photoProfil: '',
-      picture: ''
-    };
-
-    this.saveUserSession(user, response.refresh_token);
-    
-    // ✅ FORCER LE RAFRAÎCHISSEMENT POUR OBTENIR LA PHOTO
-    setTimeout(() => {
-      this.refreshUserProfile().then(updatedUser => {
-        console.log('✅ Profil rafraîchi après login:', updatedUser);
-      });
-    }, 500);
-    
-    this.redirectToDashboard(role);
+  // Si un rôle est fourni, l'utiliser directement
+  if (providedRole) {
+    role = providedRole;
+    console.log(`🎯 Rôle fourni: ${role}`);
+  } else {
+    // Sinon, extraire les rôles du token
+    roles = this.keycloakService.extractRoles(response.access_token);
+    console.log('🔑 Rôles extraits:', roles);
+    role = this.determinePrimaryRole(roles);
   }
+
+  if (!role) {
+    console.error('❌ Aucun rôle valide trouvé');
+    throw new Error('Rôle utilisateur non détecté');
+  }
+
+  console.log(`🎯 Rôle final: ${role}`);
+
+  const tokenPayload = this.keycloakService.decodeToken(response.access_token);
+  const email = this.keycloakService.extractEmail(response.access_token);
+
+  // ✅ AJOUTER TOUS LES CHAMPS PHOTO (même vides au départ)
+  const user: CurrentUser = {
+    email: email,
+    role: role,
+    token: response.access_token,
+    firstName: tokenPayload?.given_name || '',
+    lastName: tokenPayload?.family_name || '',
+    prenom: tokenPayload?.given_name || '',
+    nom: tokenPayload?.family_name || '',
+    
+    // ✅ AJOUT CRUCIAL : Initialiser tous les champs photo
+    profilePhoto: '',
+    profilePicture: '',
+    photo: '',
+    photoProfil: '',
+    picture: ''
+  };
+
+  this.saveUserSession(user, response.refresh_token);
+  
+  // ✅ NOUVEAU : DÉMARRER LA SESSION APRÈS LE LOGIN
+  this.sessionService.startSession().subscribe({
+    next: () => console.log('✅ Session démarrée pour:', email),
+    error: (err) => console.warn('⚠️ Erreur startSession:', err)
+  });
+  
+  // ✅ FORCER LE RAFRAÎCHISSEMENT POUR OBTENIR LA PHOTO
+  setTimeout(() => {
+    this.refreshUserProfile().then(updatedUser => {
+      console.log('✅ Profil rafraîchi après login:', updatedUser);
+    });
+  }, 500);
+  
+  this.redirectToDashboard(role);
+}
 
   // ========================================
   // SAUVEGARDE DE LA SESSION
@@ -334,66 +345,108 @@ export class AuthService {
   // ========================================
   // DÉCONNEXION
   // ========================================
-  logout(): void {
-    const refreshToken = localStorage.getItem('refresh_token');
-    
-    if (refreshToken) {
-      this.keycloakService.logout(refreshToken).subscribe({
-        next: () => {
-          console.log('✅ Déconnexion réussie');
-          this.clearSession();
-        },
-        error: (err) => {
-          console.error('❌ Erreur lors de la déconnexion:', err);
-          this.clearSession();
-        }
-      });
-    } else {
-      this.clearSession();
-    }
+ // ✅ MODIFIER logout() pour fermer la session avant de déconnecter Keycloak
+// src/app/core/services/auth.ts
+
+logout(): void {
+  const refreshToken = localStorage.getItem('refresh_token');
+  const email = this.getCurrentUser()?.email;
+
+  // ✅ notifier le backend avant de nettoyer
+  if (email) {
+    const url = 'http://localhost:8089/api/sessions/end-by-email';
+    const data = JSON.stringify({ email });
+    navigator.sendBeacon(url, new Blob([data], { type: 'application/json' }));
   }
 
-  // ========================================
-  // NETTOYAGE DE LA SESSION
-  // ========================================
-  private clearSession(): void {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('current_user');
-    localStorage.removeItem('user_role');
-    localStorage.removeItem('token_expires_at');
-    
-    this.currentUserSubject.next(null);
+  this.sessionService.endSession().subscribe({
+    next: () => this.logoutFromKeycloak(refreshToken, true),
+    error: () => this.logoutFromKeycloak(refreshToken, true)
+  });
+}
+
+// ✅ nouvelle méthode pour déconnexion sans redirection
+logoutWithoutRedirect(): void {
+  const refreshToken = localStorage.getItem('refresh_token');
+  const email = this.getCurrentUser()?.email;
+
+  if (email) {
+    const url = 'http://localhost:8089/api/sessions/end-by-email';
+    const data = JSON.stringify({ email });
+    navigator.sendBeacon(url, new Blob([data], { type: 'application/json' }));
+  }
+
+  this.sessionService.endSession().subscribe({
+    next: () => this.logoutFromKeycloak(refreshToken, false),
+    error: () => this.logoutFromKeycloak(refreshToken, false)
+  });
+}
+
+private logoutFromKeycloak(refreshToken: string | null, redirect: boolean = true): void {
+  if (refreshToken) {
+    this.keycloakService.logout(refreshToken).subscribe({
+      next: () => this.clearSession(redirect),
+      error: () => this.clearSession(redirect)
+    });
+  } else {
+    this.clearSession(redirect);
+  }
+}
+
+private clearSession(redirect: boolean = true): void {
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('current_user');
+  localStorage.removeItem('user_role');
+  localStorage.removeItem('token_expires_at');
+
+  console.log('🧹 LocalStorage nettoyé');
+
+  this.currentUserSubject.next(null);
+
+  if (redirect) {
     this.router.navigate(['/login']);
   }
+}
+
+
 
   // ========================================
   // RAFRAÎCHISSEMENT DU TOKEN
   // ========================================
-  refreshToken(): Observable<AuthResponse> {
-    const refreshToken = localStorage.getItem('refresh_token');
-    
-    if (!refreshToken) {
-      return throwError(() => new Error('Aucun refresh token disponible'));
-    }
-
-    return this.keycloakService.refreshToken(refreshToken).pipe(
-      tap((response) => {
-        console.log(' Token rafraîchi avec succès');
-        
-        const currentUser = this.getCurrentUser();
-        if (currentUser) {
-          currentUser.token = response.access_token;
-          this.saveUserSession(currentUser, response.refresh_token);
-        }
-      }),
-      catchError((err) => {
-        console.error('❌ Erreur lors du rafraîchissement du token:', err);
-        this.clearSession();
-        return throwError(() => new Error('Session expirée'));
-      })
-    );
+ // ========================================
+// RAFRAÎCHISSEMENT DU TOKEN
+// ========================================
+refreshToken(): Observable<AuthResponse> {
+  const refreshToken = localStorage.getItem('refresh_token');
+  
+  if (!refreshToken) {
+    return throwError(() => new Error('Aucun refresh token disponible'));
   }
+
+  return this.keycloakService.refreshToken(refreshToken).pipe(
+    tap((response) => {
+      console.log('✅ Token rafraîchi avec succès');
+      
+      const currentUser = this.getCurrentUser();
+      if (currentUser) {
+        currentUser.token = response.access_token;
+        this.saveUserSession(currentUser, response.refresh_token);
+        
+        // ✅ NOUVEAU : Démarrer une nouvelle session après refresh
+        this.sessionService.startSession().subscribe({
+          next: () => console.log('✅ Nouvelle session démarrée après refresh'),
+          error: (err) => console.warn('⚠️ Erreur startSession après refresh:', err)
+        });
+      }
+    }),
+    catchError((err) => {
+      console.error('❌ Erreur lors du rafraîchissement du token:', err);
+      this.clearSession();
+      return throwError(() => new Error('Session expirée'));
+    })
+  );
+}
 
   // ========================================
   // VÉRIFICATIONS D'AUTHENTIFICATION

@@ -5,6 +5,8 @@ import { Router } from '@angular/router';
 import { Role, RegisterRequest } from '../../../shared/models/user.model';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
+
 
 interface RoleOption {
   value: Role;
@@ -41,7 +43,7 @@ interface Region {
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, HttpClientModule],
+  imports: [CommonModule, FormsModule, HttpClientModule,TranslateModule],
   templateUrl: './register.html',
   styleUrls: ['./register.css']
 })

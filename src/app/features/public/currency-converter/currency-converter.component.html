@@ -1,0 +1,49 @@
+<div class="converter-wrap">
+
+  <!-- Ligne montant + devise source -->
+  <div class="converter-row">
+    <div class="input-group">
+      <input
+        type="number"
+        [(ngModel)]="amount"
+        (ngModelChange)="convert()"
+        placeholder="0.00"
+        min="0"
+        class="amount-input"
+      />
+      <select [(ngModel)]="fromCurrency" (ngModelChange)="convert()" class="currency-select">
+        <option *ngFor="let c of currencies" [value]="c.code">
+          {{ c.flag }} {{ c.code }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Bouton swap -->
+    <button class="swap-btn" (click)="swap()" title="Swap currencies">⇄</button>
+
+    <!-- Devise cible -->
+    <div class="input-group">
+      <div class="result-display">
+        <span *ngIf="loading" class="loading-dots">···</span>
+        <span *ngIf="!loading && result" class="result-value">
+          {{ result.convertedAmount | number:'1.2-2' }}
+        </span>
+        <span *ngIf="!loading && !result && !error">—</span>
+      </div>
+      <select [(ngModel)]="toCurrency" (ngModelChange)="convert()" class="currency-select">
+        <option *ngFor="let c of currencies" [value]="c.code">
+          {{ c.flag }} {{ c.code }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Taux affiché -->
+  <div class="rate-info" *ngIf="result && fromCurrency !== toCurrency">
+    1 {{ fromCurrency }} = {{ result.rate | number:'1.3-3' }} {{ toCurrency }}
+  </div>
+
+  <!-- Erreur -->
+  <div class="conv-error" *ngIf="error">{{ error }}</div>
+
+</div>

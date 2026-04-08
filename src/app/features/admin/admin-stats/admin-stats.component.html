@@ -1,0 +1,149 @@
+<div class="page">
+
+  <div class="chart-header">
+    <h2>User activity — this week</h2>
+    <a routerLink="/admin/dashboard" class="back-to-dashboard">← Back to Dashboard</a>
+  </div>
+
+  @if (loading) {
+    <div class="loading">Chargement...</div>
+  }
+
+  @if (error) {
+    <div class="error">{{ error }}</div>
+  }
+
+  @if (!loading && !error) {
+
+    <!-- Metric cards -->
+    <div class="cards-grid">
+      <div class="metric-card" style="background:#E8F4FD">
+        <span class="label" style="color:#5a8ab8">Total utilisateurs</span>
+        <span class="value" style="color:#2a6a9a">{{ users.length }}</span>
+      </div>
+      <div class="metric-card" style="background:#E4F7EF">
+        <span class="label" style="color:#5aaa80">Actifs cette semaine</span>
+        <span class="value" style="color:#2a7a56">{{ activeThisWeek }}</span>
+      </div>
+      <div class="metric-card" style="background:#FDF0F1">
+        <span class="label" style="color:#c07a80">Temps total</span>
+        <span class="value" style="color:#9a3a46">{{ formatTime(totalTimeThisWeek) }}</span>
+      </div>
+      <div class="metric-card" style="background:#FFF0FA">
+        <span class="label" style="color:#c07aaa">Moyenne / utilisateur</span>
+        <span class="value" style="color:#9a2a7a">{{ formatTime(avgTimeThisWeek) }}</span>
+      </div>
+    </div>
+
+    <div class="main-row">
+
+      <!-- Tableau principal -->
+      <div class="card table-card">
+        <h3>Activity by user</h3>
+        <div class="table-wrap">
+          <table class="stats-table">
+            <thead>
+              <tr>
+                <th class="col-user">Utilisateur</th>
+                <th class="col-role">Rôle</th>
+                <th class="col-days">Lun — Dim</th>
+                <th class="col-total">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of users; track user.userEmail) {
+                <tr>
+                  <td>
+                    <div class="user-cell">
+                      @if (user.profilePhoto) {
+                        <img [src]="user.profilePhoto" class="avatar">
+                      } @else {
+                        <span class="avatar-placeholder"
+                              [style.background]="getRoleBg(user.userRole)"
+                              [style.color]="getRoleText(user.userRole)">
+                          {{ user.userFullName.charAt(0) }}
+                        </span>
+                      }
+                      <div>
+                        <div class="user-name">{{ user.userFullName }}</div>
+                        <div class="user-email">{{ user.userEmail }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="role-badge"
+                          [style.background]="getRoleBg(user.userRole)"
+                          [style.color]="getRoleText(user.userRole)">
+                      {{ user.userRole.replace('_', ' ') }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="days-bars">
+                      @for (day of getDays(user); track day.label) {
+                        <div class="day-bar-wrap" [title]="day.label + ': ' + formatTime(day.seconds)">
+                          <div class="day-bar"
+                               [style.height.px]="getDayBarHeight(day.seconds)"
+                               [style.background]="day.seconds > 0 ? getRoleFill(user.userRole) : '#ececec'">
+                          </div>
+                          <span class="day-lbl">{{ day.label.charAt(0) }}</span>
+                        </div>
+                      }
+                    </div>
+                  </td>
+                  <td class="col-total-val">
+                    {{ user.totalSecondsThisWeek > 0 ? formatTime(user.totalSecondsThisWeek) : '—' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Colonne droite -->
+      <div class="right-col">
+
+        <!-- Donut chart -->
+        <div class="card">
+          <h3>Répartition par rôle</h3>
+          <div class="pie-legend">
+            @for (r of roleStats; track r.role) {
+              <div class="legend-item">
+                <span class="legend-dot" [style.background]="r.fill"></span>
+                <span [style.color]="r.text">{{ r.role.replace('_', ' ') }} — {{ r.count }}</span>
+              </div>
+            }
+          </div>
+          <div class="pie-wrap">
+            <canvas #pieCanvas></canvas>
+          </div>
+        </div>
+
+        <!-- Top 10 -->
+        <div class="card">
+          <h3>Top 10 — temps cette semaine</h3>
+          @for (user of top10; track user.userEmail; let i = $index) {
+            <div class="hbar-item">
+              <span class="hbar-rank">{{ i + 1 }}</span>
+              <div class="hbar-body">
+                <div class="hbar-name">{{ user.userFullName }}</div>
+                <div class="hbar-track">
+                  <div class="hbar-fill"
+                       [style.width.%]="getBarWidth(user.totalSecondsThisWeek)"
+                       [style.background]="getRoleFill(user.userRole)">
+                  </div>
+                </div>
+              </div>
+              <span class="hbar-value" [style.color]="getRoleText(user.userRole)">
+                {{ formatTime(user.totalSecondsThisWeek) }}
+              </span>
+            </div>
+          }
+        </div>
+
+      </div>
+    </div>
+
+  }
+
+</div>

@@ -1,81 +1,70 @@
 <div class="login-page">
 
-  <!-- Lien Home simple -->
-  <a routerLink="/" class="home-link">Home</a>
+  <a routerLink="/" class="home-link">{{ 'LOGIN.HOME' | translate }}</a>
 
   <div class="login-container">
-    
     <div class="login-card">
-      
+
       <div class="card-header">
-        <h2>Sign In</h2>
-        <p class="subtitle">Enter your credentials</p>
+        <h2>{{ 'LOGIN.TITLE' | translate }}</h2>
+        <p class="subtitle">{{ 'LOGIN.SUBTITLE' | translate }}</p>
       </div>
 
       <div class="error-message" *ngIf="errorMsg">
         {{ errorMsg }}
       </div>
 
-      <!-- FORM -->
       <form (ngSubmit)="onSubmit()" #loginForm="ngForm" class="login-form">
 
-        <!-- Champ Email -->
         <div class="form-group">
-          <label for="email">Email</label>
+          <label for="email">{{ 'LOGIN.EMAIL' | translate }}</label>
           <input
             id="email"
             type="email"
             [(ngModel)]="email"
             name="email"
-            placeholder="your@email.com"
+            [placeholder]="'LOGIN.EMAIL_PLACEHOLDER' | translate"
             required
             autocomplete="off"
           />
         </div>
 
-        <!-- Champ Password -->
         <div class="form-group">
-          <label for="password">Password</label>
+          <label for="password">{{ 'LOGIN.PASSWORD' | translate }}</label>
           <div class="password-wrapper">
             <input
               id="password"
               [type]="showPassword ? 'text' : 'password'"
               [(ngModel)]="password"
               name="password"
-              placeholder="Enter your password"
+              [placeholder]="'LOGIN.PASSWORD_PLACEHOLDER' | translate"
               required
               autocomplete="new-password"
             />
-            <button 
-              type="button" 
-              class="password-toggle" 
-              (click)="togglePassword()"
-            >
-              {{ showPassword ? 'Hide' : 'Show' }}
+            <button type="button" class="password-toggle" (click)="togglePassword()">
+              {{ showPassword ? ('LOGIN.HIDE' | translate) : ('LOGIN.SHOW' | translate) }}
             </button>
           </div>
         </div>
 
-        <!-- REMEMBER ME & FORGOT PASSWORD -->
         <div class="form-options">
-          
-          
-          <a routerLink="/forgot-password" class="forgot-link">Forgot password?</a>
+          <a routerLink="/forgot-password" class="forgot-link">
+            {{ 'LOGIN.FORGOT' | translate }}
+          </a>
         </div>
 
-        <!-- Submit Button -->
         <button type="submit" class="submit-button" [disabled]="loading">
-          <span *ngIf="!loading">Sign In</span>
+          <span *ngIf="!loading">{{ 'LOGIN.SUBMIT' | translate }}</span>
           <span *ngIf="loading" class="loading-spinner">
             <span class="spinner"></span>
-            Signing in...
+            {{ 'LOGIN.SUBMITTING' | translate }}
           </span>
         </button>
 
       </form>
 
       <div class="login-footer">
-        <p>© 2025 InvestPlatform</p>
+        <p>{{ 'FOOTER.COPYRIGHT' | translate }}</p>
       </div>
 
     </div>

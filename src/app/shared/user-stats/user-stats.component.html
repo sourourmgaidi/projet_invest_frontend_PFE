@@ -1,0 +1,84 @@
+<!-- HEADER -->
+<div class="stats-header">
+  <div class="header-left">
+    <h2>Statistiques Utilisateur</h2>
+    <button class="dashboard-btn" (click)="returnToDashboard()" title="Retour au dashboard">
+      <span class="dashboard-text">← Dashboard</span>
+    </button>
+  </div>
+</div>
+
+@if (loading) {
+  <div class="loading">Chargement de vos statistiques...</div>
+}
+
+@if (error) {
+  <div class="error">{{ error }}</div>
+}
+
+@if (!loading && stats) {
+  <div class="user-stats">
+
+    <!-- CARDS RÉSUMÉ -->
+    <div class="cards-grid">
+      <div class="metric-card">
+        <span class="label">Cette semaine</span>
+        <span class="value">{{ stats!.formattedThisWeekHours }}</span>
+      </div>
+      <div class="metric-card">
+        <span class="label">Semaine dernière</span>
+        <span class="value">{{ stats!.formattedLastWeekHours }}</span>
+      </div>
+      <div class="metric-card">
+        <span class="label">Différence</span>
+        <span class="value" [style.color]="trendColor">
+          {{ trendIcon }} {{ stats!.formattedDifferenceHours }}
+        </span>
+      </div>
+    </div>
+
+    <!-- NOTIFICATION BAR -->
+    <div class="notification-bar">{{ stats!.notificationMessage }}</div>
+
+    <!-- GRAPHIQUE -->
+    <div class="chart-section">
+      <h3>TEMPS PAR JOUR (MINUTES)</h3>
+      <!-- ✅ FIX : On affiche TOUJOURS le canvas car le backend retourne maintenant tous les 7 jours -->
+      <div style="position: relative; height: 250px;">
+        <canvas #dailyCanvas></canvas>
+      </div>
+    </div>
+
+    <!-- SESSIONS PAR JOUR -->
+    <div class="sessions-section">
+      <h3>SESSIONS DE LA SEMAINE</h3>
+
+      @if (!hasSessions) {
+        <div class="empty">Aucune session enregistrée cette semaine</div>
+      }
+
+      @for (day of stats!.dailySessions; track day.date) {
+        <div class="day-group">
+          <div class="day-header">
+            <span class="day-label">{{ day.dayLabel }}</span>
+            <span class="day-total">{{ day.formattedTime }}</span>
+          </div>
+
+          @for (session of day.sessions; track session.sessionId) {
+            <div class="session-item">
+              <span class="session-time">
+                {{ session.loginTime | date:'HH:mm' }}
+                <span class="arrow">→</span>
+                {{ session.logoutTime | date:'HH:mm' }}
+              </span>
+              <span class="session-duration">
+                {{ formatDuration(session.durationSeconds) }}
+              </span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+  </div>
+}

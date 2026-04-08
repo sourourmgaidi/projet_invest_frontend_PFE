@@ -2,7 +2,7 @@
   <app-navbar></app-navbar>
   <main class="dashboard-content">
     
-    <!-- Header avec Notification Bell -->
+    <!-- Header -->
     <div style="display:flex; justify-content:space-between; align-items:flex-start;">
       <div>
         <h1>International Company Dashboard</h1>
@@ -11,35 +11,66 @@
       <app-notification-bell></app-notification-bell>
     </div>
 
-    <!-- Stats Cards avec méthodes de navigation -->
+    <!-- Stats Cards -->
     <div class="stats-cards">
-      <!-- Collaboration Services Card -->
+
       <div class="stat-card" (click)="navigateToCollaborationServices()" style="cursor: pointer;">
-        <h3>Collaboration Services</h3>
+        <h3>🤝 Collaboration Services</h3>
         <p class="stat-number">{{ collaborationCount }}</p>
+        <span class="stat-label">Available services</span>
       </div>
 
-      <!-- Investment Services Card -->
       <div class="stat-card" (click)="navigateToInvestmentServices()" style="cursor: pointer;">
-        <h3>Investment Services</h3>
+        <h3>📈 Investment Services</h3>
         <p class="stat-number">{{ investmentCount }}</p>
+        <span class="stat-label">Available services</span>
       </div>
 
-      <!-- Unread Messages Card -->
-      <div class="stat-card">
-        <h3>Unread Messages</h3>
-        <p class="stat-number">{{ unreadCount }}</p>
+      <div class="stat-card" (click)="navigateToMyRequests()" style="cursor: pointer;">
+        <h3>📋 My Requests</h3>
+        <p class="stat-number">{{ pendingRequestsCount }}</p>
+        <span class="stat-label">Pending / Awaiting payment</span>
       </div>
+
+      <div class="stat-card" (click)="navigateToMyTakenServices()" style="cursor: pointer;">
+        <h3>✅ My Services</h3>
+        <p class="stat-number">{{ takenServicesCount }}</p>
+        <span class="stat-label">Acquired services</span>
+      </div>
+
+      <div class="stat-card" (click)="navigateToMessages()" style="cursor: pointer;">
+        <h3>💬 Unread Messages</h3>
+        <p class="stat-number">{{ unreadCount }}</p>
+        <span class="stat-label">New messages</span>
+      </div>
+
     </div>
 
-    <!-- Favorites Section -->
-    <div style="margin-top: 2rem; display: flex; gap: 1rem;">
-      <div class="favorites-link" (click)="navigateToInvestmentFavorites()" *ngIf="investmentFavCount > 0" style="cursor: pointer;">
+    <!-- My Activity -->
+    <a routerLink="/my-stats" class="stat-card activity-card" 
+       style="text-decoration: none; display: block; cursor: pointer; margin-top: 1rem;">
+      <div class="stat-details">
+        <h3>My Activity</h3>
+        <p class="stat-value">Stats</p>
+        <span class="stat-trend">View my session stats</span>
+      </div>
+    </a>
+
+    <!-- Favorites -->
+    <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+      <div class="favorites-link" 
+           (click)="navigateToInvestmentFavorites()" 
+           *ngIf="investmentFavCount > 0" 
+           style="cursor: pointer;">
         ⭐ Investment Favorites ({{ investmentFavCount }})
       </div>
-      <div class="favorites-link" (click)="navigateToCollaborationFavorites()" *ngIf="collaborationFavCount > 0" style="cursor: pointer;">
+      <div class="favorites-link" 
+           (click)="navigateToCollaborationFavorites()" 
+           *ngIf="collaborationFavCount > 0" 
+           style="cursor: pointer;">
         ❤️ Collaboration Favorites ({{ collaborationFavCount }})
       </div>
     </div>
+
   </main>
 </div>

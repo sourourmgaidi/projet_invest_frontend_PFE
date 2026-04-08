@@ -117,6 +117,16 @@
               <span class="meta-label">🏠 Address:</span>
               <span>{{ s.address }}</span>
             </div>
+            <div class="card-meta" *ngIf="s.requestedBudget">
+  <span class="meta-label">💰 Budget:</span>
+  <span>{{ s.requestedBudget | number }} TND</span>
+</div>
+<div class="currency-converter-wrap" *ngIf="s.requestedBudget">
+  <app-currency-converter
+    [initialAmount]="s.requestedBudget"
+    [initialCurrency]="'TND'">
+  </app-currency-converter>
+</div>
 
             <!-- ✅ SECTION DOCUMENTS - AJOUTÉE ICI -->
             <div class="documents-section" *ngIf="s.documents && s.documents.length > 0">

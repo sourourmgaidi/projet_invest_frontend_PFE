@@ -52,6 +52,7 @@ export class DashboardComponent implements OnInit ,OnDestroy {
 
   // ✅ NOUVELLE PROPRIÉTÉ AJOUTÉE
   pendingRequestsCount: number = 0;
+  pendingAcquisitionCount: number = 0;
 
   collaborationForm: any = this.emptyCollaborationForm();
   investmentForm: any = this.emptyInvestmentForm();
@@ -169,7 +170,22 @@ export class DashboardComponent implements OnInit ,OnDestroy {
       this.error = 'Failed to load partner data. Please refresh.';
     }
   }
-
+ async loadPendingAcquisitionCount() {
+    try {
+      const token = this.authService.getToken();
+      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+      
+      const requests = await lastValueFrom(
+        this.http.get<any[]>('http://localhost:8089/api/acquisitions/partner/pending', { headers })
+      );
+      
+      this.pendingAcquisitionCount = requests.length;
+      console.log('📊 Pending acquisition requests:', this.pendingAcquisitionCount);
+    } catch (error) {
+      console.error('❌ Error loading acquisition requests:', error);
+      this.pendingAcquisitionCount = 0;
+    }
+  }
   async loadAllServices() {
     if (!this.partnerId) {
       console.warn('⚠️ loadAllServices called with no partnerId!');
@@ -211,7 +227,8 @@ export class DashboardComponent implements OnInit ,OnDestroy {
     await Promise.all([
       this.checkPendingRequests(),              // Pour l'investissement
       this.checkCollaborationPendingRequests(), // Pour la collaboration
-      this.loadTouristRequests()                // Pour le tourisme
+      this.loadTouristRequests() ,
+       this.loadPendingAcquisitionCount()                // Pour le tourisme
     ]);
 
     // ✅ NOUVEL APPEL AJOUTÉ
@@ -1570,33 +1587,51 @@ getImageUrl(doc: any): string {
 openImage(doc: any): void {
   const docId = doc.id.toString();
   
+  // Ouvrir la modal immédiatement avec état de chargement
+  this.selectedImage = {
+    url: 'loading',
+    name: doc.fileName,
+    doc: doc
+  };
+  
+  // Si déjà en cache, afficher directement
   if (this.imageBlobUrls.has(docId)) {
     this.selectedImage = {
       url: this.imageBlobUrls.get(docId)!,
       name: doc.fileName,
       doc: doc
     };
-  } else {
-    // Charger d'abord l'image
-    const token = this.authService.getToken();
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-    
-    this.http.get(`http://localhost:8089${doc.downloadUrl}`, {
-      headers: headers,
-      responseType: 'blob'
-    }).subscribe({
-      next: (blob: Blob) => {
-        const url = window.URL.createObjectURL(blob);
-        this.imageBlobUrls.set(docId, url);
+    return;
+  }
+  
+  // Sinon charger l'image
+  const token = this.authService.getToken();
+  const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+  
+  this.http.get(`http://localhost:8089${doc.downloadUrl}`, {
+    headers: headers,
+    responseType: 'blob'
+  }).subscribe({
+    next: (blob: Blob) => {
+      const url = window.URL.createObjectURL(blob);
+      this.imageBlobUrls.set(docId, url);
+      
+      // Mettre à jour la modal si elle est encore ouverte
+      if (this.selectedImage && this.selectedImage.name === doc.fileName) {
         this.selectedImage = {
           url: url,
           name: doc.fileName,
           doc: doc
         };
-      },
-      error: (err) => console.error('Erreur chargement image', err)
-    });
-  }
+      }
+    },
+    error: (err) => {
+      console.error('Erreur chargement image', err);
+      this.selectedImage = null;
+      this.error = 'Impossible de charger l\'image';
+      setTimeout(() => this.error = '', 3000);
+    }
+  });
 }
 
 /**
@@ -1945,5 +1980,8 @@ hasImages(service: any): boolean {
   return service.documents.some((doc: any) => 
     doc.fileType && doc.fileType.startsWith('image/')
   );
+}
+navigateToAcquisitionRequests() {
+  this.router.navigate(['/partenaire-local/acquisition-requests']);
 }
 }

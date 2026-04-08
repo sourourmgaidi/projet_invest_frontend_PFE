@@ -10,6 +10,8 @@ import { ServiceRequestService } from '../../../core/services/service-request.se
 import { CollaborationRequestService } from '../../../core/services/collaboration-request.service';
 import { TouristRequestService } from '../../../core/services/tourist-request.service';
 
+
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -38,6 +40,12 @@ export class DashboardComponent implements OnInit {
   notificationCount = 0;
   notifications: any[] = [];
 
+  // ✅ NOUVELLES PROPRIÉTÉS POUR LES STATISTIQUES
+  totalUsers: number = 0;
+  totalServices: number = 0;
+  monthlyTrend: number = 0;
+  isLoadingStats: boolean = true;
+
   constructor(
     private http: HttpClient,
     // INJECTER LES SERVICES (comme dans AdminRequestsComponent)
@@ -50,6 +58,7 @@ export class DashboardComponent implements OnInit {
     this.loadPendingCount();
     this.loadRequestsCount();
     this.loadNotifications();
+    this.loadStatisticsPreview(); // ✅ AJOUTER CETTE LIGNE
   }
 
   // Charge le nombre de services en attente
@@ -229,6 +238,62 @@ export class DashboardComponent implements OnInit {
       });
   }
 
+  // ✅ NOUVELLE MÉTHODE POUR CHARGER L'APERÇU DES STATISTIQUES
+  loadStatisticsPreview(): void {
+    this.isLoadingStats = true;
+    const token = localStorage.getItem('auth_token') || '';
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+
+    // Récupérer le résumé des statistiques
+    this.http.get<any>('http://localhost:8089/api/stats/summary', { headers })
+      .subscribe({
+        next: (summary) => {
+          this.totalUsers = 
+            (summary.totalInvestors || 0) +
+            (summary.totalEconomicPartners || 0) +
+            (summary.totalInternationalCompanies || 0) +
+            (summary.totalTourists || 0) +
+            (summary.totalLocalPartners || 0);
+          
+          this.totalServices = 
+            (summary.approvedInvestmentServices || 0) +
+            (summary.approvedCollaborationServices || 0) +
+            (summary.approvedTouristServices || 0);
+          
+          this.isLoadingStats = false;
+          console.log('📊 Statistiques chargées:', {
+            totalUsers: this.totalUsers,
+            totalServices: this.totalServices
+          });
+        },
+        error: (err) => {
+          console.error('Error loading stats preview:', err);
+          this.totalUsers = 0;
+          this.totalServices = 0;
+          this.isLoadingStats = false;
+        }
+      });
+
+    // Récupérer la tendance mensuelle pour l'aperçu
+    this.http.get<any>('http://localhost:8089/api/stats/notification', { headers, responseType: 'text' as 'json' })
+      .subscribe({
+        next: (notification: string) => {
+          // Extraire le pourcentage de la notification
+          const match = notification.match(/(\d+)%/);
+          if (match) {
+            this.monthlyTrend = parseInt(match[1]);
+          } else {
+            this.monthlyTrend = 0;
+          }
+          console.log('📈 Tendance mensuelle:', this.monthlyTrend);
+        },
+        error: (err) => {
+          console.error('Error loading trend:', err);
+          this.monthlyTrend = 0;
+        }
+      });
+  }
+
   // Toggle le panneau de notifications
   toggleNotificationPanel(): void {
     this.showNotifications = !this.showNotifications;
@@ -284,6 +349,7 @@ export class DashboardComponent implements OnInit {
     this.loadPendingCount();
     this.loadRequestsCount();
     this.loadNotifications();
+    this.loadStatisticsPreview(); // ✅ AJOUTER CETTE LIGNE
   }
 
   // Formater la date des notifications

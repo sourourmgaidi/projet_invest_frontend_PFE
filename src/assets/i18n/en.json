@@ -1,0 +1,117 @@
+{
+  "HOME": {
+    "BADGE": "Official Investment Platform",
+    "TITLE": "Invest in",
+    "TITLE_HIGHLIGHT": "Tunisia",
+    "DESC": "The platform that connects investors, local partners, international companies and tourists for sustainable economic development.",
+    "GET_STARTED": "Get Started →",
+    "ALREADY_ACCOUNT": "I already have an account"
+  },
+  "STATS": {
+    "USERS": "Registered Users",
+    "SERVICES": "Active Services",
+    "GOVERNORATES": "Governorates"
+  },
+  "MAP": {
+    "TITLE": "Explore Tunisia's 24 Governorates"
+  },
+  "COMMUNITY": {
+    "TITLE": "Our Community",
+    "INVESTORS": "Investors",
+    "ECONOMIC_PARTNERS": "Economic Partners",
+    "LOCAL_PARTNERS": "Local Partners",
+    "INTERNATIONAL": "International Companies",
+    "TOURISTS": "Tourists"
+  },
+  "SERVICES": {
+    "TITLE": "Available Services",
+    "INVESTMENT": "Investment Opportunities",
+    "COLLABORATION": "Collaboration Services",
+    "TOURIST": "Tourist Services"
+  },
+  "FOOTER": {
+    "COPYRIGHT": "© 2025 ForsaTN · All rights reserved"
+  },
+  "LOGIN": {
+  "HOME": "Home",
+  "TITLE": "Sign In",
+  "SUBTITLE": "Enter your credentials",
+  "EMAIL": "Email",
+  "EMAIL_PLACEHOLDER": "your@email.com",
+  "PASSWORD": "Password",
+  "PASSWORD_PLACEHOLDER": "Enter your password",
+  "SHOW": "Show",
+  "HIDE": "Hide",
+  "FORGOT": "Forgot password?",
+  "SUBMIT": "Sign In",
+  "SUBMITTING": "Signing in..."
+},
+
+  "REGISTER": {
+    "TITLE": "Create an account",
+    "STEP_ROLE": "Role",
+    "STEP_INFO": "Information",
+    "WHAT_PROFILE": "What is your profile?",
+    "SELECT_ROLE": "Select your role to create a suitable account",
+    "CONTINUE": "Continue",
+    "EMAIL": "Email",
+    "VALID_EMAIL": "Valid email required",
+    "PHONE": "Phone",
+    "PHONE_EXAMPLE": "Example",
+    "LAST_NAME": "Last Name",
+    "FIRST_NAME": "First Name",
+    "LAST_NAME_PLACEHOLDER": "Your last name",
+    "FIRST_NAME_PLACEHOLDER": "Your first name",
+    "NATIONALITY": "Nationality",
+    "SELECT_NATIONALITY": "Select your nationality",
+    "COMPANY_NAME": "Company Name",
+    "COMPANY_NAME_PLACEHOLDER": "Your company name",
+    "COUNTRY_ORIGIN": "Country of Origin",
+    "SELECT_COUNTRY": "Select country",
+    "ACTIVITY_SECTOR": "Activity Sector",
+    "SELECT_SECTOR": "Select activity sector",
+    "BUSINESS_SECTOR": "Business Sector",
+    "WEBSITE": "Website",
+    "LINKEDIN": "LinkedIn Profile",
+    "HEADQUARTERS_ADDRESS": "Headquarters Address",
+    "ADDRESS": "Address",
+    "ADDRESS_PLACEHOLDER": "Full address",
+    "REGION": "Region",
+    "SELECT_REGION": "Select a region",
+    "BUSINESS_REG_NUMBER": "Business Registration Number",
+    "REG_NUMBER_PLACEHOLDER": "Registration number",
+    "TAX_NUMBER": "Professional Tax Number",
+    "TAX_NUMBER_PLACEHOLDER": "Tax number",
+    "CONTACT_LAST_NAME": "Contact Last Name",
+    "CONTACT_FIRST_NAME": "Contact First Name",
+    "SIRET_NUMBER": "SIRET Number",
+    "SIRET_PLACEHOLDER": "SIRET number",
+    "PASSWORD": "Password",
+    "PASSWORD_PLACEHOLDER": "Minimum 6 characters",
+    "PASSWORD_MIN_LENGTH": "Minimum 6 characters required",
+    "CONFIRM_PASSWORD": "Confirm Password",
+    "CONFIRM_PASSWORD_PLACEHOLDER": "Repeat your password",
+    "PASSWORD_MISMATCH": "Passwords do not match",
+    "BACK": "Back",
+    "CREATE_ACCOUNT": "Create account",
+    "REGISTERING": "Registering...",
+    "SHOW": "Show",
+    "HIDE": "Hide"
+  },
+  "ROLES": {
+    "INVESTOR": "Investor",
+    "TOURIST": "Tourist",
+    "PARTNER": "Economic Partner",
+    "LOCAL_PARTNER": "Local Partner",
+    "INTERNATIONAL_COMPANY": "International Company",
+    "ADMIN": "Administrator"
+  },
+  "ROLES_DESC": {
+    "INVESTOR": "Discover investment opportunities in Tunisia",
+    "TOURIST": "Explore the wonders of Tunisia",
+    "PARTNER": "Develop your economic partnerships",
+    "LOCAL_PARTNER": "Engage in local development",
+    "INTERNATIONAL_COMPANY": "Establish your international presence",
+    "ADMIN": "Platform administration"
+  }
+}

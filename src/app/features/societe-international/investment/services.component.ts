@@ -6,7 +6,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { NavbarComponent } from '../../../shared/navbar/navbar';
 import { NotificationBellComponent } from '../../../shared/notification-bell/notification-bell.component';
 import { FavoriteService } from '../../../core/services/favorite.service';
-
+// ✅ Chemin correct
+import { CurrencyConverterComponent } from '../../public/currency-converter/currency-converter.component';
 @Component({
   selector: 'app-investment-services',
   standalone: true,
@@ -15,7 +16,8 @@ import { FavoriteService } from '../../../core/services/favorite.service';
     FormsModule, 
     RouterModule, 
     NavbarComponent, 
-    NotificationBellComponent
+    NotificationBellComponent ,
+    CurrencyConverterComponent 
   ],
   templateUrl: './services.component.html',
   styleUrls: ['./services.component.css']

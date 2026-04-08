@@ -3,7 +3,9 @@ import { authGuard } from './core/guards/auth-guard';
 import { roleGuard } from './core/guards/role-guard';
 import { Role } from './shared/models/user.model';
 import { AdminNotificationsComponent } from './features/admin/notifications/notifications.component';
+import { RegionServicesComponent } from './features/public/home/region/region-services.component';
 import { InboxComponent } from './shared/inbox/inbox.component';
+import { PartnerAcquisitionRequestsComponent } from './features/partenaire-local/myRequests/partner-acquisition-requests.component';
 
 export const routes: Routes = [
 
@@ -28,6 +30,21 @@ export const routes: Routes = [
     loadComponent: () => import('./features/public/forgot-password/forgot-password.component')
       .then(m => m.ForgotPasswordComponent)
   },
+   {
+    path: 'tunisia-map',
+    loadComponent: () => import('./features/public/tunisiaMap/tunisia-map.component')
+      .then(m => m.TunisiaMapComponent)
+  },
+  {
+  path: 'tunisia-map-3d',
+  loadComponent: () => import('./features/public/tunisia-mapbox/tunisia-mapbox.component')
+    .then(m => m.TunisiaMapboxComponent)
+},
+ {
+    path: 'region-services/:id',
+    component: RegionServicesComponent
+  },
+
   {
     path: 'profile',
     loadComponent: () => import('./features/profile/profile.component')
@@ -67,6 +84,16 @@ export const routes: Routes = [
         path: 'notifications',
         component: AdminNotificationsComponent
       },
+      {
+  path: 'stats',
+  loadComponent: () => import('./features/admin/stats-dashboard/stats-dashboard.component')
+    .then(m => m.StatsDashboardComponent)
+},
+{
+  path: 'admin-stats',
+  loadComponent: () => import('./features/admin/admin-stats/admin-stats.component')
+    .then(m => m.AdminStatsComponent)
+},
       // ✅ NOUVELLES ROUTES POUR LES DEMANDES (ADMIN)
       {
         path: 'requests',
@@ -143,7 +170,22 @@ export const routes: Routes = [
         path: 'favorites',
         loadComponent: () => import('./shared/favoritesInvestservice/favorites-list/favorites-list.component')
           .then(m => m.FavoritesListComponent)
-      }
+      },
+      {
+  path: 'acquisition-requests',
+  loadComponent: () => import('./features/partenaire-local/myRequests/partner-acquisition-requests.component')
+    .then(m => m.PartnerAcquisitionRequestsComponent)
+},
+  {
+      path: 'my-requests',
+      loadComponent: () => import('./features/public/my-acquired-services/my-acquired-services.component')
+        .then(m => m.MyAcquiredServicesComponent)
+    },
+    {
+      path: 'my-taken-services',
+      loadComponent: () => import('./features/investisseur/MyTakenService/my-taken-services.component')
+        .then(m => m.MyTakenServicesComponent)
+    }
     ]
   },
 
@@ -186,6 +228,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/partenaire-local/messagerie/partenaire-local-messagerie.component')
           .then(m => m.PartenaireLocalMessagerieComponent)
       },
+        {
+        path: 'acquisition-requests',
+        component: PartnerAcquisitionRequestsComponent
+      },
       // ✅ NOUVELLES ROUTES POUR LES DEMANDES (PARTENAIRE LOCAL)
       {
         path: 'requests',
@@ -211,11 +257,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/societe-international/dashboard/dashboard')
           .then(m => m.DashboardComponent)
       },
-      {
-        path: 'services',
-        loadComponent: () => import('./features/societe-international/investment/services.component')
-          .then(m => m.InvestmentServicesComponent)
-      },
+     // ✅ APRÈS — même composant que l'investor mais avec userRole
+{
+  path: 'services',
+  loadComponent: () => import('./features/investisseur/services/services.component')
+    .then(m => m.InvestorServicesComponent),
+  data: { userRole: 'INT_COMPANY' }
+},
        
   {
       path: 'collaboration-services',  // ← Changé ici !
@@ -244,6 +292,17 @@ export const routes: Routes = [
         loadComponent: () => import('./features/societe-international/messagerie/societe-international-messagerie.component')
           .then(m => m.SocieteInternationalMessagerieComponent)
       }
+      ,
+         {
+      path: 'my-requests',  
+      loadComponent: () => import('./features/public/my-acquired-services/my-acquired-services.component')
+        .then(m => m.MyAcquiredServicesComponent)
+    },
+    {
+      path: 'my-taken-services',  
+      loadComponent: () => import('./features/investisseur/MyTakenService/my-taken-services.component')
+        .then(m => m.MyTakenServicesComponent)
+    }
     ]
   },
   {
@@ -252,6 +311,14 @@ export const routes: Routes = [
       .then(m => m.InboxComponent),
     canActivate: [authGuard]
   },
+  
+   
+  {
+  path: 'my-stats',
+  loadComponent: () => import('./shared/user-stats/user-stats.component')
+    .then(m => m.UserStatsComponent),
+  canActivate: [authGuard]  // ✅ Juste authGuard — accessible à TOUS les rôles
+},
 
   // ── Wildcard ──────────────────────────────────────
   { path: '**', redirectTo: '' }

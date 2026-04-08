@@ -1,0 +1,232 @@
+<div class="region-services-panel">
+  <!-- Header -->
+  <div class="panel-header">
+    <div class="header-content">
+      <h2>{{ regionName || 'Loading...' }}</h2>
+      <p>Available services and opportunities</p>
+    </div>
+    <button class="close-btn" (click)="closePanel()">×</button>
+  </div>
+  
+  <!-- Container centré -->
+  <div class="services-container">
+    <!-- Debug Info (à supprimer après test) -->
+    <div class="debug-info">
+
+      Investment: {{ services?.investmentServices?.length || 0 }} | 
+      Collaboration: {{ services?.collaborationServices?.length || 0 }} | 
+      Tourist: {{ services?.touristServices?.length || 0 }}
+    </div>
+    
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Loading services...</p>
+    </div>
+    
+    <!-- Services Content -->
+    <div class="services-content" *ngIf="!loading && services">
+      <!-- Tabs -->
+      <div class="tabs" *ngIf="!showDetail">
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab === 'investment'"
+          (click)="selectTab('investment')">
+          Investment
+          <span class="count">{{ getInvestmentCount() }}</span>
+        </button>
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab === 'collaboration'"
+          (click)="selectTab('collaboration')">
+          Collaboration
+          <span class="count">{{ getCollaborationCount() }}</span>
+        </button>
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab === 'tourist'"
+          (click)="selectTab('tourist')">
+          Tourism
+          <span class="count">{{ getTouristCount() }}</span>
+        </button>
+      </div>
+      
+      <!-- Service List View -->
+      <div class="service-list" *ngIf="!showDetail">
+        <div class="empty-state" *ngIf="getCurrentServices().length === 0">
+          <p>No services available in this category</p>
+        </div>
+        
+        <div 
+          class="service-card" 
+          *ngFor="let service of getCurrentServices()"
+          (click)="viewServiceDetails(service)">
+          <div class="service-header">
+            <h3>{{ getServiceTitle(service) }}</h3>
+            <span class="status-badge" [class]="service.status?.toLowerCase()">
+              {{ service.status || 'Active' }}
+            </span>
+          </div>
+          <p class="service-description">{{ (service.description || '').substring(0, 100) }}{{ (service.description || '').length > 100 ? '...' : '' }}</p>
+          <div class="service-meta">
+            <span class="meta-item" *ngIf="activeTab === 'investment' && service.totalAmount">
+              Total: {{ service.totalAmount | number }} TND
+            </span>
+            <span class="meta-item" *ngIf="activeTab === 'collaboration' && service.requestedBudget">
+              Budget: {{ service.requestedBudget | number }} TND
+            </span>
+            <span class="meta-item" *ngIf="activeTab === 'tourist' && service.price">
+              From: {{ service.price | number }} TND
+            </span>
+            <span class="meta-item">
+              {{ service.availability || 'Available' }}
+            </span>
+          </div>
+          <div class="view-detail">Click to view details →</div>
+        </div>
+      </div>
+      
+      <!-- Service Detail View -->
+      <div class="service-detail" *ngIf="showDetail && selectedService">
+        <button class="back-btn" (click)="backToList()">
+          ← Back to list
+        </button>
+        
+        <div class="detail-content">
+          <div class="detail-header">
+            <h3>{{ getServiceTitle(selectedService) }}</h3>
+            <span class="service-type">{{ getServiceType(selectedService) }}</span>
+          </div>
+          
+          <div class="detail-section">
+            <label>Description</label>
+            <p>{{ selectedService.description || 'No description available' }}</p>
+          </div>
+          
+          <div class="detail-section">
+            <label>Details</label>
+            <div class="details-grid">
+              <!-- Investment fields -->
+              <ng-container *ngIf="activeTab === 'investment'">
+                <div class="detail-item">
+                  <span class="detail-label">Total Amount</span>
+                  <span class="detail-value">{{ formatCurrency(selectedService.totalAmount) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Minimum Amount</span>
+                  <span class="detail-value">{{ formatCurrency(selectedService.minimumAmount) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Economic Sector</span>
+                  <span class="detail-value">{{ selectedService.economicSector?.name || 'N/A' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Project Duration</span>
+                  <span class="detail-value">{{ selectedService.projectDuration || 'N/A' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Deadline</span>
+                  <span class="detail-value">{{ formatDate(selectedService.deadlineDate) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Zone</span>
+                  <span class="detail-value">{{ selectedService.zone || 'N/A' }}</span>
+                </div>
+              </ng-container>
+              
+              <!-- Collaboration fields -->
+              <ng-container *ngIf="activeTab === 'collaboration'">
+                <div class="detail-item">
+                  <span class="detail-label">Requested Budget</span>
+                  <span class="detail-value">{{ formatCurrency(selectedService.requestedBudget) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Collaboration Type</span>
+                  <span class="detail-value">{{ selectedService.collaborationType || 'N/A' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Activity Domain</span>
+                  <span class="detail-value">{{ selectedService.activityDomain || 'N/A' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Expected Benefits</span>
+                  <span class="detail-value">{{ selectedService.expectedBenefits || 'N/A' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Required Skills</span>
+                  <span class="detail-value">{{ selectedService.requiredSkills || 'N/A' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Duration</span>
+                  <span class="detail-value">{{ selectedService.collaborationDuration || 'N/A' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Address</span>
+                  <span class="detail-value">{{ selectedService.address || 'N/A' }}</span>
+                </div>
+              </ng-container>
+              
+              <!-- Tourist fields -->
+              <ng-container *ngIf="activeTab === 'tourist'">
+                <div class="detail-item">
+                  <span class="detail-label">Price</span>
+                  <span class="detail-value">{{ formatCurrency(selectedService.price) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Group Price</span>
+                  <span class="detail-value">{{ formatCurrency(selectedService.groupPrice) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Category</span>
+                  <span class="detail-value">{{ selectedService.category || 'N/A' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Duration</span>
+                  <span class="detail-value">{{ selectedService.durationHours || 'N/A' }} hours</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Max Capacity</span>
+                  <span class="detail-value">{{ selectedService.maxCapacity || 'N/A' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Target Audience</span>
+                  <span class="detail-value">{{ selectedService.targetAudience || 'N/A' }}</span>
+                </div>
+                <div class="detail-item" *ngIf="selectedService.includedServices?.length">
+                  <span class="detail-label">Included Services</span>
+                  <span class="detail-value">{{ selectedService.includedServices.join(', ') }}</span>
+                </div>
+                <div class="detail-item" *ngIf="selectedService.availableLanguages?.length">
+                  <span class="detail-label">Languages</span>
+                  <span class="detail-value">{{ selectedService.availableLanguages.join(', ') }}</span>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+          
+          <div class="detail-section">
+            <label>Availability & Contact</label>
+            <div class="details-grid">
+              <div class="detail-item">
+                <span class="detail-label">Availability</span>
+                <span class="detail-value">{{ selectedService.availability || 'N/A' }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Contact Person</span>
+                <span class="detail-value">{{ selectedService.contactPerson || 'N/A' }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Region</span>
+                <span class="detail-value">{{ selectedService.region?.name || 'N/A' }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Provider</span>
+                <span class="detail-value">{{ getProviderName(selectedService) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

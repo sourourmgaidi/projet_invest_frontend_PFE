@@ -1,0 +1,106 @@
+<div class="mapbox-container">
+  <div #mapContainer class="map-container"></div>
+
+  <!-- PANNEAU LATÉRAL -->
+  <div class="side-panel" [class.open]="selectedRegion">
+
+    <ng-container *ngIf="selectedRegion">
+
+      <!-- Banner Header -->
+      <div class="panel-banner">
+        <button class="close-btn" (click)="closePanel()">✕</button>
+        <h2 class="region-name">{{ selectedRegion.name }}</h2>
+        <span class="zone-badge" *ngIf="isValidField(selectedRegion.geographicalZone)">
+          {{ selectedRegion.geographicalZone }}
+        </span>
+      </div>
+
+      <!-- Body -->
+      <div class="panel-body">
+
+        <!-- Stats -->
+        <div class="section-label">Services Breakdown</div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value">{{ selectedRegion.approvedInvestmentServices }}</div>
+            <div class="stat-label">Investment</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">{{ selectedRegion.approvedCollaborationServices }}</div>
+            <div class="stat-label">Collab</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">{{ selectedRegion.approvedTouristServices }}</div>
+            <div class="stat-label">Tourism</div>
+          </div>
+        </div>
+
+        <!-- Total -->
+        <div class="total-section">
+          <div class="total-row">
+            <span class="total-label">Total Services</span>
+            <span class="total-value">{{ selectedRegion.totalApprovedServices }}</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" [style.width.%]="getPercentage(selectedRegion)"></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Infrastructure + Tax -->
+        <div class="info-grid">
+          <div class="info-card">
+            <div class="info-card-label purple">Infrastructure</div>
+            <div class="info-card-text" *ngIf="isValidField(selectedRegion.infrastructure)">
+              {{ selectedRegion.infrastructure }}
+            </div>
+            <div class="info-card-empty" *ngIf="!isValidField(selectedRegion.infrastructure)">
+              Not available
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="info-card-label pink">Tax Incentives</div>
+            <div class="info-card-text" *ngIf="isValidField(selectedRegion.taxIncentives)">
+              {{ selectedRegion.taxIncentives }}
+            </div>
+            <div class="info-card-empty" *ngIf="!isValidField(selectedRegion.taxIncentives)">
+              Not available
+            </div>
+          </div>
+        </div>
+
+        <!-- Economic Profile -->
+        <div class="info-card full" *ngIf="isValidField(selectedRegion.economicDescription)">
+          <div class="info-card-label blue">Economic Profile</div>
+          <div class="info-card-text">{{ selectedRegion.economicDescription }}</div>
+        </div>
+
+        <!-- Bouton -->
+        <button class="view-btn" (click)="openRegionServicesPage(selectedRegion)">
+          View All Services — {{ selectedRegion.totalApprovedServices }}
+        </button>
+
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Légende -->
+  <div class="map-controls" *ngIf="!loading">
+    <div class="legend">
+      <h4>Number of Services</h4>
+      <div class="legend-gradient"></div>
+      <div class="legend-labels">
+        <span>Low</span>
+        <span>High</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-overlay" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading 3D Map...</p>
+  </div>
+
+</div>

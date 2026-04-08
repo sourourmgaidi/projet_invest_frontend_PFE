@@ -1,0 +1,61 @@
+<div class="monthly-chart-container">
+   <div class="chart-header">
+    <h2>📅 Monthly Registrations</h2>
+    <a routerLink="/admin/dashboard" class="back-to-dashboard">← Back to Dashboard</a>
+  </div>
+  <!-- Notification Bar -->
+  <div class="notification-bar" *ngIf="notification && !isLoading">
+    <span class="notification-icon">📊</span>
+    <span>{{ notification }}</span>
+  </div>
+
+  <!-- Period Selector -->
+  <div class="period-selector">
+    <button class="period-btn" [class.active]="monthsCount === 6" (click)="changePeriod(6)">
+      6 months
+    </button>
+    <button class="period-btn" [class.active]="monthsCount === 12" (click)="changePeriod(12)">
+      12 months
+    </button>
+    <button class="period-btn" [class.active]="monthsCount === 24" (click)="changePeriod(24)">
+      24 months
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="isLoading">
+    <span>Loading statistics...</span>
+  </div>
+
+  <!-- Error -->
+  <div class="error-state" *ngIf="hasError && !isLoading">
+    <span>⚠️ Unable to load data</span>
+    <button (click)="loadData()">Retry</button>
+  </div>
+
+  <ng-container *ngIf="!isLoading && !hasError">
+    
+    <!-- Chart -->
+    <div class="canvas-wrapper">
+      <canvas #monthlyChart></canvas>
+    </div>
+
+    <!-- Stats Summary -->
+    <div class="stats-summary">
+      <div class="stat-card">
+        <div class="stat-value">{{ totalRegistrations }}</div>
+        <div class="stat-label">Total Registrations</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ averagePerMonth }}</div>
+        <div class="stat-label">Avg / month</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ bestMonth }}</div>
+        <div class="stat-label">Best month</div>
+      </div>
+    </div>
+
+  </ng-container>
+
+</div>

@@ -1,9 +1,10 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute } from '@angular/router';
-import { MessagerieService, Conversation, Message } from '../../core/services/messagerie.service';
+import { MessagerieService, Conversation, Message, MessageAttachment } from '../../core/services/messagerie.service';
 import { AuthService } from '../../core/services/auth';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Role } from '../models/user.model';
 import { interval, Subscription, switchMap } from 'rxjs';
 import { NavbarComponent } from '../navbar/navbar';
@@ -70,7 +71,7 @@ import { NavbarComponent } from '../navbar/navbar';
           <!-- Zone de chat -->
           <div class="chat-area" [class.mobile-visible]="mobileShowChat">
 
-            <!-- Chat header with back button (mobile) -->
+            <!-- Chat header -->
             <div class="chat-header" *ngIf="selectedConversation">
               <button class="back-btn" (click)="mobileShowChat = false">←</button>
               <div class="contact-info">
@@ -95,8 +96,53 @@ import { NavbarComponent } from '../navbar/navbar';
                   [class.my-message]="msg.senderEmail === myEmail"
                 >
                   <div class="message-bubble">
-                    <p>{{ msg.content }}</p>
-                    <span class="message-time">{{ formatMessageTime(msg.sentDate) }}</span>
+                    <!-- Texte -->
+                    <p *ngIf="msg.content && !isAutoAttachLabel(msg.content)">{{ msg.content }}</p>
+
+                    <!-- ── Pièces jointes ── -->
+                    <div class="attachments-list" *ngIf="msg.attachments && msg.attachments.length > 0">
+                      <div
+                        class="attachment-item"
+                        *ngFor="let att of msg.attachments"
+                      >
+                        <!-- Image -->
+                        <ng-container *ngIf="isImageFile(att.fileType)">
+                          <div class="img-preview-wrapper" (click)="openImagePreview(att)">
+                            <img
+                              [src]="getBlobUrl(att.id)"
+                              [alt]="att.fileName"
+                              class="img-preview"
+                              loading="lazy"
+                            />
+                            <div class="img-zoom-hint">🔍</div>
+                          </div>
+                          <div class="att-footer">
+                            <span class="att-name">{{ att.fileName }}</span>
+                            <button class="att-dl-btn" (click)="downloadFile(att)" title="Download">⬇</button>
+                          </div>
+                        </ng-container>
+
+                        <!-- Fichier non-image -->
+                        <ng-container *ngIf="!isImageFile(att.fileType)">
+                          <div class="file-att">
+                            <span class="file-icon">{{ getFileIcon(att.fileType) }}</span>
+                            <div class="file-info">
+                              <span class="file-name">{{ att.fileName }}</span>
+                              <span class="file-size">{{ formatFileSize(att.fileSize) }}</span>
+                            </div>
+                            <button class="att-dl-btn" (click)="downloadFile(att)" title="Download">⬇</button>
+                          </div>
+                        </ng-container>
+                      </div>
+                    </div>
+                    <!-- ── Fin pièces jointes ── -->
+
+                    <div class="msg-meta">
+                      <span class="message-time">{{ formatMessageTime(msg.sentDate) }}</span>
+                      <span class="attach-indicator" *ngIf="msg.attachments && msg.attachments.length > 0">
+                        📎{{ msg.attachments.length }}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -107,31 +153,84 @@ import { NavbarComponent } from '../navbar/navbar';
               </div>
             </div>
 
-            <!-- Input -->
+            <!-- ── Input Area ── -->
             <div class="message-input-area" *ngIf="selectedConversation">
-              <textarea
-                [(ngModel)]="newMessage"
-                placeholder="Type your message..."
-                (keydown.enter)="$event.preventDefault(); sendMessage()"
-                rows="1"
-              ></textarea>
-              <button
-                class="send-btn"
-                [disabled]="!newMessage.trim() || sending"
-                (click)="sendMessage()"
-              >
-                <span *ngIf="!sending">Send ➤</span>
-                <span *ngIf="sending">...</span>
-              </button>
+
+              <!-- Aperçu fichiers sélectionnés -->
+              <div class="files-preview" *ngIf="selectedFiles.length > 0">
+                <div class="files-preview-header">
+                  <span>{{ selectedFiles.length }} file(s) selected</span>
+                  <button class="clear-files-btn" (click)="clearFiles()">✕ Clear all</button>
+                </div>
+                <div class="files-chips">
+                  <div class="file-chip" *ngFor="let f of selectedFiles; let i = index">
+                    <span class="chip-icon">{{ getFileIcon(f.type) }}</span>
+                    <span class="chip-name">{{ f.name }}</span>
+                    <span class="chip-size">({{ formatFileSize(f.size) }})</span>
+                    <button class="chip-remove" (click)="removeFile(i)">✕</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="input-row">
+                <!-- Bouton pièce jointe -->
+                <button
+                  class="attach-btn"
+                  (click)="fileInput.click()"
+                  [class.has-files]="selectedFiles.length > 0"
+                  title="Attach file"
+                >
+                  📎
+                  <span class="attach-badge" *ngIf="selectedFiles.length > 0">{{ selectedFiles.length }}</span>
+                </button>
+
+                <input
+                  #fileInput
+                  type="file"
+                  multiple
+                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar"
+                  style="display:none"
+                  (change)="onFilesSelected($event)"
+                />
+
+                <textarea
+                  [(ngModel)]="newMessage"
+                  placeholder="Type your message..."
+                  (keydown.enter)="$event.preventDefault(); sendMessage()"
+                  (input)="autoResize($event)"
+                  rows="1"
+                ></textarea>
+
+                <button
+                  class="send-btn"
+                  [disabled]="(!newMessage.trim() && selectedFiles.length === 0) || sending"
+                  (click)="sendMessage()"
+                >
+                  <span *ngIf="!sending">Send ➤</span>
+                  <span *ngIf="sending">...</span>
+                </button>
+              </div>
             </div>
 
           </div>
         </div>
       </div>
     </div>
+
+    <!-- ── Modal prévisualisation image ── -->
+    <div class="img-modal" *ngIf="previewAtt" (click)="closeImagePreview()">
+      <div class="img-modal-content" (click)="$event.stopPropagation()">
+        <button class="modal-close" (click)="closeImagePreview()">✕</button>
+        <img [src]="getBlobUrl(previewAtt.id)" [alt]="previewAtt.fileName" class="modal-img" />
+        <div class="modal-footer">
+          <span>{{ previewAtt.fileName }}</span>
+          <button class="modal-dl-btn" (click)="downloadFile(previewAtt)">⬇ Download</button>
+        </div>
+      </div>
+    </div>
   `,
   styles: [`
-    /* ─── Page Layout (matches other pages) ─── */
+    /* ─── Page Layout ─── */
     .page-layout {
       display: flex;
       min-height: 100vh;
@@ -264,6 +363,7 @@ import { NavbarComponent } from '../navbar/navbar';
       display: flex;
       align-items: center;
       gap: 1rem;
+      flex-shrink: 0;
     }
     .empty-header { justify-content: center; color: #94a3b8; }
     .empty-header h3 { margin: 0; font-size: 0.95rem; font-weight: 500; }
@@ -293,11 +393,7 @@ import { NavbarComponent } from '../navbar/navbar';
       display: flex;
       flex-direction: column;
     }
-    .messages-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
+    .messages-list { display: flex; flex-direction: column; gap: 0.75rem; }
     .message-item { display: flex; }
     .message-item.my-message { justify-content: flex-end; }
     .message-bubble {
@@ -314,21 +410,128 @@ import { NavbarComponent } from '../navbar/navbar';
       border-color: transparent;
     }
     .message-bubble p { margin: 0 0 0.2rem; font-size: 0.9rem; line-height: 1.5; word-wrap: break-word; }
-    .message-time { font-size: 0.65rem; opacity: 0.65; display: block; text-align: right; }
+
+    .msg-meta {
+      display: flex; justify-content: flex-end;
+      align-items: center; gap: 0.4rem; margin-top: 0.25rem;
+    }
+    .message-time { font-size: 0.65rem; opacity: 0.65; }
+    .attach-indicator { font-size: 0.65rem; opacity: 0.75; }
+
     .no-messages { text-align: center; margin: auto; color: #94a3b8; }
     .no-msg-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
     .no-messages p { font-size: 0.9rem; }
 
+    /* ─── Pièces jointes dans les bulles ─── */
+    .attachments-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.35rem; }
+
+    .img-preview-wrapper {
+      position: relative; border-radius: 10px; overflow: hidden;
+      cursor: pointer; max-width: 200px;
+    }
+    .img-preview { width: 100%; display: block; border-radius: 10px; transition: filter 0.2s; }
+    .img-zoom-hint {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; opacity: 0; transition: opacity 0.2s;
+    }
+    .img-preview-wrapper:hover .img-zoom-hint { opacity: 1; }
+    .img-preview-wrapper:hover .img-preview { filter: brightness(0.8); }
+
+    .att-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 0.2rem; padding: 0 0.1rem;
+    }
+    .att-name { font-size: 0.72rem; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+
+    .file-att {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.5rem 0.65rem;
+      background: rgba(255,255,255,0.15);
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.2);
+      min-width: 180px;
+    }
+    .file-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .file-info { flex: 1; min-width: 0; }
+    .file-name { display: block; font-size: 0.78rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
+    .file-size { font-size: 0.68rem; opacity: 0.7; }
+
+    .att-dl-btn {
+      background: rgba(255,255,255,0.2); border: none; border-radius: 6px;
+      cursor: pointer; padding: 0.25rem 0.4rem;
+      font-size: 0.85rem; transition: background 0.2s; flex-shrink: 0;
+    }
+    .att-dl-btn:hover { background: rgba(255,255,255,0.4); }
+
     /* ─── Input Area ─── */
     .message-input-area {
-      display: flex;
-      gap: 0.75rem;
-      padding: 1rem 1.5rem;
+      padding: 0.75rem 1.5rem;
       background: white;
       border-top: 1px solid #e2e8f0;
-      align-items: flex-end;
+      flex-shrink: 0;
     }
-    .message-input-area textarea {
+
+    /* Aperçu fichiers */
+    .files-preview {
+      margin-bottom: 0.6rem;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 0.6rem 0.8rem;
+    }
+    .files-preview-header {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.78rem; color: #2563eb; font-weight: 600; margin-bottom: 0.4rem;
+    }
+    .clear-files-btn {
+      background: none; border: none; color: #ef4444;
+      cursor: pointer; font-size: 0.72rem; font-weight: 600;
+      padding: 0.1rem 0.35rem; border-radius: 4px; transition: background 0.15s;
+    }
+    .clear-files-btn:hover { background: #fee2e2; }
+    .files-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .file-chip {
+      display: flex; align-items: center; gap: 0.3rem;
+      background: white; border: 1px solid #bfdbfe;
+      border-radius: 20px; padding: 0.2rem 0.6rem;
+      font-size: 0.75rem; color: #374151;
+    }
+    .chip-icon { font-size: 0.9rem; }
+    .chip-name { font-weight: 500; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .chip-size { color: #94a3b8; }
+    .chip-remove {
+      background: none; border: none; cursor: pointer;
+      color: #94a3b8; font-size: 0.8rem; padding: 0; transition: color 0.15s;
+    }
+    .chip-remove:hover { color: #ef4444; }
+
+    .input-row {
+      display: flex; gap: 0.75rem; align-items: flex-end;
+    }
+
+    /* Bouton pièce jointe */
+    .attach-btn {
+      width: 44px; height: 44px; flex-shrink: 0;
+      background: #f1f5f9; border: 1.5px solid #e2e8f0;
+      border-radius: 12px; cursor: pointer;
+      font-size: 1.1rem; position: relative;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .attach-btn:hover { background: #dbeafe; border-color: #2563eb; }
+    .attach-btn.has-files { background: #dbeafe; border-color: #2563eb; }
+    .attach-badge {
+      position: absolute; top: -5px; right: -5px;
+      background: #2563eb; color: white;
+      border-radius: 50%; width: 18px; height: 18px;
+      font-size: 0.62rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid white;
+    }
+
+    .input-row textarea {
       flex: 1;
       padding: 0.75rem 1rem;
       border: 1.5px solid #e2e8f0;
@@ -341,23 +544,59 @@ import { NavbarComponent } from '../navbar/navbar';
       transition: border-color 0.2s;
       line-height: 1.4;
     }
-    .message-input-area textarea:focus { border-color: #2563eb; }
+    .input-row textarea:focus { border-color: #2563eb; }
+
     .send-btn {
       padding: 0.75rem 1.4rem;
       background: linear-gradient(135deg, #2563eb, #7c3aed);
       color: white; border: none;
       border-radius: 12px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
+      font-weight: 600; font-size: 0.9rem;
+      cursor: pointer; transition: all 0.2s;
+      white-space: nowrap; height: 44px;
     }
     .send-btn:hover:not(:disabled) {
       transform: translateY(-1px);
       box-shadow: 0 4px 14px rgba(37,99,235,0.3);
     }
     .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ─── Modal image ─── */
+    .img-modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+      z-index: 9999; display: flex; align-items: center; justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .img-modal-content {
+      position: relative; background: #1e293b;
+      border-radius: 16px; overflow: hidden;
+      max-width: 90vw; max-height: 90vh;
+      display: flex; flex-direction: column;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.6);
+    }
+    .modal-close {
+      position: absolute; top: 0.75rem; right: 0.75rem; z-index: 10;
+      background: rgba(0,0,0,0.5); color: white; border: none;
+      border-radius: 50%; width: 32px; height: 32px;
+      cursor: pointer; font-size: 0.9rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .modal-close:hover { background: rgba(0,0,0,0.8); }
+    .modal-img { max-width: 85vw; max-height: 78vh; object-fit: contain; display: block; }
+    .modal-footer {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.75rem 1rem; background: #0f172a;
+      color: #94a3b8; font-size: 0.82rem;
+    }
+    .modal-dl-btn {
+      background: #2563eb; color: white; border: none;
+      border-radius: 8px; padding: 0.4rem 0.9rem;
+      cursor: pointer; font-size: 0.82rem; font-weight: 600;
+      transition: background 0.2s;
+    }
+    .modal-dl-btn:hover { background: #1d4ed8; }
 
     /* ─── Responsive ─── */
     @media (max-width: 900px) {
@@ -370,10 +609,11 @@ import { NavbarComponent } from '../navbar/navbar';
       .chat-area { display: none; }
       .chat-area.mobile-visible { display: flex; }
       .back-btn { display: block; }
+      .message-bubble { max-width: 80%; }
     }
   `]
 })
-export class InboxComponent implements OnInit, OnDestroy {
+export class InboxComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   conversations: Conversation[] = [];
   filteredConversations: Conversation[] = [];
@@ -386,49 +626,48 @@ export class InboxComponent implements OnInit, OnDestroy {
   loading = false;
   sending = false;
   mobileShowChat = false;
+  private shouldScroll = false;
+
+  // ── Pièces jointes ──
+  selectedFiles: File[] = [];
+  previewAtt: MessageAttachment | null = null;
+  private blobUrlCache = new Map<number, string>();
 
   @ViewChild('messagesContainer') messagesContainer?: ElementRef;
 
   private refreshSubscription?: Subscription;
+  private readonly API = 'http://localhost:8089/api/messagerie';
 
   constructor(
     private messagerieService: MessagerieService,
     private authService: AuthService,
+    private http: HttpClient,
     private route: ActivatedRoute
   ) {
-    // Récupérer l'email du current user
     const currentUser = this.authService.getCurrentUser();
     console.log('👤 Current user complet:', currentUser);
-    
+
     this.myEmail = currentUser?.email || '';
     console.log('📧 Email récupéré du currentUser:', this.myEmail);
-    
+
     this.myRole = this.authService.getUserRole();
     console.log('👤 Rôle:', this.myRole);
-    
-    // Si pas d'email, essayer de le récupérer du token
+
     if (!this.myEmail) {
       const token = localStorage.getItem('auth_token');
       if (token) {
         try {
           const payload = JSON.parse(atob(token.split('.')[1]));
           console.log('🔍 JWT payload:', payload);
-          console.log('🔍 Tous les champs du payload:', Object.keys(payload));
-          
-          // Essayer tous les champs possibles
-          this.myEmail = payload.email || 
-                         payload.sub || 
-                         payload.preferred_username || 
-                         payload.username || 
+          this.myEmail = payload.email ||
+                         payload.sub ||
+                         payload.preferred_username ||
+                         payload.username ||
                          payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] ||
                          '';
-          
           console.log('📧 Email extrait du token:', this.myEmail);
-          
-          // Vérifier les rôles
           const roles = payload.realm_access?.roles || payload.roles || [];
           console.log('👤 Rôles du token:', roles);
-          
         } catch (e) {
           console.error('❌ Erreur parsing token:', e);
         }
@@ -447,7 +686,6 @@ export class InboxComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Rafraîchissement toutes les 10 secondes
     this.refreshSubscription = interval(10000).pipe(
       switchMap(() => this.messagerieService.getMyConversations())
     ).subscribe({
@@ -458,13 +696,24 @@ export class InboxComponent implements OnInit, OnDestroy {
       error: (err) => console.error('Refresh error:', err)
     });
 
-    // Vérifier si l'email existe dans la base après 2 secondes
     setTimeout(() => this.verifierEmailDansBase(), 2000);
   }
 
   ngOnDestroy(): void {
     this.refreshSubscription?.unsubscribe();
+    // Libérer les blob URLs
+    this.blobUrlCache.forEach(url => window.URL.revokeObjectURL(url));
+    this.blobUrlCache.clear();
   }
+
+  ngAfterViewChecked(): void {
+    if (this.shouldScroll) {
+      this.scrollToBottom();
+      this.shouldScroll = false;
+    }
+  }
+
+  // ────────── Conversations ──────────
 
   loadConversations(): void {
     this.loading = true;
@@ -481,35 +730,16 @@ export class InboxComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Vérifier si l'email existe dans la base de données
   verifierEmailDansBase(): void {
-    if (!this.myEmail) {
-      console.error('❌ Pas d\'email à vérifier');
-      return;
-    }
-    
-    console.log('🔍 Vérification de l\'email dans la base:', this.myEmail);
-    
+    if (!this.myEmail) { console.error('❌ Pas d\'email à vérifier'); return; }
     this.messagerieService.searchLocalPartners(this.myEmail).subscribe({
       next: (results) => {
-        console.log('Résultats recherche partenaire local:', results);
-        
-        const existe = results && results.some((r: any) => 
-          r.email && r.email.toLowerCase() === this.myEmail.toLowerCase()
+        const existe = results?.some((r: any) =>
+          r.email?.toLowerCase() === this.myEmail.toLowerCase()
         );
-        
-        if (existe) {
-          console.log('✅ Votre email EXISTE dans la table local_partner');
-        } else {
-          console.error('❌ Votre email N\'EXISTE PAS dans la table local_partner');
-          if (results && results.length > 0) {
-            console.log('Emails trouvés dans la base:', results.map((r: any) => r.email));
-          }
-        }
+        console.log(existe ? '✅ Email EXISTE dans la base' : '❌ Email INTROUVABLE dans la base');
       },
-      error: (err) => {
-        console.error('Erreur vérification email:', err);
-      }
+      error: (err) => console.error('Erreur vérification email:', err)
     });
   }
 
@@ -520,7 +750,6 @@ export class InboxComponent implements OnInit, OnDestroy {
     if (existing) {
       this.selectConversation(existing);
     } else {
-      // Créer une conversation temporaire
       const fakeConv: Conversation = {
         id: -1,
         senderRole: this.myRole?.toString() || '',
@@ -552,9 +781,7 @@ export class InboxComponent implements OnInit, OnDestroy {
     });
   }
 
-  searchConversations(): void {
-    this.filterConversations();
-  }
+  searchConversations(): void { this.filterConversations(); }
 
   selectConversation(conv: Conversation): void {
     this.selectedConversation = conv;
@@ -563,82 +790,177 @@ export class InboxComponent implements OnInit, OnDestroy {
 
     this.messagerieService.getConversation(otherEmail).subscribe({
       next: (msgs) => {
-        this.messages = msgs;
-        setTimeout(() => this.scrollToBottom(), 100);
+        // S'assurer que chaque message a un tableau attachments
+        this.messages = msgs.map(m => ({ ...m, attachments: m.attachments || [] }));
+        this.shouldScroll = true;
       },
       error: (err) => console.error('Error loading conversation:', err)
     });
   }
 
+  // ────────── Gestion fichiers ──────────
+
+  onFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files) return;
+    this.selectedFiles = [...this.selectedFiles, ...Array.from(input.files)];
+    input.value = '';
+  }
+
+  removeFile(index: number): void {
+    this.selectedFiles = this.selectedFiles.filter((_, i) => i !== index);
+  }
+
+  clearFiles(): void { this.selectedFiles = []; }
+
+  // ────────── Envoi message ──────────
+
   sendMessage(): void {
-    if (!this.newMessage.trim() || !this.selectedConversation || this.sending) return;
+    const hasText = this.newMessage.trim().length > 0;
+    const hasFiles = this.selectedFiles.length > 0;
+
+    if ((!hasText && !hasFiles) || !this.selectedConversation || this.sending) return;
 
     const otherEmail = this.getOtherEmail(this.selectedConversation);
     const content = this.newMessage.trim();
-    
-    console.log('📤 ===== TENTATIVE D\'ENVOI =====');
-    console.log('1️⃣ Mon email (expéditeur):', this.myEmail);
-    console.log('2️⃣ Email destinataire:', otherEmail);
-    console.log('3️⃣ Contenu:', content);
-    
-    // Vérifications
-    if (!this.myEmail) {
-      alert('❌ Erreur: Votre email n\'est pas défini. Reconnectez-vous.');
-      return;
-    }
-    
-    if (!otherEmail) {
-      alert('❌ Erreur: Email du destinataire manquant');
-      return;
-    }
-    
+
+    console.log('📤 Envoi → destinataire:', otherEmail, '| fichiers:', this.selectedFiles.length);
+
+    if (!this.myEmail) { alert('❌ Votre email n\'est pas défini. Reconnectez-vous.'); return; }
+    if (!otherEmail) { alert('❌ Email du destinataire manquant'); return; }
     if (otherEmail.toLowerCase() === this.myEmail.toLowerCase()) {
-      alert('❌ Erreur: Vous ne pouvez pas vous envoyer un message à vous-même');
+      alert('❌ Vous ne pouvez pas vous envoyer un message à vous-même');
       return;
     }
 
     this.sending = true;
-    const messageToSend = content;
     this.newMessage = '';
 
-    this.messagerieService.sendMessage(otherEmail, messageToSend).subscribe({
-      next: (msg) => {
-        console.log('✅ Message envoyé avec succès:', msg);
-        this.messages.push(msg);
-        this.sending = false;
-
-        if (this.selectedConversation?.id === -1) {
-          setTimeout(() => this.loadConversations(), 500);
-        } else {
-          this.loadConversations();
-        }
-        setTimeout(() => this.scrollToBottom(), 100);
-      },
-      error: (err) => {
-        console.error('❌ ERREUR COMPLÈTE:', err);
-        console.error('Status:', err.status);
-        console.error('Message backend:', err.error);
-        
-        let errorMessage = 'Erreur lors de l\'envoi';
-        if (err.error) {
-          if (typeof err.error === 'string') {
-            errorMessage = err.error;
-          } else if (err.error.error) {
-            errorMessage = err.error.error;
-          } else if (err.error.message) {
-            errorMessage = err.error.message;
+    // ── Cas 1 : Pas de fichiers → JSON simple ──
+    if (!hasFiles) {
+      this.messagerieService.sendMessage(otherEmail, content).subscribe({
+        next: (msg) => {
+          this.messages.push({ ...msg, attachments: msg.attachments || [] });
+          this.sending = false;
+          this.shouldScroll = true;
+          if (this.selectedConversation?.id === -1) {
+            setTimeout(() => this.loadConversations(), 500);
           } else {
-            errorMessage = JSON.stringify(err.error);
+            this.loadConversations();
           }
+        },
+        error: (err) => {
+          console.error('❌ Erreur envoi:', err);
+          this.sending = false;
+          this.newMessage = content;
+          const msg = err.error?.error || err.error?.message || JSON.stringify(err.error) || 'Erreur inconnue';
+          alert('❌ ' + msg);
         }
-        
-        alert('❌ ' + errorMessage);
-        
-        this.sending = false;
-        this.newMessage = messageToSend;
+      });
+      return;
+    }
+
+    // ── Cas 2 : Avec fichiers → XHR multipart (bypass intercepteur Angular) ──
+    const formData = new FormData();
+    formData.append('recipientEmail', otherEmail);
+    // Le backend exige content non-null
+    const finalContent = content || `📎 ${this.selectedFiles.length} fichier(s) joint(s)`;
+    formData.append('content', finalContent);
+    this.selectedFiles.forEach(file => formData.append('attachments', file, file.name));
+
+    const token = localStorage.getItem('auth_token') || '';
+    const filesToSend = [...this.selectedFiles];
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${this.API}/send-with-attachments`, true);
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    // ⚠️ Pas de Content-Type : le browser génère la boundary automatiquement
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const data: { message: Message; attachmentCount: number } = JSON.parse(xhr.responseText);
+          const msg = { ...data.message, attachments: data.message.attachments || [] };
+          this.messages.push(msg);
+          this.selectedFiles = [];
+          this.shouldScroll = true;
+          setTimeout(() => this.loadConversations(), 400);
+        } catch (e) {
+          console.error('Erreur parsing réponse:', e);
+        }
+      } else {
+        console.error('Erreur serveur:', xhr.status, xhr.responseText);
+        this.newMessage = content;
+        this.selectedFiles = filesToSend;
+        alert(`Erreur ${xhr.status} : ${xhr.responseText || 'Vérifiez le backend'}`);
       }
+      this.sending = false;
+    };
+
+    xhr.onerror = () => {
+      console.error('Erreur réseau XHR');
+      this.sending = false;
+      this.newMessage = content;
+      this.selectedFiles = filesToSend;
+      alert('Erreur réseau. Vérifiez que le serveur est accessible.');
+    };
+
+    xhr.send(formData);
+  }
+
+  // ────────── Blob URLs pour les images (évite le 401 du ?token=) ──────────
+
+  getBlobUrl(attachmentId: number): string {
+    if (this.blobUrlCache.has(attachmentId)) {
+      return this.blobUrlCache.get(attachmentId)!;
+    }
+    this.blobUrlCache.set(attachmentId, ''); // placeholder
+    const token = localStorage.getItem('auth_token') || '';
+    this.http.get(`${this.API}/attachment/${attachmentId}`, {
+      headers: new HttpHeaders({ Authorization: `Bearer ${token}` }),
+      responseType: 'blob'
+    }).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        this.blobUrlCache.set(attachmentId, url);
+      },
+      error: () => this.blobUrlCache.delete(attachmentId)
+    });
+    return '';
+  }
+
+  // ────────── Téléchargement ──────────
+
+  downloadFile(att: MessageAttachment): void {
+    const token = localStorage.getItem('auth_token') || '';
+    this.http.get(`${this.API}/attachment/${att.id}`, {
+      headers: new HttpHeaders({ Authorization: `Bearer ${token}` }),
+      responseType: 'blob'
+    }).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = att.fileName; a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => alert('Erreur lors du téléchargement.')
     });
   }
+
+  // ────────── Modal image ──────────
+
+  openImagePreview(att: MessageAttachment): void { this.previewAtt = att; }
+  closeImagePreview(): void { this.previewAtt = null; }
+
+  // ────────── Auto-resize textarea ──────────
+
+  autoResize(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+  }
+
+  // ────────── Helpers ──────────
 
   getOtherEmail(conv: Conversation): string {
     return conv.senderEmail === this.myEmail ? conv.recipientEmail : conv.senderEmail;
@@ -665,7 +987,8 @@ export class InboxComponent implements OnInit, OnDestroy {
       'LOCAL_PARTNER': 'Local Partner',
       'INVESTOR': 'Investor',
       'PARTNER': 'Economic Partner',
-      'TOURIST': 'Tourist'
+      'TOURIST': 'Tourist',
+      'ADMIN': 'Administrator'
     };
     return labels[role] || role || '';
   }
@@ -679,6 +1002,34 @@ export class InboxComponent implements OnInit, OnDestroy {
 
   isViewed(conv: Conversation): boolean {
     return conv.senderEmail === this.myEmail ? conv.senderViewed : conv.partnerViewed;
+  }
+
+  isImageFile(fileType: string): boolean {
+    return fileType?.startsWith('image/') ?? false;
+  }
+
+  /** Masquer le label auto-généré "📎 N fichier(s)" dans la bulle si des attachments existent */
+  isAutoAttachLabel(content: string): boolean {
+    return /^📎 \d+ (fichier|pièce)\(s\)/.test(content);
+  }
+
+  getFileIcon(fileType: string): string {
+    if (!fileType) return '📄';
+    if (fileType.startsWith('image/')) return '🖼️';
+    if (fileType === 'application/pdf') return '📕';
+    if (fileType.includes('word') || fileType.includes('document')) return '📝';
+    if (fileType.includes('excel') || fileType.includes('spreadsheet')) return '📊';
+    if (fileType.includes('zip') || fileType.includes('rar')) return '🗜️';
+    if (fileType.startsWith('text/')) return '📃';
+    return '📎';
+  }
+
+  formatFileSize(bytes: number): string {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   }
 
   formatTime(dateString: string): string {
@@ -699,7 +1050,8 @@ export class InboxComponent implements OnInit, OnDestroy {
 
   private scrollToBottom(): void {
     if (this.messagesContainer?.nativeElement) {
-      this.messagesContainer.nativeElement.scrollTop = this.messagesContainer.nativeElement.scrollHeight;
+      this.messagesContainer.nativeElement.scrollTop =
+        this.messagesContainer.nativeElement.scrollHeight;
     }
   }
 }

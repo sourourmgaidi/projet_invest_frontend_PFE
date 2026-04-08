@@ -1,0 +1,116 @@
+{
+  "HOME": {
+    "BADGE": "Plateforme Officielle d'Investissement",
+    "TITLE": "Investissez en",
+    "TITLE_HIGHLIGHT": "Tunisie",
+    "DESC": "La plateforme qui connecte les investisseurs, partenaires locaux, sociétés internationales et touristes pour un développement économique durable.",
+    "GET_STARTED": "Commencer →",
+    "ALREADY_ACCOUNT": "J'ai déjà un compte"
+  },
+  "STATS": {
+    "USERS": "Utilisateurs inscrits",
+    "SERVICES": "Services actifs",
+    "GOVERNORATES": "Gouvernorats"
+  },
+  "MAP": {
+    "TITLE": "Explorez les 24 gouvernorats de Tunisie"
+  },
+  "COMMUNITY": {
+    "TITLE": "Notre Communauté",
+    "INVESTORS": "Investisseurs",
+    "ECONOMIC_PARTNERS": "Partenaires Économiques",
+    "LOCAL_PARTNERS": "Partenaires Locaux",
+    "INTERNATIONAL": "Sociétés Internationales",
+    "TOURISTS": "Touristes"
+  },
+  "SERVICES": {
+    "TITLE": "Services Disponibles",
+    "INVESTMENT": "Opportunités d'Investissement",
+    "COLLABORATION": "Services de Collaboration",
+    "TOURIST": "Services Touristiques"
+  },
+  "FOOTER": {
+    "COPYRIGHT": "© 2025 ForsaTN · Tous droits réservés"
+  },"LOGIN": {
+  "HOME": "Accueil",
+  "TITLE": "Connexion",
+  "SUBTITLE": "Entrez vos identifiants",
+  "EMAIL": "Email",
+  "EMAIL_PLACEHOLDER": "votre@email.com",
+  "PASSWORD": "Mot de passe",
+  "PASSWORD_PLACEHOLDER": "Entrez votre mot de passe",
+  "SHOW": "Afficher",
+  "HIDE": "Masquer",
+  "FORGOT": "Mot de passe oublié ?",
+  "SUBMIT": "Se connecter",
+  "SUBMITTING": "Connexion..."
+}
+,
+  "REGISTER": {
+    "TITLE": "Créer un compte",
+    "STEP_ROLE": "Rôle",
+    "STEP_INFO": "Informations",
+    "WHAT_PROFILE": "Quel est votre profil ?",
+    "SELECT_ROLE": "Sélectionnez votre rôle pour créer un compte adapté",
+    "CONTINUE": "Continuer",
+    "EMAIL": "Email",
+    "VALID_EMAIL": "Email valide requis",
+    "PHONE": "Téléphone",
+    "PHONE_EXAMPLE": "Exemple",
+    "LAST_NAME": "Nom",
+    "FIRST_NAME": "Prénom",
+    "LAST_NAME_PLACEHOLDER": "Votre nom",
+    "FIRST_NAME_PLACEHOLDER": "Votre prénom",
+    "NATIONALITY": "Nationalité",
+    "SELECT_NATIONALITY": "Sélectionnez votre nationalité",
+    "COMPANY_NAME": "Nom de l'entreprise",
+    "COMPANY_NAME_PLACEHOLDER": "Nom de votre entreprise",
+    "COUNTRY_ORIGIN": "Pays d'origine",
+    "SELECT_COUNTRY": "Sélectionnez un pays",
+    "ACTIVITY_SECTOR": "Secteur d'activité",
+    "SELECT_SECTOR": "Sélectionnez le secteur d'activité",
+    "BUSINESS_SECTOR": "Secteur d'activité",
+    "WEBSITE": "Site web",
+    "LINKEDIN": "Profil LinkedIn",
+    "HEADQUARTERS_ADDRESS": "Adresse du siège social",
+    "ADDRESS": "Adresse",
+    "ADDRESS_PLACEHOLDER": "Adresse complète",
+    "REGION": "Région",
+    "SELECT_REGION": "Sélectionnez une région",
+    "BUSINESS_REG_NUMBER": "Numéro d'enregistrement commercial",
+    "REG_NUMBER_PLACEHOLDER": "Numéro d'enregistrement",
+    "TAX_NUMBER": "Numéro de taxe professionnelle",
+    "TAX_NUMBER_PLACEHOLDER": "Numéro de taxe",
+    "CONTACT_LAST_NAME": "Nom du contact",
+    "CONTACT_FIRST_NAME": "Prénom du contact",
+    "SIRET_NUMBER": "Numéro SIRET",
+    "SIRET_PLACEHOLDER": "Numéro SIRET",
+    "PASSWORD": "Mot de passe",
+    "PASSWORD_PLACEHOLDER": "Minimum 6 caractères",
+    "PASSWORD_MIN_LENGTH": "Minimum 6 caractères requis",
+    "CONFIRM_PASSWORD": "Confirmer le mot de passe",
+    "CONFIRM_PASSWORD_PLACEHOLDER": "Répétez votre mot de passe",
+    "PASSWORD_MISMATCH": "Les mots de passe ne correspondent pas",
+    "BACK": "Retour",
+    "CREATE_ACCOUNT": "Créer un compte",
+    "REGISTERING": "Inscription en cours...",
+    "SHOW": "Afficher",
+    "HIDE": "Masquer"
+  },
+  "ROLES": {
+    "INVESTOR": "Investisseur",
+    "TOURIST": "Touriste",
+    "PARTNER": "Partenaire Économique",
+    "LOCAL_PARTNER": "Partenaire Local",
+    "INTERNATIONAL_COMPANY": "Société Internationale",
+    "ADMIN": "Administrateur"
+  },
+  "ROLES_DESC": {
+    "INVESTOR": "Découvrez les opportunités d'investissement en Tunisie",
+    "TOURIST": "Explorez les merveilles de la Tunisie",
+    "PARTNER": "Développez vos partenariats économiques",
+    "LOCAL_PARTNER": "Engagez-vous dans le développement local",
+    "INTERNATIONAL_COMPANY": "Établissez votre présence internationale",
+    "ADMIN": "Administration de la plateforme"
+  }
+}

@@ -6,6 +6,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { NavbarComponent } from '../../../shared/navbar/navbar';
 import { NotificationBellComponent } from '../../../shared/notification-bell/notification-bell.component';
 import { FavoriteCollaborationService } from '../../../core/services/favorite-collaboration.service';
+import { CurrencyConverterComponent } from '../../../features/public/currency-converter/currency-converter.component';
 
 @Component({
   selector: 'app-collaboration-services',
@@ -15,7 +16,7 @@ import { FavoriteCollaborationService } from '../../../core/services/favorite-co
     FormsModule, 
     RouterModule, 
     NavbarComponent, 
-    NotificationBellComponent
+    NotificationBellComponent , CurrencyConverterComponent
   ],
   templateUrl: './collaboration-services.component.html',
   styleUrls: ['./collaboration-services.component.css']

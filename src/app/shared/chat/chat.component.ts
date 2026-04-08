@@ -807,43 +807,48 @@ export class ChatComponent implements OnInit, OnDestroy {
   /**
    * ✅ Retourner au dashboard selon le rôle de l'utilisateur
    */
-  returnToDashboard(): void {
-    console.log('🏠 Retour au dashboard pour le rôle:', this.userRole);
-    
-    // Construire le chemin du dashboard en fonction du rôle
-    let dashboardPath = '';
-    
-    switch (this.userRole) {
-      case 'ADMIN':
-        dashboardPath = '/admin/dashboard';
-        break;
-      case 'TOURIST':
-        dashboardPath = '/touriste/dashboard';
-        break;
-      case 'INVESTOR':
-        dashboardPath = '/investisseur/dashboard';
-        break;
-      case 'PARTNER':
-        dashboardPath = '/partenaire-economique/dashboard';
-        break;
-      case 'LOCAL_PARTNER':
-        dashboardPath = '/partenaire-local/dashboard';
-        break;
-      case 'INTERNATIONAL_COMPANY':
-        dashboardPath = '/societe-international/dashboard';
-        break;
-      default:
-        dashboardPath = '/dashboard';
-    }
-    
-    console.log('🚀 Navigation vers:', dashboardPath);
-    
-    // Utiliser le routeur pour naviguer
-    this.router.navigate([dashboardPath]).then(success => {
-      if (!success) {
-        // Fallback en cas d'échec
-        window.location.href = dashboardPath;
-      }
-    });
+ returnToDashboard(): void {
+  const token = localStorage.getItem('auth_token');
+
+  if (!token) {
+    this.router.navigate(['/login']);
+    return;
   }
+
+  // ✅ Décoder le JWT sans librairie externe
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    console.log('🔑 Token payload:', payload);
+
+    // Keycloak met les rôles dans realm_access.roles
+    const roles: string[] = payload?.realm_access?.roles || [];
+    console.log('🎭 Rôles trouvés:', roles);
+
+    const roleRoutes: Record<string, string> = {
+      'ADMIN':                 '/admin/dashboard',
+      'TOURIST':               '/touriste/dashboard',
+      'INVESTOR':              '/investisseur/dashboard',
+      'PARTNER':               '/partenaire-economique/dashboard',
+      'LOCAL_PARTNER':         '/partenaire-local/dashboard',
+      'INTERNATIONAL_COMPANY': '/societe-international/dashboard',
+    };
+
+    // Trouver le premier rôle métier dans le token
+    const matchedRole = Object.keys(roleRoutes).find(r => roles.includes(r));
+
+    if (!matchedRole) {
+      console.warn('⚠️ Aucun rôle métier trouvé dans le token, rôles:', roles);
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    const dashboardPath = roleRoutes[matchedRole];
+    console.log('🚀 Redirection vers:', dashboardPath);
+    this.router.navigate([dashboardPath]);
+
+  } catch (e) {
+    console.error('❌ Erreur décodage token:', e);
+    this.router.navigate(['/login']);
+  }
+}
 }

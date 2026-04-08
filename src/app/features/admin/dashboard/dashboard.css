@@ -694,3 +694,72 @@ app-navbar {
   background: rgba(239, 68, 68, 0.2);
   color: #ef4444;
 }
+/* Statistics Card Styles */
+.stats-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+}
+
+.stats-card .card-content h3,
+.stats-card .card-content p {
+  color: white;
+}
+
+.stats-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stats-icon {
+  font-size: 28px;
+  background: rgba(255,255,255,0.2);
+  padding: 8px 12px;
+  border-radius: 12px;
+}
+
+.stats-preview {
+  display: flex;
+  gap: 16px;
+  margin: 16px 0;
+  padding: 12px 0;
+  border-top: 1px solid rgba(255,255,255,0.2);
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.stat-preview-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.stat-preview-value {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.stat-preview-label {
+  font-size: 11px;
+  opacity: 0.8;
+  margin-top: 4px;
+}
+
+.trend-positive {
+  color: #4ade80;
+}
+
+.trend-negative {
+  color: #f87171;
+}
+
+.trend-neutral {
+  color: #fbbf24;
+}
+
+/* Animation pour la carte au survol */
+.stats-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
+}
