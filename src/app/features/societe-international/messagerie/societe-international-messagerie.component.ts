@@ -5,7 +5,17 @@ import { RouterModule, ActivatedRoute } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { interval, Subscription } from 'rxjs';
 import { NavbarComponent } from '../../../shared/navbar/navbar';
+import { MessagerieService } from '../../../core/services/messagerie.service';
 import { NotificationBellComponent } from '../../../shared/notification-bell/notification-bell.component';
+
+interface MessageAttachment {
+  id: number;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  filePath: string;
+  uploadedAt: string;
+}
 
 interface Message {
   id: number;
@@ -14,6 +24,7 @@ interface Message {
   recipientEmail: string;
   sentDate: string;
   read: boolean;
+  attachments: MessageAttachment[];
 }
 
 interface Conversation {
@@ -27,6 +38,7 @@ interface Conversation {
   senderViewed: boolean;
   partnerViewed: boolean;
   _contactName?: string;
+   unreadCount?: number; 
 }
 
 @Component({
@@ -80,9 +92,14 @@ interface Conversation {
                     <span class="conv-time">{{ formatTime(conv.lastMessageDate) }}</span>
                   </div>
                   <div class="conv-bottom">
-                    <span class="conv-preview">{{ conv.lastMessage || 'Start conversation...' }}</span>
-                    <span class="unread-dot" *ngIf="!isViewed(conv)">●</span>
-                  </div>
+  <span class="conv-preview">{{ conv.lastMessage || 'Start conversation...' }}</span>
+  <div class="conv-badges">
+    <span class="unread-dot" *ngIf="!isViewed(conv)">●</span>
+    <span class="conv-unread-count" *ngIf="conv.unreadCount && conv.unreadCount > 0">
+      {{ conv.unreadCount > 99 ? '99+' : conv.unreadCount }}
+    </span>
+  </div>
+</div>
                   <span class="role-badge">{{ getRoleLabel(conv) }}</span>
                 </div>
               </div>
@@ -126,9 +143,45 @@ interface Conversation {
                       {{ getInitials(selectedConv) }}
                     </div>
                     <div class="msg-bubble">
-                      <p>{{ msg.content }}</p>
+                      <p *ngIf="msg.content && !isAutoAttachLabel(msg.content)">{{ msg.content }}</p>
+
+                      <!-- Pièces jointes -->
+                      <div class="attachments-list" *ngIf="msg.attachments && msg.attachments.length > 0">
+                        <div class="attachment-item" *ngFor="let att of msg.attachments">
+
+                          <!-- Image -->
+                          <ng-container *ngIf="isImageFile(att.fileType)">
+                            <div class="img-preview-wrapper" (click)="openImagePreview(att)">
+                              <img [src]="getBlobUrl(att.id)" [alt]="att.fileName"
+                                   class="img-preview" loading="lazy" />
+                              <div class="img-zoom-hint">🔍</div>
+                            </div>
+                            <div class="att-footer">
+                              <span class="att-name">{{ att.fileName }}</span>
+                              <button class="att-dl-btn" (click)="downloadFile(att)" title="Download">⬇</button>
+                            </div>
+                          </ng-container>
+
+                          <!-- Fichier non-image -->
+                          <ng-container *ngIf="!isImageFile(att.fileType)">
+                            <div class="file-att">
+                              <span class="file-icon">{{ getFileIcon(att.fileType) }}</span>
+                              <div class="file-info">
+                                <span class="file-name">{{ att.fileName }}</span>
+                                <span class="file-size">{{ formatFileSize(att.fileSize) }}</span>
+                              </div>
+                              <button class="att-dl-btn" (click)="downloadFile(att)" title="Download">⬇</button>
+                            </div>
+                          </ng-container>
+
+                        </div>
+                      </div>
+
                       <div class="msg-meta">
                         <span class="msg-time">{{ formatMsgTime(msg.sentDate) }}</span>
+                        <span class="attach-indicator" *ngIf="msg.attachments && msg.attachments.length > 0">
+                          📎{{ msg.attachments.length }}
+                        </span>
                         <span class="msg-status" *ngIf="msg.senderEmail === myEmail">
                           {{ msg.read ? '✓✓' : '✓' }}
                         </span>
@@ -144,14 +197,47 @@ interface Conversation {
               </ng-container>
             </div>
 
+            <!-- ── Input Area ── -->
             <div class="input-area" *ngIf="selectedConv">
+
+              <!-- Aperçu fichiers sélectionnés -->
+              <div class="files-preview" *ngIf="selectedFiles.length > 0">
+                <div class="files-preview-header">
+                  <span>{{ selectedFiles.length }} file(s) selected</span>
+                  <button class="clear-files-btn" (click)="clearFiles()">✕ Clear all</button>
+                </div>
+                <div class="files-chips">
+                  <div class="file-chip" *ngFor="let f of selectedFiles; let i = index">
+                    <span class="chip-icon">{{ getFileIcon(f.type) }}</span>
+                    <span class="chip-name">{{ f.name }}</span>
+                    <span class="chip-size">({{ formatFileSize(f.size) }})</span>
+                    <button class="chip-remove" (click)="removeFile(i)">✕</button>
+                  </div>
+                </div>
+              </div>
+
               <div class="input-wrapper">
+                <!-- Bouton pièce jointe -->
+                <button class="attach-btn" (click)="fileInput.click()"
+                        [class.has-files]="selectedFiles.length > 0" title="Attach file">
+                  📎
+                  <span class="attach-badge" *ngIf="selectedFiles.length > 0">{{ selectedFiles.length }}</span>
+                </button>
+
+                <input #fileInput type="file" multiple
+                       accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar"
+                       style="display:none"
+                       (change)="onFilesSelected($event)" />
+
                 <textarea [(ngModel)]="newMessage"
                           placeholder="Write a message... (Enter to send)"
                           (keydown.enter)="$event.preventDefault(); sendMessage()"
                           (input)="autoResize($event)"
                           rows="1" class="msg-input"></textarea>
-                <button class="send-btn" [disabled]="!newMessage.trim() || sending" (click)="sendMessage()">
+
+                <button class="send-btn"
+                        [disabled]="(!newMessage.trim() && selectedFiles.length === 0) || sending"
+                        (click)="sendMessage()">
                   <span *ngIf="!sending">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -168,6 +254,18 @@ interface Conversation {
         </div>
       </div>
     </div>
+
+    <!-- ── Modal prévisualisation image ── -->
+    <div class="img-modal" *ngIf="previewAtt" (click)="closeImagePreview()">
+      <div class="img-modal-content" (click)="$event.stopPropagation()">
+        <button class="modal-close" (click)="closeImagePreview()">✕</button>
+        <img [src]="getBlobUrl(previewAtt.id)" [alt]="previewAtt.fileName" class="modal-img" />
+        <div class="modal-footer">
+          <span>{{ previewAtt.fileName }}</span>
+          <button class="modal-dl-btn" (click)="downloadFile(previewAtt)">⬇ Download</button>
+        </div>
+      </div>
+    </div>
   `,
   styles: [`
     .page-layout { display: flex; min-height: 100vh; background: linear-gradient(135deg, #f8fafc, #f1f5f9); font-family: 'Inter', sans-serif; }
@@ -181,6 +279,7 @@ interface Conversation {
 
     .inbox-container { display: flex; flex: 1; min-height: 0; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 30px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
 
+    /* ── Sidebar ── */
     .sidebar { width: 320px; flex-shrink: 0; border-right: 1px solid #f1f5f9; display: flex; flex-direction: column; background: #fafbff; }
     .sidebar-header { padding: 1.2rem 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 0.75rem; }
     .sidebar-header h2 { margin: 0; font-size: 1rem; font-weight: 700; color: #0f172a; }
@@ -190,7 +289,6 @@ interface Conversation {
     .search-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
     .search-icon { position: absolute; left: 1.65rem; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
     .conv-list { flex: 1; overflow-y: auto; }
-
     .conv-item { display: flex; padding: 0.85rem 1.25rem; gap: 0.75rem; cursor: pointer; transition: all 0.15s; border-bottom: 1px solid #f8fafc; }
     .conv-item:hover { background: #eff6ff; }
     .conv-item.active { background: #eff6ff; border-left: 3px solid #2563eb; }
@@ -209,6 +307,7 @@ interface Conversation {
     .empty-conv p { font-size: 0.95rem; font-weight: 500; margin: 0 0 0.5rem; color: #64748b; }
     .loading-state { display: flex; justify-content: center; padding: 2rem; }
 
+    /* ── Chat Zone ── */
     .chat-zone { flex: 1; display: flex; flex-direction: column; background: #f8fafc; min-width: 0; }
     .chat-header { padding: 1rem 1.5rem; border-bottom: 1px solid #e2e8f0; background: white; display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; min-height: 70px; }
     .empty-header { justify-content: center; }
@@ -218,6 +317,7 @@ interface Conversation {
     .contact-info h3 { margin: 0; font-size: 1rem; font-weight: 600; color: #0f172a; }
     .role-tag { font-size: 0.75rem; color: #059669; background: #d1fae5; padding: 0.15rem 0.6rem; border-radius: 20px; font-weight: 500; }
 
+    /* ── Messages ── */
     .messages-area { flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; }
     .loading-msgs { display: flex; align-items: center; justify-content: center; gap: 0.75rem; color: #64748b; font-size: 0.9rem; margin: auto; }
     .messages-list { display: flex; flex-direction: column; gap: 0.6rem; }
@@ -231,23 +331,86 @@ interface Conversation {
     .msg-meta { display: flex; justify-content: flex-end; align-items: center; gap: 0.3rem; }
     .msg-time { font-size: 0.65rem; opacity: 0.65; }
     .msg-status { font-size: 0.65rem; opacity: 0.8; }
+    .attach-indicator { font-size: 0.65rem; opacity: 0.75; }
     .no-messages { text-align: center; margin: auto; color: #94a3b8; padding: 2rem; }
     .no-messages div { font-size: 3rem; margin-bottom: 0.75rem; }
     .no-messages p { font-size: 0.95rem; font-weight: 500; color: #64748b; margin: 0 0 0.4rem; }
 
+    /* ── Pièces jointes dans les bulles ── */
+    .attachments-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.35rem; }
+    .img-preview-wrapper { position: relative; border-radius: 10px; overflow: hidden; cursor: pointer; max-width: 200px; }
+    .img-preview { width: 100%; display: block; border-radius: 10px; transition: filter 0.2s; }
+    .img-zoom-hint { position: absolute; inset: 0; background: rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; opacity: 0; transition: opacity 0.2s; }
+    .img-preview-wrapper:hover .img-zoom-hint { opacity: 1; }
+    .img-preview-wrapper:hover .img-preview { filter: brightness(0.8); }
+    .att-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 0.2rem; padding: 0 0.1rem; }
+    .att-name { font-size: 0.72rem; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+    .file-att { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.65rem; background: rgba(255,255,255,0.15); border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); min-width: 180px; }
+    .file-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .file-info { flex: 1; min-width: 0; }
+    .file-name { display: block; font-size: 0.78rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
+    .file-size { font-size: 0.68rem; opacity: 0.7; }
+    .att-dl-btn { background: rgba(255,255,255,0.2); border: none; border-radius: 6px; cursor: pointer; padding: 0.25rem 0.4rem; font-size: 0.85rem; transition: background 0.2s; flex-shrink: 0; }
+    .att-dl-btn:hover { background: rgba(255,255,255,0.4); }
+
+    /* ── Input Area ── */
     .input-area { padding: 1rem 1.5rem 0.75rem; background: white; border-top: 1px solid #e2e8f0; flex-shrink: 0; }
+    .files-preview { margin-bottom: 0.6rem; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 0.6rem 0.8rem; }
+    .files-preview-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: #2563eb; font-weight: 600; margin-bottom: 0.4rem; }
+    .clear-files-btn { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.72rem; font-weight: 600; padding: 0.1rem 0.35rem; border-radius: 4px; }
+    .clear-files-btn:hover { background: #fee2e2; }
+    .files-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .file-chip { display: flex; align-items: center; gap: 0.3rem; background: white; border: 1px solid #bfdbfe; border-radius: 20px; padding: 0.2rem 0.6rem; font-size: 0.75rem; color: #374151; }
+    .chip-icon { font-size: 0.9rem; }
+    .chip-name { font-weight: 500; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .chip-size { color: #94a3b8; }
+    .chip-remove { background: none; border: none; cursor: pointer; color: #94a3b8; font-size: 0.8rem; padding: 0; }
+    .chip-remove:hover { color: #ef4444; }
     .input-wrapper { display: flex; gap: 0.75rem; align-items: flex-end; }
+    .attach-btn { width: 44px; height: 44px; flex-shrink: 0; background: #f1f5f9; border: 1.5px solid #e2e8f0; border-radius: 12px; cursor: pointer; font-size: 1.1rem; position: relative; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .attach-btn:hover { background: #dbeafe; border-color: #2563eb; }
+    .attach-btn.has-files { background: #dbeafe; border-color: #2563eb; }
+    .attach-badge { position: absolute; top: -5px; right: -5px; background: #2563eb; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 0.62rem; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
     .msg-input { flex: 1; padding: 0.75rem 1rem; border: 1.5px solid #e2e8f0; border-radius: 14px; resize: none; font-family: inherit; font-size: 0.9rem; max-height: 120px; outline: none; line-height: 1.4; }
     .msg-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
     .send-btn { width: 44px; height: 44px; flex-shrink: 0; background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; border: none; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
     .send-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(37,99,235,0.4); }
     .send-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
     .input-hint { margin: 0.4rem 0 0; font-size: 0.72rem; color: #94a3b8; }
+    .conv-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
 
+.conv-unread-count {
+  background: #ef4444;
+  color: white;
+  border-radius: 20px;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  min-width: 18px;
+  text-align: center;
+}
+
+    /* ── Modal image ── */
+    .img-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .img-modal-content { position: relative; background: #1e293b; border-radius: 16px; overflow: hidden; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 25px 80px rgba(0,0,0,0.6); }
+    .modal-close { position: absolute; top: 0.75rem; right: 0.75rem; z-index: 10; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; }
+    .modal-close:hover { background: rgba(0,0,0,0.8); }
+    .modal-img { max-width: 85vw; max-height: 78vh; object-fit: contain; display: block; }
+    .modal-footer { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: #0f172a; color: #94a3b8; font-size: 0.82rem; }
+    .modal-dl-btn { background: #2563eb; color: white; border: none; border-radius: 8px; padding: 0.4rem 0.9rem; cursor: pointer; font-size: 0.82rem; font-weight: 600; }
+    .modal-dl-btn:hover { background: #1d4ed8; }
+
+    /* ── Spinners ── */
     .spinner { width: 28px; height: 28px; border: 3px solid #e2e8f0; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; }
     .spinner-sm { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ── Responsive ── */
     @media (max-width: 900px) {
       app-navbar { width: 100%; height: auto; position: relative; }
       .page-layout { flex-direction: column; }
@@ -278,10 +441,16 @@ export class SocieteInternationalMessagerieComponent implements OnInit, OnDestro
   unreadCount = 0;
   private shouldScroll = false;
 
+  // ── Pièces jointes ──
+  selectedFiles: File[] = [];
+  previewAtt: MessageAttachment | null = null;
+  private blobUrlCache = new Map<number, string>();
+
   @ViewChild('messagesContainer') messagesContainer?: ElementRef;
 
   private http = inject(HttpClient);
   private route = inject(ActivatedRoute);
+  private messagerieService = inject(MessagerieService);
   private refreshSub?: Subscription;
 
   private readonly API = 'http://localhost:8089/api/messagerie';
@@ -302,14 +471,12 @@ export class SocieteInternationalMessagerieComponent implements OnInit, OnDestro
 
     this.loadConversations();
 
-    // Ouvrir conversation depuis "Contact Provider"
     this.route.queryParams.subscribe(params => {
       if (params['contact']) {
         setTimeout(() => this.openOrCreate(params['contact'], params['name']), 800);
       }
     });
 
-    // Rafraîchissement auto toutes les 10s
     this.refreshSub = interval(10000).subscribe(() => {
       this.loadConversations(false);
       if (this.selectedConv) this.reloadMessages();
@@ -318,6 +485,8 @@ export class SocieteInternationalMessagerieComponent implements OnInit, OnDestro
 
   ngOnDestroy(): void {
     this.refreshSub?.unsubscribe();
+    this.blobUrlCache.forEach(url => window.URL.revokeObjectURL(url));
+    this.blobUrlCache.clear();
   }
 
   ngAfterViewChecked(): void {
@@ -328,19 +497,59 @@ export class SocieteInternationalMessagerieComponent implements OnInit, OnDestro
   }
 
   loadConversations(showLoader = true): void {
-    if (showLoader) this.loadingConv = true;
-    this.http.get<Conversation[]>(`${this.API}/my-conversations`, {
-      headers: this.getHeaders()
-    }).subscribe({
-      next: (data) => {
-        this.conversations = data;
+  if (showLoader) this.loadingConv = true;
+  
+  this.http.get<Conversation[]>(`${this.API}/my-conversations`, {
+    headers: this.getHeaders()
+  }).subscribe({
+    next: (data) => {
+      this.conversations = data;
+      
+      // Compter les messages non lus pour chaque conversation
+      let completedRequests = 0;
+      const totalRequests = data.length;
+      
+      if (totalRequests === 0) {
         this.filterConversations();
-        this.unreadCount = data.filter(c => !this.isViewed(c)).length;
+        this.unreadCount = 0;
         this.loadingConv = false;
-      },
-      error: () => { this.loadingConv = false; }
-    });
-  }
+        return;
+      }
+      
+      data.forEach(conv => {
+        const otherEmail = this.getOtherEmail(conv);
+        
+        this.http.get<Message[]>(`${this.API}/conversation/${otherEmail}`, {
+          headers: this.getHeaders()
+        }).subscribe({
+          next: (messages) => {
+            const unreadMessages = messages.filter(m => 
+              m.senderEmail === otherEmail && !m.read
+            );
+            conv.unreadCount = unreadMessages.length;
+            
+            completedRequests++;
+            if (completedRequests === totalRequests) {
+              this.filterConversations();
+              this.unreadCount = data.filter(c => !this.isViewed(c)).length;
+              this.loadingConv = false;
+            }
+          },
+          error: () => {
+            conv.unreadCount = 0;
+            completedRequests++;
+            if (completedRequests === totalRequests) {
+              this.filterConversations();
+              this.unreadCount = data.filter(c => !this.isViewed(c)).length;
+              this.loadingConv = false;
+            }
+          }
+        });
+      });
+    },
+    error: () => { this.loadingConv = false; }
+  });
+}
 
   filterConversations(): void {
     if (!this.searchQuery.trim()) {
@@ -354,11 +563,21 @@ export class SocieteInternationalMessagerieComponent implements OnInit, OnDestro
     );
   }
 
-  selectConversation(conv: Conversation): void {
-    this.selectedConv = conv;
-    this.mobileShowChat = true;
-    this.loadMessages(conv);
-  }
+selectConversation(conv: Conversation): void {
+  this.selectedConv = conv;
+  this.mobileShowChat = true;
+  this.loadMessages(conv);
+  
+  // ✅ Marquer les messages comme lus quand on ouvre la conversation
+  const otherEmail = this.getOtherEmail(conv);
+  this.messagerieService.markConversationAsRead(otherEmail).subscribe({
+    next: () => {
+      conv.unreadCount = 0;
+      setTimeout(() => this.loadConversations(false), 500);
+    },
+    error: (err) => console.error('Erreur marquage lecture:', err)
+  });
+}
 
   loadMessages(conv: Conversation): void {
     this.loadingMessages = true;
@@ -368,9 +587,9 @@ export class SocieteInternationalMessagerieComponent implements OnInit, OnDestro
       headers: this.getHeaders()
     }).subscribe({
       next: (data) => {
-        this.messages = [...data].sort((a, b) =>
-          new Date(a.sentDate).getTime() - new Date(b.sentDate).getTime()
-        );
+        this.messages = [...data]
+          .map(m => ({ ...m, attachments: m.attachments || [] }))
+          .sort((a, b) => new Date(a.sentDate).getTime() - new Date(b.sentDate).getTime());
         this.loadingMessages = false;
         this.shouldScroll = true;
       },
@@ -385,9 +604,9 @@ export class SocieteInternationalMessagerieComponent implements OnInit, OnDestro
       headers: this.getHeaders()
     }).subscribe({
       next: (data) => {
-        const sorted = [...data].sort((a, b) =>
-          new Date(a.sentDate).getTime() - new Date(b.sentDate).getTime()
-        );
+        const sorted = [...data]
+          .map(m => ({ ...m, attachments: m.attachments || [] }))
+          .sort((a, b) => new Date(a.sentDate).getTime() - new Date(b.sentDate).getTime());
         if (sorted.length > this.messages.length) {
           this.messages = sorted;
           this.shouldScroll = true;
@@ -422,28 +641,164 @@ export class SocieteInternationalMessagerieComponent implements OnInit, OnDestro
     }
   }
 
+  // ── Gestion fichiers ──
+
+  onFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files) return;
+    this.selectedFiles = [...this.selectedFiles, ...Array.from(input.files)];
+    input.value = '';
+  }
+
+  removeFile(index: number): void {
+    this.selectedFiles = this.selectedFiles.filter((_, i) => i !== index);
+  }
+
+  clearFiles(): void { this.selectedFiles = []; }
+
+  // ── Envoi message ──
+
   sendMessage(): void {
-    if (!this.newMessage.trim() || !this.selectedConv || this.sending) return;
+    const hasText = this.newMessage.trim().length > 0;
+    const hasFiles = this.selectedFiles.length > 0;
+
+    if ((!hasText && !hasFiles) || !this.selectedConv || this.sending) return;
+
     const otherEmail = this.getOtherEmail(this.selectedConv);
     const content = this.newMessage.trim();
     this.sending = true;
     this.newMessage = '';
-    this.http.post<Message>(`${this.API}/send`,
-      { recipientEmail: otherEmail, content },
-      { headers: this.getHeaders() }
-    ).subscribe({
-      next: (msg) => {
-        this.messages.push(msg);
-        this.sending = false;
-        this.shouldScroll = true;
-        setTimeout(() => this.loadConversations(false), 400);
-      },
-      error: () => {
-        this.sending = false;
+
+    // Sans fichiers → JSON simple
+    if (!hasFiles) {
+      this.http.post<Message>(`${this.API}/send`,
+        { recipientEmail: otherEmail, content },
+        { headers: this.getHeaders() }
+      ).subscribe({
+        next: (msg) => {
+          this.messages.push({ ...msg, attachments: msg.attachments || [] });
+          this.sending = false;
+          this.shouldScroll = true;
+          setTimeout(() => this.loadConversations(false), 400);
+        },
+        error: () => {
+          this.sending = false;
+          this.newMessage = content;
+          alert('Error sending message. Please try again.');
+        }
+      });
+      return;
+    }
+
+    // Avec fichiers → multipart XHR
+    const filesToSend = [...this.selectedFiles];
+    const token = localStorage.getItem('auth_token') || '';
+    const formData = new FormData();
+    formData.append('recipientEmail', otherEmail);
+    formData.append('content', content || `📎 ${this.selectedFiles.length} fichier(s) joint(s)`);
+    this.selectedFiles.forEach(file => formData.append('attachments', file, file.name));
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${this.API}/send-with-attachments`, true);
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          const msg = { ...data.message, attachments: data.message.attachments || [] };
+          this.messages.push(msg);
+          this.selectedFiles = [];
+          this.shouldScroll = true;
+          setTimeout(() => this.loadConversations(false), 400);
+        } catch (e) { console.error('Erreur parsing:', e); }
+      } else {
         this.newMessage = content;
-        alert('Error sending message. Please try again.');
+        this.selectedFiles = filesToSend;
+        alert(`Erreur ${xhr.status} : ${xhr.responseText || 'Vérifiez le backend'}`);
       }
+      this.sending = false;
+    };
+
+    xhr.onerror = () => {
+      this.sending = false;
+      this.newMessage = content;
+      this.selectedFiles = filesToSend;
+      alert('Erreur réseau.');
+    };
+
+    xhr.send(formData);
+  }
+
+  // ── Blob URLs pour les images ──
+
+  getBlobUrl(attachmentId: number): string {
+    if (this.blobUrlCache.has(attachmentId)) return this.blobUrlCache.get(attachmentId)!;
+    this.blobUrlCache.set(attachmentId, '');
+    const token = localStorage.getItem('auth_token') || '';
+    this.http.get(`${this.API}/attachment/${attachmentId}`, {
+      headers: new HttpHeaders({ Authorization: `Bearer ${token}` }),
+      responseType: 'blob'
+    }).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        this.blobUrlCache.set(attachmentId, url);
+      },
+      error: () => this.blobUrlCache.delete(attachmentId)
     });
+    return '';
+  }
+
+  // ── Téléchargement ──
+
+  downloadFile(att: MessageAttachment): void {
+    const token = localStorage.getItem('auth_token') || '';
+    this.http.get(`${this.API}/attachment/${att.id}`, {
+      headers: new HttpHeaders({ Authorization: `Bearer ${token}` }),
+      responseType: 'blob'
+    }).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = att.fileName; a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => alert('Erreur lors du téléchargement.')
+    });
+  }
+
+  // ── Modal image ──
+
+  openImagePreview(att: MessageAttachment): void { this.previewAtt = att; }
+  closeImagePreview(): void { this.previewAtt = null; }
+
+  // ── Helpers ──
+
+  isImageFile(fileType: string): boolean {
+    return fileType?.startsWith('image/') ?? false;
+  }
+
+  isAutoAttachLabel(content: string): boolean {
+    return /^📎 \d+ (fichier|pièce)\(s\)/.test(content);
+  }
+
+  getFileIcon(fileType: string): string {
+    if (!fileType) return '📄';
+    if (fileType.startsWith('image/')) return '🖼️';
+    if (fileType === 'application/pdf') return '📕';
+    if (fileType.includes('word') || fileType.includes('document')) return '📝';
+    if (fileType.includes('excel') || fileType.includes('spreadsheet')) return '📊';
+    if (fileType.includes('zip') || fileType.includes('rar')) return '🗜️';
+    if (fileType.startsWith('text/')) return '📃';
+    return '📎';
+  }
+
+  formatFileSize(bytes: number): string {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   }
 
   autoResize(event: Event): void {

@@ -6,15 +6,20 @@
   </div>
   
   <!-- Navigation Links -->
-  <div class="nav-links">
-    <ng-container *ngFor="let link of navLinks">
-      <a [routerLink]="link.route"
-         routerLinkActive="active"
-         class="nav-link">
-        {{ link.label }}
-      </a>
-    </ng-container>
-  </div>
+<div class="nav-links">
+  <ng-container *ngFor="let link of navLinks">
+    <a [routerLink]="link.route"
+       routerLinkActive="active"
+       class="nav-link"
+       [class.has-unread]="link.route.includes('messagerie') && messagerieCount > 0">
+      {{ link.label }}
+      <span class="unread-badge" 
+            *ngIf="link.route.includes('messagerie') && messagerieCount > 0">
+        {{ messagerieCount }}
+      </span>
+    </a>
+  </ng-container>
+</div>
   
   <!-- AJOUT: Messenger Icon -->
   <div class="messenger-section">

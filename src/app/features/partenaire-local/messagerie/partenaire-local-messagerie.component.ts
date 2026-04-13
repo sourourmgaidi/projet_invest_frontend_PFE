@@ -6,7 +6,9 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { interval, Subscription } from 'rxjs';
 import { NavbarComponent } from '../../../shared/navbar/navbar';
+import { MessagerieService } from '../../../core/services/messagerie.service';
 import { NotificationBellComponent } from '../../../shared/notification-bell/notification-bell.component';
+
 
 interface MessageAttachment {
   id: number;
@@ -38,6 +40,7 @@ interface Conversation {
   senderViewed: boolean;
   partnerViewed: boolean;
   _contactName?: string;
+  unreadCount?: number;
 }
 
 @Component({
@@ -67,7 +70,7 @@ interface Conversation {
 
             <div class="sidebar-header">
               <h2>💬 Conversations</h2>
-              <span class="badge-count" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+              
             </div>
 
             <div class="search-wrapper">
@@ -106,9 +109,14 @@ interface Conversation {
                     <span class="conv-time">{{ formatTime(conv.lastMessageDate) }}</span>
                   </div>
                   <div class="conv-bottom">
-                    <span class="conv-preview">{{ conv.lastMessage || 'Démarrer la conversation...' }}</span>
-                    <span class="unread-dot" *ngIf="!isViewed(conv)">●</span>
-                  </div>
+  <span class="conv-preview">{{ conv.lastMessage || 'Démarrer la conversation...' }}</span>
+  <div class="conv-badges">
+    <span class="unread-dot" *ngIf="!isViewed(conv)">●</span>
+    <span class="conv-unread-count" *ngIf="conv.unreadCount && conv.unreadCount > 0">
+      {{ conv.unreadCount > 99 ? '99+' : conv.unreadCount }}
+    </span>
+  </div>
+</div>
                   <span class="role-badge">{{ getRoleLabel(conv) }}</span>
                 </div>
               </div>
@@ -697,6 +705,22 @@ interface Conversation {
       border: 3px solid #d1fae5; border-top-color: #10b981;
       border-radius: 50%; animation: spin 0.8s linear infinite;
     }
+    .conv-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.conv-unread-count {
+  background: #ef4444;
+  color: white;
+  border-radius: 20px;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  min-width: 18px;
+  text-align: center;
+}
     .spinner-sm {
       width: 16px; height: 16px;
       border: 2px solid rgba(255,255,255,0.4); border-top-color: white;
@@ -746,6 +770,7 @@ export class PartenaireLocalMessagerieComponent implements OnInit, OnDestroy, Af
 
   private http = inject(HttpClient);
   private route = inject(ActivatedRoute);
+  private messagerieService = inject(MessagerieService);
   private refreshSub?: Subscription;
 
   private readonly API = 'http://localhost:8089/api/messagerie';
@@ -819,12 +844,59 @@ loadConversations(showLoader = true): void {
   }).subscribe({
     next: (data) => {
       this.conversations = data;
-      this.filterConversations();
-      this.unreadCount = data.filter(c => !this.isViewed(c)).length;
-      this.loadingConv = false;
-      this.loadRolesForConversations(data); // ✅ AJOUTER
+      
+      // Pour chaque conversation, compter les messages non lus
+      let completedRequests = 0;
+      const totalRequests = data.length;
+      
+      if (totalRequests === 0) {
+        this.filterConversations();
+        this.unreadCount = 0;
+        this.loadingConv = false;
+        this.loadRolesForConversations(data);
+        return;
+      }
+      
+      data.forEach(conv => {
+        const otherEmail = this.getOtherEmail(conv);
+        
+        this.http.get<Message[]>(`${this.API}/conversation/${otherEmail}`, {
+          headers: this.getHeaders()
+        }).subscribe({
+          next: (messages) => {
+            // Compter les messages non lus envoyés par l'autre personne
+            const unreadMessages = messages.filter(m => 
+              m.senderEmail === otherEmail && !m.read
+            );
+            conv.unreadCount = unreadMessages.length;
+            console.log(`📊 Conversation avec ${otherEmail}: ${conv.unreadCount} messages non lus`); // Debug
+            
+            completedRequests++;
+            if (completedRequests === totalRequests) {
+              this.filterConversations();
+              this.unreadCount = this.conversations.filter(c => !this.isViewed(c)).length;
+              this.loadingConv = false;
+              this.loadRolesForConversations(data);
+            }
+          },
+          error: (err) => {
+            console.error(`Erreur chargement messages pour ${otherEmail}:`, err);
+            conv.unreadCount = 0;
+            completedRequests++;
+            if (completedRequests === totalRequests) {
+              this.filterConversations();
+              this.unreadCount = this.conversations.filter(c => !this.isViewed(c)).length;
+              this.loadingConv = false;
+              this.loadRolesForConversations(data);
+            }
+          }
+        });
+      });
     },
-    error: () => { this.loadingConv = false; }
+    error: (err) => { 
+      console.error('Erreur chargement conversations:', err);
+      this.loadingConv = false; 
+    }
   });
 }
   filterConversations(): void {
@@ -841,11 +913,22 @@ loadConversations(showLoader = true): void {
 
   // ────────── Sélectionner une conversation ──────────
 
-  selectConversation(conv: Conversation): void {
-    this.selectedConv = conv;
-    this.mobileShowChat = true;
-    this.loadMessages(conv);
-  }
+selectConversation(conv: Conversation): void {
+  this.selectedConv = conv;
+  this.mobileShowChat = true;
+  this.loadMessages(conv);
+  
+  // ✅ Marquer les messages comme lus quand on ouvre la conversation
+  const otherEmail = this.getOtherEmail(conv);
+  this.messagerieService.markConversationAsRead(otherEmail).subscribe({
+    next: () => {
+      conv.unreadCount = 0;
+      // Recharger les conversations pour mettre à jour l'affichage
+      setTimeout(() => this.loadConversations(false), 500);
+    },
+    error: (err) => console.error('Erreur marquage lecture:', err)
+  });
+}
 
   loadMessages(conv: Conversation): void {
     this.loadingMessages = true;

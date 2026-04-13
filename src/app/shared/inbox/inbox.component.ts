@@ -50,10 +50,15 @@ import { NavbarComponent } from '../navbar/navbar';
                     <span class="conv-name">{{ getContactName(conv) }}</span>
                     <span class="conv-time">{{ formatTime(conv.lastMessageDate) }}</span>
                   </div>
-                  <div class="conv-last-message">
-                    <span class="last-msg">{{ getLastMessagePreview(conv) }}</span>
-                    <span class="unread-badge" *ngIf="!isViewed(conv)">●</span>
-                  </div>
+                 <div class="conv-last-message">
+  <span class="last-msg">{{ getLastMessagePreview(conv) }}</span>
+  <div class="conv-badges">
+    <span class="unread-dot" *ngIf="!isViewed(conv)">●</span>
+    <span class="conv-unread-count" *ngIf="conv.unreadCount && conv.unreadCount > 0">
+      {{ conv.unreadCount > 99 ? '99+' : conv.unreadCount }}
+    </span>
+  </div>
+</div>
                 </div>
               </div>
 
@@ -334,11 +339,33 @@ import { NavbarComponent } from '../navbar/navbar';
     .conv-time { font-size: 0.7rem; color: #94a3b8; flex-shrink: 0; }
     .conv-last-message { display: flex; justify-content: space-between; align-items: center; }
     .last-msg { font-size: 0.8rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
-    .unread-badge { color: #2563eb; font-size: 0.9rem; flex-shrink: 0; }
+    .unread-dot { color: #2563eb; font-size: 0.9rem; flex-shrink: 0; }
     .empty-conversations { text-align: center; padding: 3rem 1rem; color: #94a3b8; }
     .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
     .empty-conversations p { font-size: 0.9rem; }
     .loading-conv { display: flex; justify-content: center; padding: 2rem; }
+    .conv-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.conv-unread-count {
+  background: #ef4444;
+  color: white;
+  border-radius: 20px;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  min-width: 18px;
+  text-align: center;
+}
+
+.unread-dot {
+  color: #2563eb;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
     .spinner-small {
       width: 28px; height: 28px;
       border: 3px solid #e2e8f0;
@@ -715,20 +742,55 @@ export class InboxComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   // ────────── Conversations ──────────
 
-  loadConversations(): void {
-    this.loading = true;
-    this.messagerieService.getMyConversations().subscribe({
-      next: (data) => {
-        this.conversations = data;
+loadConversations(): void {
+  this.loading = true;
+  this.messagerieService.getMyConversations().subscribe({
+    next: (data) => {
+      this.conversations = data;
+      
+      // Compter les messages non lus pour chaque conversation
+      let completedRequests = 0;
+      const totalRequests = data.length;
+      
+      if (totalRequests === 0) {
         this.filterConversations();
         this.loading = false;
-      },
-      error: (err) => {
-        console.error('Error loading conversations:', err);
-        this.loading = false;
+        return;
       }
-    });
-  }
+      
+      data.forEach(conv => {
+        const otherEmail = this.getOtherEmail(conv);
+        
+        this.messagerieService.getConversation(otherEmail).subscribe({
+          next: (messages) => {
+            const unreadMessages = messages.filter(m => 
+              m.senderEmail === otherEmail && !m.read
+            );
+            conv.unreadCount = unreadMessages.length;
+            
+            completedRequests++;
+            if (completedRequests === totalRequests) {
+              this.filterConversations();
+              this.loading = false;
+            }
+          },
+          error: () => {
+            conv.unreadCount = 0;
+            completedRequests++;
+            if (completedRequests === totalRequests) {
+              this.filterConversations();
+              this.loading = false;
+            }
+          }
+        });
+      });
+    },
+    error: (err) => {
+      console.error('Error loading conversations:', err);
+      this.loading = false;
+    }
+  });
+}
 
   verifierEmailDansBase(): void {
     if (!this.myEmail) { console.error('❌ Pas d\'email à vérifier'); return; }
@@ -783,20 +845,28 @@ export class InboxComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   searchConversations(): void { this.filterConversations(); }
 
-  selectConversation(conv: Conversation): void {
-    this.selectedConversation = conv;
-    this.mobileShowChat = true;
-    const otherEmail = this.getOtherEmail(conv);
+ selectConversation(conv: Conversation): void {
+  this.selectedConversation = conv;
+  this.mobileShowChat = true;
+  const otherEmail = this.getOtherEmail(conv);
 
-    this.messagerieService.getConversation(otherEmail).subscribe({
-      next: (msgs) => {
-        // S'assurer que chaque message a un tableau attachments
-        this.messages = msgs.map(m => ({ ...m, attachments: m.attachments || [] }));
-        this.shouldScroll = true;
-      },
-      error: (err) => console.error('Error loading conversation:', err)
-    });
-  }
+  this.messagerieService.getConversation(otherEmail).subscribe({
+    next: (msgs) => {
+      this.messages = msgs.map(m => ({ ...m, attachments: m.attachments || [] }));
+      this.shouldScroll = true;
+    },
+    error: (err) => console.error('Error loading conversation:', err)
+  });
+  
+  // ✅ Marquer les messages comme lus quand on ouvre la conversation
+  this.messagerieService.markConversationAsRead(otherEmail).subscribe({
+    next: () => {
+      conv.unreadCount = 0;
+      setTimeout(() => this.loadConversations(), 500);
+    },
+    error: (err) => console.error('Erreur marquage lecture:', err)
+  });
+}
 
   // ────────── Gestion fichiers ──────────
 

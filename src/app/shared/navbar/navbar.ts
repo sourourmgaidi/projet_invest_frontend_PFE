@@ -5,6 +5,7 @@ import { AuthService } from '../../core/services/auth';
 import { ChatService } from '../../core/services/chat.service'; // AJOUT: Import du service chat
 import { Role, CurrentUser } from '../models/user.model';
 import { Subscription } from 'rxjs';
+import { MessagerieService } from '../../core/services/messagerie.service';
 
 interface NavLink {
   label: string;
@@ -24,8 +25,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
   userPhoto: string = '';
   photoVersion: number = Date.now();
   unreadCount: number = 0; // AJOUT: Propriété pour les messages non lus
+  messagerieCount: number = 0;
   private userSubscription: Subscription | null = null;
   private chatSubscription: Subscription | null = null; // AJOUT: Subscription pour le chat
+  private messagerieSubscription: Subscription | null = null
+
 
   private readonly ROLE_MENUS: Record<Role, NavLink[]> = {
     [Role.ADMIN]: [
@@ -69,6 +73,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   constructor(
     public authService: AuthService,
     private chatService: ChatService, // AJOUT: Injection du service chat
+     private messagerieService: MessagerieService, 
     private router: Router
   ) {}
 
@@ -82,6 +87,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
       // AJOUT: Charger le nombre de messages non lus quand l'utilisateur est connecté
       if (user) {
         this.loadUnreadCount();
+        this.loadMessagerieCount();    // ← AJOUT - Messagerie
+
       }
     });
   }
@@ -89,7 +96,18 @@ export class NavbarComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.userSubscription?.unsubscribe();
     this.chatSubscription?.unsubscribe(); // AJOUT: Nettoyer la subscription chat
+    this.messagerieSubscription?.unsubscribe(); // ← AJOUT
   }
+  // AJOUT: Méthode séparée pour la Messagerie
+loadMessagerieCount(): void {
+  this.messagerieSubscription = this.messagerieService.getUnreadMessagesCount().subscribe({
+    next: (data) => {
+      this.messagerieCount = data.unreadCount;
+      console.log('📬 messagerieCount:', this.messagerieCount);
+    },
+    error: (err: any) => console.error('Erreur messagerie count', err)
+  });
+}
 
   // AJOUT: Méthode pour charger les messages non lus
   loadUnreadCount(): void {

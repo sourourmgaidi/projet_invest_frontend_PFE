@@ -33,6 +33,7 @@ export interface Conversation {
   partnerViewed: boolean;
   senderName?: string;
   recipientName?: string;
+  unreadCount?: number;
 }
 
 @Injectable({
@@ -59,6 +60,17 @@ export class MessagerieService {
       content
     }, { headers: this.getHeaders() });
   }
+  // ─────────────────────────────────────────────────────────────────────────
+// MARQUER UNE CONVERSATION COMME LUE
+// ─────────────────────────────────────────────────────────────────────────
+
+markConversationAsRead(otherEmail: string): Observable<{ message: string }> {
+  return this.http.put<{ message: string }>(
+    `${this.apiUrl}/conversation/${otherEmail}/read`,
+    {},
+    { headers: this.getHeaders() }
+  );
+}
 
   // ─────────────────────────────────────────────────────────────────────────
   // ENVOYER UN MESSAGE AVEC PIÈCES JOINTES (multipart/form-data)
@@ -300,6 +312,16 @@ export class MessagerieService {
   isImageFile(fileType: string): boolean {
     return fileType.startsWith('image/');
   }
+  // ─────────────────────────────────────────────────────────────────────────
+// COMPTER LES MESSAGES NON LUS (UNIQUEMENT LE NOMBRE)
+// ─────────────────────────────────────────────────────────────────────────
+
+getUnreadMessagesCount(): Observable<{ unreadCount: number }> {
+  return this.http.get<{ unreadCount: number }>(
+    `${this.apiUrl}/unread/count`,
+    { headers: this.getHeaders() }
+  );
+}
 
   /**
    * Télécharger un fichier avec le nom original
