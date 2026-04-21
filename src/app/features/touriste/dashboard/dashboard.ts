@@ -4,12 +4,13 @@ import { RouterModule } from '@angular/router'; // ✅ IMPORT RouterModule
 import { NavbarComponent } from '../../../shared/navbar/navbar';
 import { NotificationBellComponent } from '../../../shared/notification-bell/notification-bell.component';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { FavoriteTouristService } from '../../../core/services/favorite-tourist.service'; // ✅ NOUVEL IMPORT
+import { FavoriteTouristService } from '../../../core/services/favorite-tourist.service';
+import { ChatbotWidgetComponent } from "../../../shared/Agents/chatbot-widget.component"; // ✅ NOUVEL IMPORT
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, NavbarComponent, NotificationBellComponent], // ✅ Ajout RouterModule
+  imports: [CommonModule, RouterModule, NavbarComponent, NotificationBellComponent, ChatbotWidgetComponent], // ✅ Ajout RouterModule
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css']
 })

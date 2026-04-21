@@ -7,6 +7,8 @@ import { NavbarComponent } from '../../../shared/navbar/navbar';
 import { NotificationBellComponent } from '../../../shared/notification-bell/notification-bell.component';
 import { FavoriteCollaborationService } from '../../../core/services/favorite-collaboration.service';
 import { CurrencyConverterComponent } from '../../../features/public/currency-converter/currency-converter.component';
+import { SubscriptionService } from '../../../core/services/subscription.service';
+import { SubscriptionModalComponent } from '../../../shared/models/subscription-modal.component';
 
 @Component({
   selector: 'app-collaboration-services',
@@ -16,6 +18,7 @@ import { CurrencyConverterComponent } from '../../../features/public/currency-co
     FormsModule, 
     RouterModule, 
     NavbarComponent, 
+    SubscriptionModalComponent,
     NotificationBellComponent , CurrencyConverterComponent
   ],
   templateUrl: './collaboration-services.component.html',
@@ -34,6 +37,9 @@ export class CollaborationServicesComponent implements OnInit {
   selectedImage: { url: string; name: string; doc: any } | null = null;
   imageBlobUrls: Map<string, string> = new Map();
   imageLoading: Set<string> = new Set();
+   showSubscriptionModal = false;
+  private subscriptionService = inject(SubscriptionService);
+  private pendingProvider: { email: string; name: string } | null = null;
 
   private http = inject(HttpClient);
   private router = inject(Router);
@@ -151,11 +157,42 @@ export class CollaborationServicesComponent implements OnInit {
 
   contactProvider(provider: any): void {
     if (!provider?.email) return;
-    const name = provider.firstName && provider.lastName
-      ? `${provider.firstName} ${provider.lastName}` : 'Local Partner';
+
+    // Stocker le provider pendant la vérification
+    this.pendingProvider = { email: provider.email, name: `${provider.firstName || ''} ${provider.lastName || ''}`.trim() || 'Local Partner' };
+
+    this.subscriptionService.checkSubscription().subscribe({
+      next: (status) => {
+        if (status.hasActiveSubscription) {
+          // ✅ Abonnement actif → ouvrir le chat directement
+          this.openChat(provider);
+        } else {
+          // ❌ Pas d'abonnement → afficher la modal
+          this.showSubscriptionModal = true;
+        }
+      },
+      error: () => {
+        // En cas d'erreur réseau, ouvrir quand même le chat
+        this.openChat(provider);
+      }
+    });
+  }
+
+  /** Navigation vers le chat */
+  private openChat(provider: any): void {
+    const name = `${provider.firstName || ''} ${provider.lastName || ''}`.trim() || 'Local Partner';
     this.router.navigate(['/societe-international/messagerie'], {
       queryParams: { contact: provider.email, name }
     });
+  }
+
+  /** Appelé si l'utilisateur souscrit depuis la modal */
+  onSubscribed(): void {
+    this.showSubscriptionModal = false;
+    if (this.pendingProvider) {
+      this.openChat({ email: this.pendingProvider.email, firstName: this.pendingProvider.name.split(' ')[0], lastName: this.pendingProvider.name.split(' ')[1] || '' });
+      this.pendingProvider = null;
+    }
   }
 
   // ========================================
@@ -295,5 +332,62 @@ export class CollaborationServicesComponent implements OnInit {
       window.URL.revokeObjectURL(url);
     });
     this.imageBlobUrls.clear();
+  }
+
+    // ========================================
+  // MÉTHODES D'ABONNEMENT
+  // ========================================
+
+  /**
+   * Vérifie si l'utilisateur a un abonnement actif avant de contacter
+   */
+  checkSubscriptionAndContact(provider: any): void {
+    if (!provider?.email) return;
+    
+    const providerName = provider.firstName && provider.lastName
+      ? `${provider.firstName} ${provider.lastName}` : 'Local Partner';
+    
+    this.subscriptionService.checkSubscription().subscribe({
+      next: (status) => {
+        if (status.hasActiveSubscription) {
+          this.openMessaging(provider.email, providerName);
+        } else {
+          this.pendingProvider = { email: provider.email, name: providerName };
+          this.showSubscriptionModal = true;
+        }
+      },
+      error: () => {
+        this.pendingProvider = { email: provider.email, name: providerName };
+        this.showSubscriptionModal = true;
+      }
+    });
+  }
+
+  /**
+   * Ouvre la messagerie
+   */
+  openMessaging(providerEmail: string, providerName: string): void {
+    this.router.navigate(['/societe-international/messagerie'], {
+      queryParams: { contact: providerEmail, name: providerName }
+    });
+  }
+
+  /**
+   * Appelé après un abonnement réussi
+   */
+  onSubscriptionSuccess(): void {
+    this.showSubscriptionModal = false;
+    if (this.pendingProvider) {
+      this.openMessaging(this.pendingProvider.email, this.pendingProvider.name);
+      this.pendingProvider = null;
+    }
+  }
+
+  /**
+   * Fermeture du modal (annulation)
+   */
+  onSubscriptionClosed(): void {
+    this.showSubscriptionModal = false;
+    this.pendingProvider = null;
   }
 }

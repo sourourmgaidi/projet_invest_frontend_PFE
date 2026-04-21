@@ -199,3 +199,10 @@
     </div>
   </div>
 </div>
+<!-- SUBSCRIPTION MODAL -->
+@if (showSubscriptionModal) {
+  <app-subscription-modal
+    (closed)="showSubscriptionModal = false"
+    (subscribed)="onSubscribed()">
+  </app-subscription-modal>
+}

@@ -5,11 +5,12 @@ import { NavbarComponent } from '../../../shared/navbar/navbar';
 import { NotificationBellComponent } from '../../../shared/notification-bell/notification-bell.component';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MessagerieService } from '../../../core/services/messagerie.service';
+import { ChatbotWidgetComponent } from '../../../shared/Agents/chatbot-widget.component';
 
 @Component({
   selector: 'app-economic-partner-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, NavbarComponent, NotificationBellComponent],
+  imports: [CommonModule, RouterModule, NavbarComponent, NotificationBellComponent,ChatbotWidgetComponent],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css']
 })

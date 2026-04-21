@@ -341,4 +341,87 @@ getUnreadMessagesCount(): Observable<{ unreadCount: number }> {
       }
     });
   }
+  // ========================================
+// PAIEMENT LOCAL PARTNER (40 DT)
+// ========================================
+
+/**
+ * 1. Vérifier si l'utilisateur a déjà payé pour contacter ce Local Partner
+ */
+checkIfAlreadyPaid(localPartnerEmail: string, serviceId: string): Observable<{
+  hasPaid: boolean;
+  requiresPayment: boolean;
+  amount: number;
+  currency: string;
+}> {
+  return this.http.get<{
+    hasPaid: boolean;
+    requiresPayment: boolean;
+    amount: number;
+    currency: string;
+  }>(`${this.apiUrl}/contact-local-partner/check`, {
+    headers: this.getHeaders(),
+    params: { localPartnerEmail, serviceId }
+  });
+}
+
+/**
+ * 2. Initier le paiement (SANS message - juste le paiement)
+ */
+initiatePayment(localPartnerEmail: string, serviceId: string): Observable<{
+  paymentId: string;
+  paymentUrl: string;
+  amount: number;
+}> {
+  return this.http.post<{
+    paymentId: string;
+    paymentUrl: string;
+    amount: number;
+  }>(`${this.apiUrl}/contact-local-partner/initiate-payment`, {
+    localPartnerEmail,
+    serviceId
+  }, { headers: this.getHeaders() });
+}
+
+/**
+ * 3. Vérifier le statut d'un paiement
+ */
+getPaymentStatus(paymentId: string): Observable<{
+  paymentId: string;
+  status: string;
+  isCompleted: boolean;
+  amount: number;
+  createdAt: string;
+  paidAt?: string;
+}> {
+  return this.http.get<{
+    paymentId: string;
+    status: string;
+    isCompleted: boolean;
+    amount: number;
+    createdAt: string;
+    paidAt?: string;
+  }>(`${this.apiUrl}/contact-local-partner/payment-status/${paymentId}`, {
+    headers: this.getHeaders()
+  });
+}
+
+/**
+ * 4. Confirmer le paiement (callback après paiement Flouci)
+ */
+confirmPayment(paymentId: string, transactionId?: string): Observable<{
+  success: boolean;
+  localPartnerEmail: string;
+  paymentId: string;
+}> {
+  let url = `${this.apiUrl}/contact-local-partner/payment-success?paymentId=${paymentId}`;
+  if (transactionId) {
+    url += `&transaction_id=${transactionId}`;
+  }
+  return this.http.get<{
+    success: boolean;
+    localPartnerEmail: string;
+    paymentId: string;
+  }>(url, { headers: this.getHeaders() });
+}
 }

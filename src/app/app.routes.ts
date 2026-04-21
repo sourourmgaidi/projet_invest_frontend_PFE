@@ -311,6 +311,24 @@ export const routes: Routes = [
       .then(m => m.InboxComponent),
     canActivate: [authGuard]
   },
+  {
+  path: 'subscription/payment-success',
+  loadComponent: () => import('./shared/Subscription/subscription-success.component')
+    .then(m => m.SubscriptionSuccessComponent),
+  canActivate: [authGuard]  // ✅ AJOUTER
+},
+{
+  path: 'investisseur/subscription/payment-success',
+  loadComponent: () => import('./shared/Subscription/subscription-success.component')
+    .then(m => m.SubscriptionSuccessComponent),
+  canActivate: [authGuard]  // ✅ AJOUTER
+},
+{
+  path: 'societe-international/subscription/payment-success',
+  loadComponent: () => import('./shared/Subscription/subscription-success.component')
+    .then(m => m.SubscriptionSuccessComponent),
+  canActivate: [authGuard]  // ✅ AJOUTER
+},
   
    
   {

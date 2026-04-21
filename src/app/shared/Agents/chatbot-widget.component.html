@@ -1,0 +1,252 @@
+<!-- chatbot-widget.component.html -->
+
+<!-- ══ FAB ════════════════════════════════════════════════════ -->
+<button class="chatbot-fab" (click)="toggleChat()" [class.fab-open]="isOpen">
+  <div class="fab-icon-wrap">
+    <!-- Closed: show chat icon -->
+    <svg *ngIf="!isOpen" width="22" height="22" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+    <!-- Open: show X -->
+    <svg *ngIf="isOpen" width="20" height="20" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  </div>
+  <span class="fab-badge" *ngIf="!isOpen && unreadCount > 0">{{ unreadCount }}</span>
+  <span class="fab-label" *ngIf="!isOpen">AI Assistants</span>
+</button>
+
+<!-- ══ PANEL ══════════════════════════════════════════════════ -->
+<div class="chatbot-panel" [class.panel-open]="isOpen">
+
+  <!-- ── Tab bar: only shown when BOTH tabs are accessible ─── -->
+  <div class="tab-bar" *ngIf="canUseLegal && canUseReco">
+    <button class="tab-btn" [class.tab-btn--active]="activeTab === 'legal'"
+            (click)="setTab('legal')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2">
+        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/>
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <span>Legal Assistant</span>
+    </button>
+
+    <button class="tab-btn" [class.tab-btn--active]="activeTab === 'reco'"
+            [class.tab-btn--locked]="!canUseReco"
+            (click)="canUseReco && setTab('reco')"
+            [title]="!canUseReco ? 'Available for Investors, Tourists, Partners & International Companies' : ''">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+      </svg>
+      <span>AI Recommendations</span>
+      <span class="tab-lock-icon" *ngIf="!canUseReco">🔒</span>
+    </button>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       TAB 1 — LEGAL ASSISTANT (hidden for tourists)
+  ═══════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab === 'legal' && canUseLegal">
+
+    <!-- Header -->
+    <div class="cp-header">
+      <div class="cp-header-left">
+        <div class="cp-avatar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2">
+            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/>
+            <path d="M12 8v4l3 3"/>
+          </svg>
+          <span class="cp-status-dot"></span>
+        </div>
+        <div class="cp-header-info">
+          <span class="cp-title">AI Assistant</span>
+          <span class="cp-subtitle">Tunisian law &amp; investment expert · Online</span>
+        </div>
+      </div>
+      <div class="cp-header-actions">
+        <button class="cp-icon-btn" (click)="clearHistory()" title="Clear conversation">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14H6L5 6"/>
+            <path d="M10 11v6M14 11v6"/>
+          </svg>
+        </button>
+        <button class="cp-icon-btn" (click)="toggleChat()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- FAQ Overlay -->
+    <div class="faq-overlay" *ngIf="showFaqPanel" (click)="closeFaqPanel()">
+      <div class="faq-panel" (click)="$event.stopPropagation()">
+        <div class="faq-panel-header">
+          <div class="faq-panel-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span>Frequently Asked Questions</span>
+          </div>
+          <button class="faq-close-btn" (click)="closeFaqPanel()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <p class="faq-panel-sub">Choose a topic for an instant answer, or type your own question below.</p>
+        <div class="faq-grid">
+          <button class="faq-item" *ngFor="let qa of quickAnswers" (click)="selectFaq(qa)">
+            <span class="faq-icon">{{ qa.icon }}</span>
+            <span class="faq-item-label">{{ qa.label }}</span>
+            <svg class="faq-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </div>
+        <button class="faq-skip-btn" (click)="closeFaqPanel()">Continue conversation →</button>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="cp-messages" #messagesEl>
+      <!-- Welcome -->
+      <div class="cp-welcome" *ngIf="messages.length === 0">
+        <div class="cp-welcome-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.5">
+            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <h4>How can I help you today?</h4>
+        <p>I specialize in Tunisian investment law, regulations, and business opportunities.</p>
+        <div class="cp-starters">
+          <button class="cp-starter-btn" *ngFor="let qa of quickAnswers" (click)="selectFaq(qa)">
+            <span>{{ qa.icon }}</span> {{ qa.label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Message list -->
+      <ng-container *ngFor="let msg of messages">
+        <div class="cp-separator" *ngIf="msg.role === 'system'">
+          <span>{{ msg.text }}</span>
+        </div>
+        <div class="cp-msg-row cp-user" *ngIf="msg.role === 'user'">
+          <div class="cp-bubble cp-bubble-user">
+            <p>{{ msg.text }}</p>
+            <span class="cp-time">{{ formatTime(msg.timestamp) }}</span>
+          </div>
+        </div>
+        <div class="cp-msg-row cp-bot" *ngIf="msg.role === 'bot'">
+          <div class="cp-bot-avatar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2">
+              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/>
+            </svg>
+          </div>
+          <div class="cp-bubble cp-bubble-bot">
+            <div class="cp-typing" *ngIf="msg.loading">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="cp-text" *ngIf="!msg.loading" [innerHTML]="formatMarkdown(msg.text)"></div>
+            <div class="cp-sources" *ngIf="!msg.loading && msg.sources && msg.sources.length > 0">
+              <span class="cp-sources-label">Sources</span>
+              <span class="cp-source-tag" *ngFor="let src of msg.sources">{{ shortSrc(src) }}</span>
+            </div>
+            <div class="cp-quick-replies" *ngIf="!msg.loading && msg.quickReplies && msg.quickReplies.length > 0">
+              <button class="cp-qr-btn" *ngFor="let qr of msg.quickReplies" (click)="sendQuickReply(qr)">
+                {{ qr }}
+              </button>
+            </div>
+            <span class="cp-time cp-time-bot" *ngIf="!msg.loading">{{ formatTime(msg.timestamp) }}</span>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+    <!-- Suggestions bar -->
+    <div class="cp-suggestions" *ngIf="contextualSuggestions.length > 0 && messages.length > 0 && !showFaqPanel">
+      <button class="cp-sug-btn" *ngFor="let s of contextualSuggestions" (click)="useSuggestion(s)">
+        {{ s }}
+      </button>
+    </div>
+
+    <!-- Input -->
+    <div class="cp-input-area">
+      <div class="cp-input-row">
+        <textarea
+          #inputEl
+          [(ngModel)]="userInput"
+          placeholder="Ask about investment law, procedures..."
+          rows="1"
+          class="cp-input"
+          [disabled]="isLoading"
+          (keydown)="onKeyDown($event)"
+          (input)="onInputChange($event)"
+        ></textarea>
+        <button class="cp-send-btn" [disabled]="!userInput.trim() || isLoading" (click)="sendMessage()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+      <div class="cp-footer-bar">
+        <span class="cp-hint">Enter to send · Shift+Enter for new line</span>
+        <span class="cp-counter">{{ getUserMsgCount() }} messages</span>
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- ════════════════════════════════════════════════════════
+       TAB 2 — RECOMMENDATION AGENT
+  ═══════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab === 'reco'">
+
+    <!-- Close button row -->
+    <div class="reco-tab-header">
+      <span class="reco-tab-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+        AI Recommendation Engine
+      </span>
+      <button class="cp-icon-btn reco-close-btn" (click)="toggleChat()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Recommendation agent scrollable content -->
+    <div class="reco-scroll-area">
+      <app-recommendation-agent></app-recommendation-agent>
+    </div>
+
+  </ng-container>
+
+</div>

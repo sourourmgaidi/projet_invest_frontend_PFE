@@ -6,11 +6,12 @@ import { NotificationBellComponent } from '../../../shared/notification-bell/not
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MessagerieService } from '../../../core/services/messagerie.service';
 import { AcquisitionService } from '../../../core/services/acquisition.service'; // ✅ Ajout
+import { ChatbotWidgetComponent } from "../../../shared/Agents/chatbot-widget.component"; // ✅ NOUVEL IMPORT
 
 @Component({
   selector: 'app-international-company-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, NavbarComponent, NotificationBellComponent],
+  imports: [CommonModule, RouterModule, NavbarComponent, NotificationBellComponent,ChatbotWidgetComponent],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css']
 })

@@ -7,11 +7,13 @@ import { NavbarComponent } from '../../../shared/navbar/navbar';
 import { NotificationBellComponent } from '../../../shared/notification-bell/notification-bell.component';
 import { FavoriteTouristService } from '../../../core/services/favorite-tourist.service';
 import { CurrencyConverterComponent } from '../../public/currency-converter/currency-converter.component';
+import { SubscriptionService } from '../../../core/services/subscription.service';
+import { SubscriptionModalComponent } from '../../../shared/models/subscription-modal.component';
 
 @Component({
   selector: 'app-tourist-services',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, NavbarComponent, NotificationBellComponent , CurrencyConverterComponent],
+  imports: [CommonModule, FormsModule, RouterModule, NavbarComponent, NotificationBellComponent , CurrencyConverterComponent,SubscriptionModalComponent ],
   template: `
     <div class="page-layout">
       <app-navbar></app-navbar>
@@ -202,6 +204,12 @@ import { CurrencyConverterComponent } from '../../public/currency-converter/curr
         </div>
       </div>
     </div>
+    @if (showSubscriptionModal) {
+  <app-subscription-modal
+    (closed)="showSubscriptionModal = false"
+    (subscribed)="onSubscribed()">
+  </app-subscription-modal>
+}
   `,
   styles: [`
   .currency-converter-wrap {
@@ -511,6 +519,9 @@ export class TouristServicesComponent implements OnInit {
   selectedImage: { url: string; name: string; doc: any } | null = null;
   imageBlobUrls: Map<string, string> = new Map();
   imageLoading: Set<string> = new Set();
+  showSubscriptionModal = false;
+  private subscriptionService = inject(SubscriptionService);
+  private pendingProvider: { email: string; name: string } | null = null;
   
   private http = inject(HttpClient);
   private router = inject(Router);
@@ -656,13 +667,55 @@ export class TouristServicesComponent implements OnInit {
     this.filtered = this.services;
   }
 
+  // ========================================
+  // MÉTHODES D'ABONNEMENT
+  // ========================================
+
   contactProvider(provider: any): void {
     if (!provider?.email) return;
-    const name = provider.firstName && provider.lastName
-      ? `${provider.firstName} ${provider.lastName}` : 'Local Partner';
+
+    // Stocker le provider pendant la vérification
+    this.pendingProvider = { 
+      email: provider.email, 
+      name: `${provider.firstName || ''} ${provider.lastName || ''}`.trim() || 'Local Partner' 
+    };
+
+    this.subscriptionService.checkSubscription().subscribe({
+      next: (status) => {
+        if (status.hasActiveSubscription) {
+          // Abonnement actif → ouvrir le chat directement
+          this.openChat(provider);
+        } else {
+          // Pas d'abonnement → afficher la modal
+          this.showSubscriptionModal = true;
+        }
+      },
+      error: () => {
+        // En cas d'erreur réseau, ouvrir quand même le chat
+        this.openChat(provider);
+      }
+    });
+  }
+
+  /** Navigation vers le chat */
+  private openChat(provider: any): void {
+    const name = `${provider.firstName || ''} ${provider.lastName || ''}`.trim() || 'Local Partner';
     this.router.navigate(['/messagerie'], {
       queryParams: { contact: provider.email, name }
     });
+  }
+
+  /** Appelé si l'utilisateur souscrit depuis la modal */
+  onSubscribed(): void {
+    this.showSubscriptionModal = false;
+    if (this.pendingProvider) {
+      this.openChat({ 
+        email: this.pendingProvider.email, 
+        firstName: this.pendingProvider.name.split(' ')[0], 
+        lastName: this.pendingProvider.name.split(' ')[1] || '' 
+      });
+      this.pendingProvider = null;
+    }
   }
 
   // ========================================

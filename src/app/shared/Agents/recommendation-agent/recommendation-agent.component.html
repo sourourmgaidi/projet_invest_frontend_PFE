@@ -1,0 +1,615 @@
+<!-- recommendation-agent.component.html -->
+
+<!-- ════ ACCESS BLOCKED ════ -->
+<div *ngIf="isBlocked" class="ra-blocked">
+  <div class="ra-blocked-icon">🔒</div>
+  <h2>Accès non autorisé</h2>
+  <p>L'agent de recommandation IA n'est pas disponible pour votre profil.</p>
+  <p class="ra-blocked-sub">Cet outil est réservé aux Investisseurs, Touristes, Partenaires Économiques et Sociétés Internationales.</p>
+</div>
+
+<!-- ════ MAIN UI ════ -->
+<div *ngIf="!isBlocked" class="ra-wrapper">
+
+  <!-- HEADER -->
+  <div class="ra-header">
+    <div class="ra-header-left">
+      <div class="ra-ai-dot"></div>
+      <div>
+        <h1 class="ra-title">Agent de recommandation IA</h1>
+        <p class="ra-subtitle">Suggestions personnalisées — {{ roleIcon }} {{ roleLabel }}</p>
+      </div>
+    </div>
+    <div class="ra-header-right">
+      <button class="ra-dark-toggle" (click)="toggleDark()" [title]="isDark ? 'Mode clair' : 'Mode sombre'">
+        <span *ngIf="!isDark">🌙</span>
+        <span *ngIf="isDark">☀️</span>
+      </button>
+      <span class="ra-badge">IA + Règles métier</span>
+    </div>
+  </div>
+
+  <!-- STEPS -->
+  <div class="ra-steps">
+    <div class="ra-step" [class.ra-step--active]="step==='form'" [class.ra-step--done]="step==='loading'||step==='results'">
+      <div class="ra-step-circle"><span *ngIf="step==='form'">1</span><span *ngIf="step!=='form'">✓</span></div>
+      <span class="ra-step-label">Profil</span>
+    </div>
+    <div class="ra-step-line"></div>
+    <div class="ra-step" [class.ra-step--active]="step==='loading'" [class.ra-step--done]="step==='results'">
+      <div class="ra-step-circle"><span *ngIf="step!=='results'">2</span><span *ngIf="step==='results'">✓</span></div>
+      <span class="ra-step-label">Analyse</span>
+    </div>
+    <div class="ra-step-line"></div>
+    <div class="ra-step" [class.ra-step--active]="step==='results'">
+      <div class="ra-step-circle">3</div>
+      <span class="ra-step-label">Résultats</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       FORM
+       ══════════════════════════════════════════ -->
+  <div *ngIf="step==='form'" class="ra-form">
+
+    <div class="ra-notice">
+      <span class="ra-notice-icon">⚡</span>
+      <span>Formulaire pré-rempli depuis votre profil <strong>{{ userDisplayName }}</strong> — ajustez si nécessaire.</span>
+    </div>
+
+    <!-- ── CRITÈRES GÉNÉRAUX ── -->
+    <div class="ra-card">
+      <div class="ra-section-title">🌍 Critères généraux</div>
+
+      <div class="ra-grid-2">
+        <div class="ra-field">
+          <label class="ra-label">Région <span class="ra-required">*</span></label>
+          <select [(ngModel)]="form.regionId" class="ra-select">
+            <option [ngValue]="undefined">— Sélectionner une région —</option>
+            <option *ngFor="let r of regions" [ngValue]="r.id">{{ r.name }}</option>
+          </select>
+          <span class="ra-hint">Région géographique cible de votre projet</span>
+        </div>
+
+        <div class="ra-field">
+          <label class="ra-label">Budget disponible (DT)</label>
+          <div class="ra-input-wrap">
+            <input type="number" [(ngModel)]="form.budget"
+                   placeholder="ex: 50 000" min="0" class="ra-input ra-input--suffix" />
+            <span class="ra-input-suffix">DT</span>
+          </div>
+          <span class="ra-hint">Montant maximum que vous souhaitez engager</span>
+        </div>
+      </div>
+
+      <div class="ra-field">
+        <label class="ra-label">Domaine d'activité</label>
+        <select [(ngModel)]="form.activityDomain" class="ra-select">
+          <option value="">— Sélectionner un domaine —</option>
+          <optgroup label="─ Tourisme ─">
+            <option *ngFor="let d of activityDomains.slice(0,8)" [value]="d.value">{{ d.label }}</option>
+          </optgroup>
+          <optgroup label="─ Investissement ─">
+            <option *ngFor="let d of activityDomains.slice(8)" [value]="d.value">{{ d.label }}</option>
+          </optgroup>
+        </select>
+        <span class="ra-hint">Le secteur principal de votre activité ou intérêt</span>
+      </div>
+    </div>
+
+    <!-- ══ INVESTISSEUR ══ -->
+    <div *ngIf="isInvestor" class="ra-card ra-card--investor">
+      <div class="ra-section-title">📈 Profil Investisseur</div>
+      <div class="ra-ai-banner">
+        <span class="ra-ai-banner-icon">🤖</span>
+        <div>
+          <strong>Aidez l'IA à affiner vos recommandations</strong>
+          <p>Plus vous décrivez précisément votre projet, plus les résultats seront pertinents.</p>
+        </div>
+      </div>
+      <div class="ra-field">
+        <label class="ra-label">Décrivez votre projet d'investissement</label>
+        <textarea [(ngModel)]="form.projectDescription" rows="3" class="ra-textarea"
+          placeholder="Ex : Je souhaite investir dans une unité de production agroalimentaire en Tunisie centrale..."></textarea>
+        <span class="ra-hint">Soyez précis : secteur, zone, objectifs, contraintes.</span>
+      </div>
+      <div class="ra-grid-2">
+        <div class="ra-field">
+          <label class="ra-label">Horizon d'investissement</label>
+          <select [(ngModel)]="form.investmentHorizon" class="ra-select">
+            <option value="">— Sélectionner —</option>
+            <option *ngFor="let h of investmentHorizons" [value]="h.value">{{ h.label }}</option>
+          </select>
+        </div>
+        <div class="ra-field">
+          <label class="ra-label">Retour minimum attendu</label>
+          <div class="ra-input-wrap">
+            <input type="number" [(ngModel)]="form.minimumReturn" placeholder="ex: 15" min="0" max="100" class="ra-input ra-input--suffix" />
+            <span class="ra-input-suffix">%</span>
+          </div>
+        </div>
+      </div>
+      <div class="ra-grid-2">
+        <div class="ra-field">
+          <label class="ra-label">Secteur préféré</label>
+          <input type="text" [(ngModel)]="form.preferredSector" placeholder="ex: Énergie renouvelable..." class="ra-input" />
+          <span class="ra-hint">Saisissez librement votre secteur de prédilection</span>
+        </div>
+        <div class="ra-field">
+          <label class="ra-label">Niveau de risque accepté</label>
+          <select [(ngModel)]="form.riskLevel" class="ra-select">
+            <option value="">— Sélectionner —</option>
+            <option *ngFor="let r of riskLevels" [value]="r.value">{{ r.label }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="ra-field">
+        <label class="ra-label">Disponibilité souhaitée du service</label>
+        <div class="ra-radio-group">
+          <label *ngFor="let a of availabilities" class="ra-radio-option"
+                 [class.ra-radio-option--active]="form.availability === a.value">
+            <input type="radio" [(ngModel)]="form.availability" [value]="a.value" />
+            {{ a.label }}
+          </label>
+        </div>
+      </div>
+      <div class="ra-field">
+        <label class="ra-label">Contraintes ou exigences spécifiques</label>
+        <textarea [(ngModel)]="form.specificRequirements" rows="2" class="ra-textarea"
+          placeholder="Ex : Besoin de partenaires locaux, respect des normes ISO..."></textarea>
+      </div>
+    </div>
+
+    <!-- ══ SOCIÉTÉ INTERNATIONALE — Filtre type ══ -->
+    <div *ngIf="isInternationalCompany" class="ra-card ra-card--intl">
+      <div class="ra-section-title">🎯 Type de recherche</div>
+      <div class="ra-field">
+        <label class="ra-label">Je recherche</label>
+        <div class="ra-toggle-group">
+          <label class="ra-toggle-option" [class.ra-toggle-option--active]="!form.serviceTypeFilter || form.serviceTypeFilter===''">
+            <input type="radio" [(ngModel)]="form.serviceTypeFilter" value="" />
+            🔀 Les deux types
+          </label>
+          <label class="ra-toggle-option" [class.ra-toggle-option--active]="form.serviceTypeFilter==='COLLABORATION'">
+            <input type="radio" [(ngModel)]="form.serviceTypeFilter" value="COLLABORATION" />
+            🤝 Collaboration
+          </label>
+          <label class="ra-toggle-option" [class.ra-toggle-option--active]="form.serviceTypeFilter==='INVESTMENT'">
+            <input type="radio" [(ngModel)]="form.serviceTypeFilter" value="INVESTMENT" />
+            📈 Investissement
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SOCIÉTÉ INTERNATIONALE — Profil ══ -->
+    <div *ngIf="isInternationalCompany" class="ra-card ra-card--intl">
+      <div class="ra-section-title">🌐 Profil Société Internationale</div>
+      <div class="ra-ai-banner">
+        <span class="ra-ai-banner-icon">🤖</span>
+        <div>
+          <strong>Présentez votre société à l'agent IA</strong>
+          <p>Une description complète permet d'identifier les meilleures opportunités tunisiennes.</p>
+        </div>
+      </div>
+      <div class="ra-field">
+        <label class="ra-label">Présentation de votre société</label>
+        <textarea [(ngModel)]="form.companyPresentation" rows="3" class="ra-textarea"
+          placeholder="Ex : Société allemande spécialisée dans les énergies renouvelables..."></textarea>
+        <span class="ra-hint">Activité principale, taille, marchés cibles, ambitions en Tunisie.</span>
+      </div>
+      <div class="ra-grid-2">
+        <div class="ra-field">
+          <label class="ra-label">Pays d'origine</label>
+          <input type="text" [(ngModel)]="form.originCountry" placeholder="ex: Allemagne, France..." class="ra-input" />
+        </div>
+        <div class="ra-field">
+          <label class="ra-label">Taille de l'entreprise</label>
+          <select [(ngModel)]="form.companySize" class="ra-select">
+            <option value="">— Sélectionner —</option>
+            <option *ngFor="let s of companySizes" [value]="s.value">{{ s.label }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="ra-field">
+        <label class="ra-label">Objectif stratégique en Tunisie</label>
+        <select [(ngModel)]="form.strategicGoal" class="ra-select">
+          <option value="">— Sélectionner —</option>
+          <option *ngFor="let g of strategicGoals" [value]="g.value">{{ g.label }}</option>
+        </select>
+      </div>
+      <div class="ra-field">
+        <label class="ra-label">Contraintes légales ou réglementaires</label>
+        <textarea [(ngModel)]="form.legalConstraints" rows="2" class="ra-textarea"
+          placeholder="Ex : Respect des lois sur le rapatriement des bénéfices..."></textarea>
+      </div>
+    </div>
+
+    <!-- ══ SOCIÉTÉ INTERNATIONALE — Collaboration ══ -->
+    <div *ngIf="isInternationalCompany && wantsCollaboration" class="ra-card">
+      <div class="ra-section-title">🤝 Critères de collaboration</div>
+      <div class="ra-grid-2">
+        <div class="ra-field">
+          <label class="ra-label">Type de collaboration</label>
+          <select [(ngModel)]="form.collaborationType" class="ra-select">
+            <option value="">— Sélectionner —</option>
+            <option *ngFor="let c of collaborationTypes" [value]="c.value">{{ c.label }}</option>
+          </select>
+        </div>
+        <div class="ra-field">
+          <label class="ra-label">Durée de partenariat souhaitée</label>
+          <select [(ngModel)]="form.partnershipDuration" class="ra-select">
+            <option value="">— Sélectionner —</option>
+            <option *ngFor="let d of partnershipDurations" [value]="d.value">{{ d.label }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="ra-field">
+        <label class="ra-label">Objectif de collaboration</label>
+        <textarea [(ngModel)]="form.collaborationGoal" rows="2" class="ra-textarea"
+                  placeholder="ex: Cherche partenaire tech IA en Tunisie..."></textarea>
+      </div>
+      <div class="ra-field">
+        <label class="ra-label">Compétences & expertises offertes</label>
+        <div class="ra-tag-wrap">
+          <span class="ra-tag" *ngFor="let t of skillTags">
+            {{ t }}<button class="ra-tag-remove" (click)="removeSkill(t)" type="button">×</button>
+          </span>
+          <input class="ra-tag-input" [(ngModel)]="newSkill"
+                 placeholder="ex: React, DevOps, Finance..." (keydown)="onSkillKeydown($event)" />
+        </div>
+        <span class="ra-hint">Appuyez sur Entrée ou virgule pour ajouter</span>
+      </div>
+    </div>
+
+    <!-- ══ SOCIÉTÉ INTERNATIONALE — Investissement ══ -->
+    <div *ngIf="isInternationalCompany && wantsInvestment" class="ra-card">
+      <div class="ra-section-title">📈 Critères d'investissement</div>
+      <div class="ra-grid-2">
+        <div class="ra-field">
+          <label class="ra-label">Horizon d'investissement</label>
+          <select [(ngModel)]="form.investmentHorizon" class="ra-select">
+            <option value="">— Sélectionner —</option>
+            <option *ngFor="let h of investmentHorizons" [value]="h.value">{{ h.label }}</option>
+          </select>
+        </div>
+        <div class="ra-field">
+          <label class="ra-label">Budget d'investissement (DT)</label>
+          <div class="ra-input-wrap">
+            <input type="number" [(ngModel)]="form.budget" placeholder="ex: 100 000" min="0" class="ra-input ra-input--suffix" />
+            <span class="ra-input-suffix">DT</span>
+          </div>
+        </div>
+      </div>
+      <div class="ra-grid-2">
+        <div class="ra-field">
+          <label class="ra-label">Secteur préféré</label>
+          <input type="text" [(ngModel)]="form.preferredSector" placeholder="ex: Énergie renouvelable..." class="ra-input" />
+        </div>
+        <div class="ra-field">
+          <label class="ra-label">Niveau de risque accepté</label>
+          <select [(ngModel)]="form.riskLevel" class="ra-select">
+            <option value="">— Sélectionner —</option>
+            <option *ngFor="let r of riskLevels" [value]="r.value">{{ r.label }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PARTENAIRE ÉCONOMIQUE ══ -->
+    <div *ngIf="isEconomicPartner" class="ra-card ra-card--partner">
+      <div class="ra-section-title">🤝 Profil Partenaire Économique</div>
+      <div class="ra-ai-banner">
+        <span class="ra-ai-banner-icon">🤖</span>
+        <div>
+          <strong>Décrivez votre besoin de partenariat</strong>
+          <p>L'IA analysera votre profil pour identifier les services de collaboration les plus adaptés.</p>
+        </div>
+      </div>
+      <div class="ra-field">
+        <label class="ra-label">Décrivez votre besoin de partenariat</label>
+        <textarea [(ngModel)]="form.projectDescription" rows="3" class="ra-textarea"
+          placeholder="Ex : PME tunisienne spécialisée dans le développement logiciel..."></textarea>
+        <span class="ra-hint">Activité, taille, ce que vous apportez, ce que vous cherchez.</span>
+      </div>
+      <div class="ra-grid-2">
+        <div class="ra-field">
+          <label class="ra-label">Type de collaboration souhaité</label>
+          <select [(ngModel)]="form.collaborationType" class="ra-select">
+            <option value="">— Sélectionner —</option>
+            <option *ngFor="let c of collaborationTypes" [value]="c.value">{{ c.label }}</option>
+          </select>
+        </div>
+        <div class="ra-field">
+          <label class="ra-label">Taille de votre entreprise</label>
+          <select [(ngModel)]="form.companySize" class="ra-select">
+            <option value="">— Sélectionner —</option>
+            <option *ngFor="let s of companySizes" [value]="s.value">{{ s.label }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="ra-grid-2">
+        <div class="ra-field">
+          <label class="ra-label">Domaine d'activité cible</label>
+          <select [(ngModel)]="form.activityDomain" class="ra-select">
+            <option value="">— Sélectionner —</option>
+            <optgroup label="─ Tourisme ─">
+              <option *ngFor="let d of activityDomains.slice(0,8)" [value]="d.value">{{ d.label }}</option>
+            </optgroup>
+            <optgroup label="─ Investissement ─">
+              <option *ngFor="let d of activityDomains.slice(8)" [value]="d.value">{{ d.label }}</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="ra-field">
+          <label class="ra-label">Durée de partenariat souhaitée</label>
+          <select [(ngModel)]="form.partnershipDuration" class="ra-select">
+            <option value="">— Sélectionner —</option>
+            <option *ngFor="let d of partnershipDurations" [value]="d.value">{{ d.label }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="ra-field">
+        <label class="ra-label">Objectif principal de collaboration</label>
+        <textarea [(ngModel)]="form.collaborationGoal" rows="2" class="ra-textarea"
+                  placeholder="ex: Cherche partenaire distribution en Europe..."></textarea>
+      </div>
+      <div class="ra-field">
+        <label class="ra-label">Compétences & expertises offertes</label>
+        <div class="ra-tag-wrap">
+          <span class="ra-tag" *ngFor="let t of skillTags">
+            {{ t }}<button class="ra-tag-remove" (click)="removeSkill(t)" type="button">×</button>
+          </span>
+          <input class="ra-tag-input" [(ngModel)]="newSkill"
+                 placeholder="ex: React, Finance, Logistique..." (keydown)="onSkillKeydown($event)" />
+        </div>
+        <span class="ra-hint">Appuyez sur Entrée ou virgule pour ajouter une compétence</span>
+      </div>
+      <div class="ra-field">
+        <label class="ra-label">Disponibilité souhaitée du service</label>
+        <div class="ra-radio-group">
+          <label *ngFor="let a of availabilities" class="ra-radio-option"
+                 [class.ra-radio-option--active]="form.availability === a.value">
+            <input type="radio" [(ngModel)]="form.availability" [value]="a.value" />
+            {{ a.label }}
+          </label>
+        </div>
+      </div>
+      <div class="ra-field">
+        <label class="ra-label">Critères du partenaire idéal</label>
+        <textarea [(ngModel)]="form.partnerCriteria" rows="2" class="ra-textarea"
+          placeholder="Ex : Partenaire disposant d'un réseau commercial établi en Europe..."></textarea>
+      </div>
+    </div>
+
+    <!-- ══ TOURISTE ══ -->
+    <div *ngIf="isTourist" class="ra-card">
+      <div class="ra-section-title">🧳 Critères Touriste</div>
+      <div class="ra-grid-2">
+        <div class="ra-field">
+          <label class="ra-label">Profil du visiteur</label>
+          <select [(ngModel)]="form.targetAudience" class="ra-select">
+            <option value="">— Sélectionner —</option>
+            <option *ngFor="let a of targetAudiences" [value]="a.value">{{ a.label }}</option>
+          </select>
+        </div>
+        <div class="ra-field">
+          <label class="ra-label">Taille du groupe</label>
+          <input type="number" [(ngModel)]="form.groupSize" placeholder="ex: 4" min="1" class="ra-input" />
+          <span class="ra-hint">Nombre total de personnes (vous inclus)</span>
+        </div>
+      </div>
+      <div class="ra-field">
+        <label class="ra-label">Catégorie de service souhaitée</label>
+        <select [(ngModel)]="form.activityDomain" class="ra-select">
+          <option value="">— Toutes catégories —</option>
+          <option value="HOTEL">🏨 Hôtel</option>
+          <option value="GUEST_HOUSE">🏡 Maison d'hôtes</option>
+          <option value="TOUR_GUIDE">🗺️ Guide touristique</option>
+          <option value="TRANSPORT">🚌 Transport</option>
+          <option value="RESTAURANT">🍽️ Restauration</option>
+          <option value="CRAFTS">🎨 Artisanat</option>
+          <option value="TRAVEL_AGENCY">✈️ Agence de voyage</option>
+        </select>
+      </div>
+      <div class="ra-field">
+        <label class="ra-label">Disponibilité souhaitée</label>
+        <div class="ra-radio-group">
+          <label *ngFor="let a of availabilities" class="ra-radio-option"
+                 [class.ra-radio-option--active]="form.availability === a.value">
+            <input type="radio" [(ngModel)]="form.availability" [value]="a.value" />
+            {{ a.label }}
+          </label>
+        </div>
+      </div>
+      <div class="ra-field">
+        <label class="ra-label">Langues préférées</label>
+        <div class="ra-tag-wrap">
+          <span class="ra-tag" *ngFor="let t of langTags">
+            {{ t }}<button class="ra-tag-remove" (click)="removeLang(t)" type="button">×</button>
+          </span>
+          <input class="ra-tag-input" [(ngModel)]="newLang"
+                 placeholder="ex: Français, English, عربي..." (keydown)="onLangKeydown($event)" />
+        </div>
+        <span class="ra-hint">Appuyez sur Entrée pour ajouter une langue</span>
+      </div>
+    </div>
+
+    <!-- SUBMIT -->
+    <button class="ra-submit-btn" (click)="submit()">
+      <span>✨</span>
+      <span>Obtenir mes recommandations</span>
+      <span class="ra-submit-arrow">→</span>
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       LOADING — SKELETON PRO
+       ══════════════════════════════════════════ -->
+  <div *ngIf="step==='loading'" class="ra-loading">
+
+    <!-- Progress header -->
+    <div class="ra-loading-header">
+      <div class="ra-loading-header-left">
+        <div class="ra-spinner">
+          <div class="ra-spinner-ring"></div>
+          <div class="ra-spinner-ring ra-spinner-ring--delay"></div>
+        </div>
+        <div>
+          <p class="ra-loading-title">Analyse en cours...</p>
+          <p class="ra-loading-step">{{ loadingMessage }}</p>
+        </div>
+      </div>
+      <div class="ra-loading-steps-mini">
+        <div class="ra-mini-step" *ngFor="let s of loadingSteps; let idx = index"
+             [class.ra-mini-step--done]="loadingStepIndex > idx"
+             [class.ra-mini-step--active]="loadingStepIndex === idx">
+          <div class="ra-mini-dot"></div>
+          <span>{{ s }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ra-progress-bar-wrap">
+      <div class="ra-progress-bar-track">
+        <div class="ra-progress-bar-fill" [style.width.%]="loadingPercent"></div>
+      </div>
+      <span class="ra-progress-pct">{{ loadingPercent }}%</span>
+    </div>
+
+    <!-- Skeleton cards -->
+    <div class="ra-skeleton-list">
+      <div class="ra-skeleton-card" *ngFor="let n of [1,2,3]">
+        <div class="ra-skeleton-header">
+          <div class="ra-skeleton-badge"></div>
+        </div>
+        <div class="ra-skeleton-body">
+          <div>
+            <div class="ra-skel ra-skel--title"></div>
+            <div class="ra-skel ra-skel--sub"></div>
+            <div class="ra-skeleton-chips">
+              <div class="ra-skel ra-skel--chip"></div>
+              <div class="ra-skel ra-skel--chip" style="width:90px"></div>
+              <div class="ra-skel ra-skel--chip" style="width:70px"></div>
+            </div>
+          </div>
+          <div class="ra-skeleton-score-wrap">
+            <div class="ra-skel ra-skel--circle"></div>
+          </div>
+        </div>
+        <div class="ra-skel ra-skel--bar"></div>
+        <div class="ra-skel ra-skel--explanation"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       RESULTS
+       ══════════════════════════════════════════ -->
+  <div *ngIf="step==='results'" class="ra-results">
+
+    <div class="ra-results-header">
+      <div>
+        <h2 class="ra-results-title">Recommandations</h2>
+        <p class="ra-results-sub">
+          <ng-container *ngIf="results.length > 0">
+            <strong>{{ filteredSortedResults.length }}</strong> résultat{{ filteredSortedResults.length > 1 ? 's' : '' }}
+            <ng-container *ngIf="filteredSortedResults.length !== results.length"> sur {{ results.length }}</ng-container>
+          </ng-container>
+          <ng-container *ngIf="results.length === 0 && !errorMessage">Aucun résultat correspondant</ng-container>
+        </p>
+      </div>
+      <button class="ra-reset-btn" (click)="reset()">← Nouvelle recherche</button>
+    </div>
+
+   
+
+    <!-- Download -->
+    <div class="ra-download-row" *ngIf="results.length > 0">
+      <button class="ra-dl-btn ra-dl-pdf" (click)="downloadPDF()">📄 Télécharger PDF</button>
+    </div>
+
+    <div *ngIf="errorMessage" class="ra-error-banner"><span>⚠️</span> {{ errorMessage }}</div>
+
+    <div *ngIf="results.length === 0 && !errorMessage" class="ra-empty">
+      <div class="ra-empty-icon">🔍</div>
+      <p>Aucun service ne correspond à vos critères actuels.</p>
+      <p class="ra-empty-sub">Essayez d'élargir votre budget ou de changer de région.</p>
+    </div>
+
+    <!-- No filter match -->
+    <div *ngIf="results.length > 0 && filteredSortedResults.length === 0" class="ra-empty">
+      <div class="ra-empty-icon">🔍</div>
+      <p>Aucun résultat pour ce filtre.</p>
+      <p class="ra-empty-sub"><button class="ra-link-btn" (click)="setTypeFilter('ALL')">Effacer le filtre</button></p>
+    </div>
+
+    <!-- Result cards -->
+    <div class="ra-cards-list">
+      <div class="ra-result-card"
+           *ngFor="let item of filteredSortedResults; let i = index"
+           [class.ra-result-card--top]="isTopMatch(item)"
+           [class.ra-result-card--appear]="true">
+
+        <!-- BEST MATCH badge — only for rank 0 after sort -->
+        <div *ngIf="i === 0 && filteredSortedResults.length > 0" class="ra-top-badge">
+          <span class="ra-top-badge-star">★</span> Meilleur match
+        </div>
+
+        <div class="ra-result-body">
+          <div class="ra-result-info">
+            <div class="ra-result-name">{{ getServiceName(item) }}</div>
+            <div class="ra-result-type">{{ getServiceType(item) }}</div>
+
+            <div class="ra-detail-chips">
+              <span class="ra-chip" *ngFor="let d of getFullServiceDetails(item)">
+                <span class="ra-chip-label">{{ d.label }}</span>
+                <span class="ra-chip-value">{{ d.value }}</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Score ring avec animation -->
+          <div class="ra-score-wrap">
+            <div class="ra-score-ring" [ngClass]="getScoreClass(item.score)">
+              <svg viewBox="0 0 44 44" class="ra-ring-svg">
+                <circle cx="22" cy="22" r="18" class="ra-ring-bg"/>
+                <circle cx="22" cy="22" r="18" class="ra-ring-fill"
+                        [style.stroke]="getBarColor(item.score)"
+                        [style.stroke-dashoffset]="getRingOffset(item.score)"/>
+              </svg>
+              <span class="ra-score-num">{{ item.score }}</span>
+            </div>
+            <span class="ra-score-label">/ 10</span>
+          </div>
+        </div>
+
+        <!-- Progress bar animée -->
+        <div class="ra-bar-track">
+          <div class="ra-bar-fill ra-bar-animated"
+               [style.width.%]="item.score * 10"
+               [style.backgroundColor]="getBarColor(item.score)"></div>
+        </div>
+
+        <!-- AI explanation -->
+        <div *ngIf="item.aiExplanation" class="ra-explanation">
+          <span class="ra-explanation-icon">💡</span>
+          {{ item.aiExplanation }}
+        </div>
+
+        <!-- Score type tag -->
+        <div class="ra-tag-row">
+          <span class="ra-scored-tag" [class.ra-scored-tag--ai]="item.isAIScored">
+            {{ item.isAIScored ? '🤖 Scoré par IA' : '📐 Règles métier' }}
+          </span>
+          <span class="ra-score-pill" [ngClass]="getScoreClass(item.score)">
+            {{ getScoreLabel(item.score) }}
+          </span>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>

@@ -11,6 +11,8 @@ import { CurrencyConverterComponent } from '../../public/currency-converter/curr
 import { AcquisitionService } from '../../../core/services/acquisition.service';
 import { AuthService } from '../../../core/services/auth';
 import { Role } from '../../../shared/models/user.model';
+import { SubscriptionService } from '../../../core/services/subscription.service';
+import { SubscriptionModalComponent } from '../../../shared/models/subscription-modal.component';
 
 @Component({
   selector: 'app-investor-services',
@@ -22,7 +24,8 @@ import { Role } from '../../../shared/models/user.model';
     NavbarComponent,
     NotificationBellComponent,
     FavoriteButtonComponent,
-    CurrencyConverterComponent
+    CurrencyConverterComponent,
+    SubscriptionModalComponent
   ],
   template: `
     <div class="page-layout">
@@ -309,6 +312,13 @@ import { Role } from '../../../shared/models/user.model';
         </div>
       </div>
     </div>
+    @if (showSubscriptionModal) {
+  <app-subscription-modal
+    (closed)="showSubscriptionModal = false"
+    (subscribed)="onSubscribed()">
+  </app-subscription-modal>
+}
+
   `,
   styles: [`
     /* ============================================ */
@@ -842,6 +852,9 @@ export class InvestorServicesComponent implements OnInit, OnDestroy {
   
   cancellingRequests: Map<number, boolean> = new Map();
   allActiveReservations: Set<number> = new Set();
+  showSubscriptionModal = false;
+private subscriptionService = inject(SubscriptionService);
+private pendingContactProvider: any = null;
   
   private http = inject(HttpClient);
   private router = inject(Router);
@@ -1174,10 +1187,45 @@ enrichWithAcquisitionStatus(): void {
 
   clearSearch(): void { this.searchQuery = ''; this.filtered = this.services; }
 
-  contactProvider(provider: any): void {
-    if (!provider?.email) return;
-    const name = `${provider.firstName || ''} ${provider.lastName || ''}`.trim() || 'Local Partner';
-    const basePath = this.isInternationalCompany ? '/societe-international/messagerie' : '/messagerie';
-    this.router.navigate([basePath], { queryParams: { contact: provider.email, name } });
+ contactProvider(provider: any): void {
+  if (!provider?.email) return;
+
+  // Stocker le provider pendant la vérification
+  this.pendingContactProvider = provider;
+
+  this.subscriptionService.checkSubscription().subscribe({
+    next: (status) => {
+      if (status.hasActiveSubscription) {
+        // ✅ Abonnement actif → ouvrir le chat directement
+        this.openChat(provider);
+      } else {
+        // ❌ Pas d'abonnement → afficher la modal
+        this.showSubscriptionModal = true;
+      }
+    },
+    error: () => {
+      // En cas d'erreur réseau, ouvrir quand même le chat
+      this.openChat(provider);
+    }
+  });
+}
+/** Navigation vers le chat */
+private openChat(provider: any): void {
+  const name = `${provider.firstName || ''} ${provider.lastName || ''}`.trim() || 'Local Partner';
+  const basePath = this.isInternationalCompany
+    ? '/societe-international/messagerie'
+    : '/messagerie';
+  this.router.navigate([basePath], {
+    queryParams: { contact: provider.email, name }
+  });
+}
+
+/** Appelé si l'utilisateur souscrit depuis la modal */
+onSubscribed(): void {
+  this.showSubscriptionModal = false;
+  if (this.pendingContactProvider) {
+    this.openChat(this.pendingContactProvider);
+    this.pendingContactProvider = null;
   }
+}
 }
