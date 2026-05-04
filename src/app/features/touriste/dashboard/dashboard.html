@@ -35,6 +35,13 @@
         <h3>❤️ My Favorites</h3>
         <p class="stat-number">{{ favoritesCount }}</p>
       </a>
+      <a routerLink="/touriste/my-requests" class="stat-card" style="text-decoration: none; display: block; cursor: pointer;">
+        <h3>📋 My Requests</h3>
+        <p class="stat-number">{{ requestsCount }}</p>
+        <span class="stat-trend" *ngIf="pendingRequestsCount > 0" style="color: #f59e0b;">
+          {{ pendingRequestsCount }} pending
+        </span>
+      </a>
 
       <!-- Recommendations Card (sans lien) -->
       <div class="stat-card">

@@ -126,14 +126,14 @@ import { AcquisitionService, ServiceAcquisition } from '../../../core/services/a
             </div>
           </div>
 
-          <!-- SERVICES RÉSERVÉS (en attente de paiement) -->
+          <!-- SERVICES RÉSERVÉS (en attente de validation paiement) -->
           <div class="section" *ngIf="reservedAcquisitions.length > 0">
-            <h2 class="section-title">⏳ Reserved — Awaiting Payment</h2>
+            <h2 class="section-title">⏳ Awaiting Payment Validation</h2>
             <div class="services-grid">
               <div class="acq-card reserved" *ngFor="let a of reservedAcquisitions">
                 <div class="acq-header">
                   <span class="type-badge investment">📈 INVESTMENT</span>
-                  <span class="status-pill reserved-pill">⏳ RESERVED</span>
+                  <span class="status-pill awaiting-pill">⏳ AWAITING VALIDATION</span>
                 </div>
                 <h3 class="acq-name">{{ a.serviceName }}</h3>
 
@@ -219,9 +219,11 @@ import { AcquisitionService, ServiceAcquisition } from '../../../core/services/a
                   </span>
                 </div>
 
-                <button class="pay-now-btn" (click)="payNow(a)" *ngIf="a.paymentUrl">
-                  💳 Pay Now — {{ a.amount | number }} TND
-                </button>
+                <div class="payment-notice-box">
+                  <span class="notice-icon">💳</span>
+                  <span>Please pay <strong>{{ a.amount | number }} TND</strong> offline to your local partner.</span>
+                </div>
+                
                 <button class="cancel-outline-btn" (click)="openCancelModal(a)">🚫 Cancel Reservation</button>
               </div>
             </div>
@@ -315,8 +317,8 @@ import { AcquisitionService, ServiceAcquisition } from '../../../core/services/a
     .type-badge { font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 50px; }
     .type-badge.investment { background: #eff6ff; color: #1d4ed8; }
     .status-pill { font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.7rem; border-radius: 50px; }
-    .reserved-pill { background: #fef9c3; color: #92400e; }
     .pending-pill { background: #dbeafe; color: #1e40af; }
+    .awaiting-pill { background: #fef9c3; color: #92400e; }
     .acq-name { font-size: 1rem; font-weight: 600; color: #0f172a; margin: 0 0 0.75rem; }
     .service-details { background: #f8fafc; border-radius: 8px; padding: 0.75rem; margin-bottom: 0.75rem; border: 1px solid #e2e8f0; }
     .detail-row { display: flex; gap: 0.5rem; font-size: 0.8rem; margin-bottom: 0.4rem; align-items: flex-start; }
@@ -332,8 +334,8 @@ import { AcquisitionService, ServiceAcquisition } from '../../../core/services/a
     .expiry-value { color: #78350f; margin-left: 0.3rem; }
     .expiry-value.urgent { color: #dc2626; font-weight: 700; }
     .expiry-countdown { display: block; color: #dc2626; font-weight: 600; margin-top: 0.2rem; font-size: 0.75rem; }
-    .pay-now-btn { width: 100%; padding: 0.6rem; background: #d97706; color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; margin-bottom: 0.5rem; transition: all 0.2s; }
-    .pay-now-btn:hover { background: #b45309; transform: translateY(-1px); }
+    .payment-notice-box { display: flex; align-items: center; gap: 0.5rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 0.65rem 0.85rem; margin-bottom: 0.75rem; font-size: 0.82rem; color: #78350f; }
+    .notice-icon { font-size: 1rem; flex-shrink: 0; }
     .cancel-btn { width: 100%; padding: 0.6rem; background: #fee2e2; color: #dc2626; border: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
     .cancel-btn:hover { background: #dc2626; color: white; }
     .cancel-outline-btn { width: 100%; padding: 0.6rem; background: transparent; border: 1px solid #fca5a5; color: #dc2626; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
@@ -414,22 +416,22 @@ export class MyAcquiredServicesComponent implements OnInit {
       backLink: '/investisseur/services',
       backText: '← Back to Services',
       title: 'My Investment Requests',
-      subtitle: 'Your pending requests and services awaiting payment',
+      subtitle: 'Your pending requests and services awaiting payment validation',
       browseLink: '/investisseur/services',
       emptyMessage: 'Browse investment services and request the ones that interest you.',
       emptyIcon: '📭',
       emptyTitle: 'No active requests'
     },
-  INTERNATIONAL_COMPANY: {
-  backLink: '/societe-international/services',  // ✅ Changé de 'investment-services' à 'services'
-  backText: '← Back to Investment Services',
-  title: 'My Company Investment Requests',
-  subtitle: 'Your company\'s pending requests and services awaiting payment',
-  browseLink: '/societe-international/services',  // ✅ Changé aussi
-  emptyMessage: 'Browse investment opportunities and request the ones that interest your company.',
-  emptyIcon: '🏢',
-  emptyTitle: 'No active company requests'
-}
+    INTERNATIONAL_COMPANY: {
+      backLink: '/societe-international/services',
+      backText: '← Back to Investment Services',
+      title: 'My Company Investment Requests',
+      subtitle: 'Your company\'s pending requests and services awaiting payment validation',
+      browseLink: '/societe-international/services',
+      emptyMessage: 'Browse investment opportunities and request the ones that interest your company.',
+      emptyIcon: '🏢',
+      emptyTitle: 'No active company requests'
+    }
   };
 
   get config() {
@@ -437,15 +439,17 @@ export class MyAcquiredServicesComponent implements OnInit {
       || this.roleConfig.INVESTOR;
   }
 
+  // ✅ CORRIGÉ: Utiliser paymentStatus au lieu de status
   get pendingAcquisitions(): ServiceAcquisition[] {
     return this.acquisitions.filter(a =>
       a.paymentStatus === 'PENDING_PARTNER_APPROVAL' && a.serviceType === 'INVESTMENT'
     );
   }
 
+  // ✅ CORRIGÉ: Utiliser AWAITING_VALIDATION au lieu de AWAITING_PAYMENT
   get reservedAcquisitions(): ServiceAcquisition[] {
     return this.acquisitions.filter(a =>
-      a.paymentStatus === 'AWAITING_PAYMENT' && a.serviceType === 'INVESTMENT'
+      a.paymentStatus === 'AWAITING_VALIDATION' && a.serviceType === 'INVESTMENT'
     );
   }
 
@@ -468,7 +472,6 @@ export class MyAcquiredServicesComponent implements OnInit {
     const roles: string[] = payload?.realm_access?.roles || [];
     if (roles.includes('INVESTOR')) return 'INVESTOR';
     if (roles.includes('INTERNATIONAL_COMPANY')) return 'INTERNATIONAL_COMPANY';
-    if (roles.includes('LOCAL_PARTNER')) return 'LOCAL_PARTNER';
     return 'INVESTOR';
   }
 
@@ -496,20 +499,24 @@ export class MyAcquiredServicesComponent implements OnInit {
     this.loadMyAcquisitions();
   }
 
- loadMyAcquisitions(): void {
-  this.loading = true;
-  this.acquisitionService.getMyServices().subscribe({
-    next: (data: ServiceAcquisition[]) => {
-      this.acquisitions = data.filter(a =>
-        a.serviceType === 'INVESTMENT' &&
-        (a.paymentStatus === 'PENDING_PARTNER_APPROVAL' || a.paymentStatus === 'AWAITING_PAYMENT')
-      );
-      this.acquisitions.forEach(acq => this.loadServiceDetails(acq));
-      this.loading = false;
-    },
-    error: () => { this.loading = false; }
-  });
-}
+  // ✅ CORRIGÉ: Utiliser getMyAllAcquisitions()
+  loadMyAcquisitions(): void {
+    this.loading = true;
+    this.acquisitionService.getMyAllAcquisitions().subscribe({
+      next: (data: ServiceAcquisition[]) => {
+        this.acquisitions = data.filter(a =>
+          a.serviceType === 'INVESTMENT' &&
+          (a.paymentStatus === 'PENDING_PARTNER_APPROVAL' || a.paymentStatus === 'AWAITING_VALIDATION')
+        );
+        this.acquisitions.forEach(acq => this.loadServiceDetails(acq));
+        this.loading = false;
+      },
+      error: (err: any) => { 
+        console.error('Error loading acquisitions:', err);
+        this.loading = false; 
+      }
+    });
+  }
 
   loadServiceDetails(acquisition: ServiceAcquisition): void {
     acquisition.detailsLoading = true;
@@ -517,17 +524,27 @@ export class MyAcquiredServicesComponent implements OnInit {
       `http://localhost:8089/api/investment-services/${acquisition.serviceId}`,
       { headers: this.getHeaders() }
     ).subscribe({
-      next: (service) => { acquisition.serviceDetails = service; acquisition.detailsLoading = false; },
-      error: () => { acquisition.serviceDetails = null; acquisition.detailsLoading = false; }
+      next: (service) => { 
+        acquisition.serviceDetails = service; 
+        acquisition.detailsLoading = false; 
+      },
+      error: (err: any) => { 
+        console.error(`Error loading service ${acquisition.serviceId}:`, err);
+        acquisition.serviceDetails = null; 
+        acquisition.detailsLoading = false; 
+      }
     });
   }
 
+  // ✅ CORRIGÉ: Supprimer paymentUrl - paiement hors ligne
   payNow(acquisition: ServiceAcquisition): void {
-    if (acquisition.paymentUrl) window.open(acquisition.paymentUrl, '_blank');
-    else alert('Payment link not available. Please contact support.');
+    alert(
+      `Please pay ${acquisition.amount ? acquisition.amount.toLocaleString() : '?'} TND ` +
+      `offline to your local partner.\n\nOnce paid, contact your partner to confirm reception.`
+    );
   }
 
-  isExpiringSoon(expiresAt: string): boolean {
+  isExpiringSoon(expiresAt: string | null): boolean {
     if (!expiresAt) return false;
     const diffHours = (new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60);
     return diffHours <= 2 && diffHours > 0;
@@ -545,25 +562,25 @@ export class MyAcquiredServicesComponent implements OnInit {
     this.cancelReason = '';
   }
 
- confirmCancel(): void {
-  if (!this.selectedAcquisition || this.cancelReason.trim().length < 5) return;
-  this.cancelLoading = true;
-  this.acquisitionService.cancelRequest(
-    this.selectedAcquisition.id,
-    this.cancelReason.trim()
-  ).subscribe({
-    next: () => {
-      this.acquisitions = this.acquisitions.filter(a => a.id !== this.selectedAcquisition!.id);
-      this.cancelLoading = false;
-      this.closeCancelModal();
-      alert('✅ Request cancelled successfully.');
-    },
-    error: (err) => {
-      this.cancelLoading = false;
-      alert('❌ ' + (err.error?.error || 'Error cancelling request'));
-    }
-  });
-}
+  confirmCancel(): void {
+    if (!this.selectedAcquisition || this.cancelReason.trim().length < 5) return;
+    this.cancelLoading = true;
+    this.acquisitionService.cancelRequest(
+      this.selectedAcquisition.id,
+      this.cancelReason.trim()
+    ).subscribe({
+      next: () => {
+        this.acquisitions = this.acquisitions.filter(a => a.id !== this.selectedAcquisition!.id);
+        this.cancelLoading = false;
+        this.closeCancelModal();
+        alert('✅ Request cancelled successfully.');
+      },
+      error: (err: any) => {
+        this.cancelLoading = false;
+        alert('❌ ' + (err.error?.error || 'Error cancelling request'));
+      }
+    });
+  }
 
   // ─── Document Methods ─────────────────────────
   viewDocument(doc: any): void {
@@ -575,7 +592,7 @@ export class MyAcquiredServicesComponent implements OnInit {
         next: (blob: Blob) => {
           this.documentUrl = URL.createObjectURL(blob);
         },
-        error: (err) => {
+        error: (err: any) => {
           console.error('Error loading image:', err);
           this.documentUrl = '';
         }
@@ -604,7 +621,7 @@ export class MyAcquiredServicesComponent implements OnInit {
         a.click();
         window.URL.revokeObjectURL(downloadUrl);
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Download error:', err);
         alert('Error downloading file');
       }

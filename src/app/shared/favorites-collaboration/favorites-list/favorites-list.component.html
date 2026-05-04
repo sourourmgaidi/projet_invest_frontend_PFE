@@ -1,6 +1,6 @@
 <!-- src/app/shared/favorites-collaboration/favorites-list/favorites-list.component.html -->
 <div class="favorites-layout">
-  <app-navbar></app-navbar>
+ 
 
   <div class="favorites-content">
     <!-- Header -->
@@ -10,7 +10,7 @@
           <span>←</span> Back to {{ getDashboardName() }} Dashboard
         </a>
         <h2>
-          <span class="title-icon">❤️</span>
+  
           My Collaboration Favorites
         </h2>
       </div>
@@ -66,34 +66,24 @@
       <div class="favorites-grid">
         @for (service of favorites; track service.id) {
           <div class="favorite-card">
-            <!-- Status Badge -->
-            <div class="card-status" [class]="getStatusClass(service.status)">
-              @if (service.status === 'APPROVED') {
-                <span class="status-icon">✓</span>
-              } @else if (service.status === 'PENDING') {
-                <span class="status-icon">⏳</span>
-              } @else if (service.status === 'REJECTED') {
-                <span class="status-icon">✗</span>
-              }
-              {{ service.status }}
-            </div>
-
+            
             <!-- Card Header with Remove Button -->
             <div class="card-header">
-              <h3 class="service-name">{{ service.name }}</h3>
-              <button 
-                class="btn-remove"
-                (click)="removeFavorite(service.id)"
-                [disabled]="isRemoving(service.id)"
-                [title]="'Remove from favorites'"
-              >
-                @if (!isRemoving(service.id)) {
-                  <span class="btn-remove-icon">✕</span>
-                } @else {
-                  <span class="loading-spinner-small"></span>
-                }
-              </button>
-            </div>
+  <h3 class="service-name">{{ service.name }}</h3>
+  <button 
+    class="btn-remove"
+    (click)="removeFavorite(service.id)"
+    [disabled]="isRemoving(service.id)"
+    [title]="'Remove from favorites'"
+  >
+    @if (!isRemoving(service.id)) {
+      <span class="btn-remove-text">Remove</span>
+    } @else {
+      <span class="loading-spinner-small"></span>
+      <span class="btn-remove-text">Removing...</span>
+    }
+  </button>
+</div>
 
             <!-- Description -->
             @if (service.description) {
@@ -282,9 +272,7 @@
         <span class="footer-info">
           Showing {{ favorites.length }} favorite item{{ favorites.length > 1 ? 's' : '' }}
         </span>
-        <a routerLink="/partenaire-economique/dashboard" class="footer-dashboard-link">
-          ← Back to Dashboard
-        </a>
+       
       </div>
     }
   </div>

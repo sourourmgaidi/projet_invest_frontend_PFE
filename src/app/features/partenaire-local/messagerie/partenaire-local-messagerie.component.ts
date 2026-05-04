@@ -1,3 +1,4 @@
+// partenaire-local-messagerie.component.ts
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -70,7 +71,6 @@ interface Conversation {
 
             <div class="sidebar-header">
               <h2>💬 Conversations</h2>
-              
             </div>
 
             <div class="search-wrapper">
@@ -100,7 +100,7 @@ interface Conversation {
                 [class.unread]="!isViewed(conv)"
                 (click)="selectConversation(conv)"
               >
-                <div class="conv-avatar" [class.green]="conv.recipientRole === 'LOCAL_PARTNER'">
+                <div class="conv-avatar" [class.gold]="conv.recipientRole === 'LOCAL_PARTNER'">
                   {{ getInitials(conv) }}
                 </div>
                 <div class="conv-info">
@@ -109,14 +109,14 @@ interface Conversation {
                     <span class="conv-time">{{ formatTime(conv.lastMessageDate) }}</span>
                   </div>
                   <div class="conv-bottom">
-  <span class="conv-preview">{{ conv.lastMessage || 'Démarrer la conversation...' }}</span>
-  <div class="conv-badges">
-    <span class="unread-dot" *ngIf="!isViewed(conv)">●</span>
-    <span class="conv-unread-count" *ngIf="conv.unreadCount && conv.unreadCount > 0">
-      {{ conv.unreadCount > 99 ? '99+' : conv.unreadCount }}
-    </span>
-  </div>
-</div>
+                    <span class="conv-preview">{{ conv.lastMessage || 'Démarrer la conversation...' }}</span>
+                    <div class="conv-badges">
+                      <span class="unread-dot" *ngIf="!isViewed(conv)">●</span>
+                      <span class="conv-unread-count" *ngIf="conv.unreadCount && conv.unreadCount > 0">
+                        {{ conv.unreadCount > 99 ? '99+' : conv.unreadCount }}
+                      </span>
+                    </div>
+                  </div>
                   <span class="role-badge">{{ getRoleLabel(conv) }}</span>
                 </div>
               </div>
@@ -136,7 +136,7 @@ interface Conversation {
             <!-- Header chat -->
             <div class="chat-header" *ngIf="selectedConv">
               <button class="back-btn" (click)="mobileShowChat = false" title="Retour">←</button>
-              <div class="avatar-lg" [class.green]="selectedConv.recipientRole === 'LOCAL_PARTNER'">
+              <div class="avatar-lg" [class.gold]="selectedConv.recipientRole === 'LOCAL_PARTNER'">
                 {{ getInitials(selectedConv) }}
               </div>
               <div class="contact-info">
@@ -175,7 +175,6 @@ interface Conversation {
 
                     <div class="msg-bubble">
 
-                      <!-- ✅ Badge rôle — alimenté par l'API /user-role/{email} -->
                       <span class="msg-sender-role" *ngIf="msg.senderEmail !== myEmail && getMsgSenderRole(msg)">
                         {{ getMsgSenderRole(msg) }}
                       </span>
@@ -357,95 +356,170 @@ interface Conversation {
     </div>
   `,
   styles: [`
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* =============================================
+       LAYOUT — navbar horizontale
+    ============================================= */
     .page-layout {
-      display: flex;
       min-height: 100vh;
-      background: linear-gradient(135deg, #f0fdf4, #f1f5f9);
+      background: #f2f2f2;
       font-family: 'Inter', sans-serif;
+      padding-top: 90px;
+      display: flex;
+      flex-direction: column;
     }
+
     app-navbar {
-      width: 280px; flex-shrink: 0;
-      position: sticky; top: 0; height: 100vh; z-index: 100;
+      display: none; /* navbar horizontale gérée en dehors */
     }
+
     .page-main {
-      flex: 1; padding: 1.5rem 2rem;
-      overflow: hidden; display: flex; flex-direction: column;
+      flex: 1;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
       gap: 1rem;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      /* hauteur calculée : viewport - navbar - paddings */
+      height: calc(100vh - 90px);
+      overflow: hidden;
     }
+
+    /* =============================================
+       PAGE HEADER
+    ============================================= */
     .page-header {
-      display: flex; justify-content: space-between; align-items: flex-start;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
       flex-shrink: 0;
     }
     .back-link {
-      display: inline-block; color: #059669; font-size: 0.85rem;
+      display: inline-block; color: #2f4f7f; font-size: 0.85rem;
       font-weight: 500; text-decoration: none; margin-bottom: 0.4rem;
+      transition: color 0.2s;
     }
-    .back-link:hover { color: #047857; }
+    .back-link:hover { color: #ffd700; }
     h1 {
-      font-size: 1.75rem; font-weight: 700; color: #0f172a;
+      font-size: 1.75rem; font-weight: 700; color: #2f4f7f;
       margin: 0 0 0.2rem;
     }
     h1::after {
       content: ''; display: block; width: 50px; height: 3px;
-      background: linear-gradient(90deg, #059669, #10b981);
+      background: linear-gradient(90deg, #2f4f7f, #ffd700);
       margin-top: 0.3rem; border-radius: 2px;
     }
     .subtitle { color: #64748b; margin: 0; font-size: 0.9rem; }
+
+    /* =============================================
+       INBOX CONTAINER
+    ============================================= */
     .inbox-container {
-      display: flex; flex: 1; min-height: 0;
-      background: white; border-radius: 20px; overflow: hidden;
-      box-shadow: 0 4px 30px rgba(0,0,0,0.08);
-      border: 1px solid #d1fae5;
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 4px 30px rgba(47,79,127,0.1);
+      border: 1px solid rgba(47,79,127,0.15);
     }
+
+    /* =============================================
+       SIDEBAR
+    ============================================= */
     .sidebar {
-      width: 320px; flex-shrink: 0;
-      border-right: 1px solid #f0fdf4;
-      display: flex; flex-direction: column;
-      background: #fafffe;
+      width: 320px;
+      flex-shrink: 0;
+      border-right: 1px solid rgba(47,79,127,0.1);
+      display: flex;
+      flex-direction: column;
+      background: #fafbff;
     }
+
     .sidebar-header {
       padding: 1.2rem 1.5rem;
-      border-bottom: 1px solid #f0fdf4;
-      display: flex; align-items: center; gap: 0.75rem;
+      border-bottom: 1px solid rgba(47,79,127,0.1);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: linear-gradient(135deg, #2f4f7f, #1e3a5f);
+      position: relative;
     }
-    .sidebar-header h2 { margin: 0; font-size: 1rem; font-weight: 700; color: #0f172a; }
+    .sidebar-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #ffd700, transparent);
+    }
+    .sidebar-header h2 {
+      margin: 0; font-size: 1rem; font-weight: 700; color: white;
+    }
+
     .badge-count {
-      background: #ef4444; color: white; border-radius: 50%;
+      background: #ffd700; color: #2f4f7f; border-radius: 50%;
       width: 20px; height: 20px; font-size: 0.7rem; font-weight: 700;
       display: flex; align-items: center; justify-content: center;
     }
+
     .search-wrapper {
-      padding: 0.75rem 1rem; position: relative;
-      border-bottom: 1px solid #f0fdf4;
+      padding: 0.75rem 1rem;
+      position: relative;
+      border-bottom: 1px solid rgba(47,79,127,0.08);
     }
     .search-input {
       width: 100%; padding: 0.55rem 0.75rem 0.55rem 2.1rem;
-      border: 1px solid #d1fae5; border-radius: 10px;
+      border: 1.5px solid rgba(47,79,127,0.2);
+      border-radius: 999px;
       font-size: 0.85rem; outline: none; background: white;
-      box-sizing: border-box; transition: border-color 0.2s;
+      box-sizing: border-box; transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
     }
-    .search-input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
+    .search-input:focus {
+      border-color: #2f4f7f;
+      box-shadow: 0 0 0 3px rgba(47,79,127,0.1);
+    }
     .search-icon {
       position: absolute; left: 1.65rem; top: 50%;
-      transform: translateY(-50%); color: #94a3b8; pointer-events: none;
+      transform: translateY(-50%); color: #2f4f7f; pointer-events: none;
     }
+
+    /* =============================================
+       CONVERSATION LIST
+    ============================================= */
     .conv-list { flex: 1; overflow-y: auto; }
+
     .conv-item {
       display: flex; padding: 0.85rem 1.25rem; gap: 0.75rem;
       cursor: pointer; transition: all 0.15s;
-      border-bottom: 1px solid #f8fafc; position: relative;
+      border-bottom: 1px solid rgba(47,79,127,0.06);
+      position: relative;
     }
-    .conv-item:hover { background: #f0fdf4; }
-    .conv-item.active { background: #ecfdf5; border-left: 3px solid #10b981; }
+    .conv-item:hover { background: rgba(47,79,127,0.04); }
+    .conv-item.active {
+      background: rgba(47,79,127,0.08);
+      border-left: 3px solid #2f4f7f;
+    }
     .conv-item.unread { background: #fffbeb; }
     .conv-item.unread .conv-name { font-weight: 700; }
+
     .conv-avatar {
       width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
-      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      background: linear-gradient(135deg, #2f4f7f, #1e3a5f);
       color: white; display: flex; align-items: center; justify-content: center;
       font-weight: 700; font-size: 0.9rem;
     }
-    .conv-avatar.green { background: linear-gradient(135deg, #059669, #10b981); }
+    .conv-avatar.gold {
+      background: linear-gradient(135deg, #d4a017, #ffd700);
+      color: #2f4f7f;
+    }
+
     .conv-info { flex: 1; min-width: 0; }
     .conv-top {
       display: flex; justify-content: space-between;
@@ -464,115 +538,153 @@ interface Conversation {
       font-size: 0.8rem; color: #64748b;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
     }
-    .unread-dot { color: #10b981; font-size: 0.85rem; flex-shrink: 0; }
-    .role-badge {
-      font-size: 0.68rem; font-weight: 600; color: #059669;
-      background: #d1fae5; padding: 0.1rem 0.5rem; border-radius: 20px;
-      display: inline-block;
+    .conv-badges { display: flex; align-items: center; gap: 0.3rem; }
+    .unread-dot { color: #ffd700; font-size: 0.85rem; flex-shrink: 0; }
+    .conv-unread-count {
+      background: #2f4f7f; color: white;
+      border-radius: 20px; padding: 0.1rem 0.45rem;
+      font-size: 0.65rem; font-weight: 700;
+      min-width: 18px; text-align: center;
     }
+    .role-badge {
+      font-size: 0.68rem; font-weight: 600; color: #2f4f7f;
+      background: rgba(47,79,127,0.1); padding: 0.1rem 0.5rem;
+      border-radius: 20px; display: inline-block;
+      border: 1px solid rgba(47,79,127,0.2);
+    }
+
     .empty-conv { text-align: center; padding: 3rem 1.5rem; color: #94a3b8; }
     .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
     .empty-conv p { font-size: 0.95rem; font-weight: 500; margin: 0 0 0.5rem; color: #64748b; }
     .empty-conv small { font-size: 0.8rem; }
+
     .loading-state { display: flex; justify-content: center; padding: 2rem; }
+
+    /* =============================================
+       CHAT ZONE
+    ============================================= */
     .chat-zone {
       flex: 1; display: flex; flex-direction: column;
       background: #f8fafc; min-width: 0;
     }
+
     .chat-header {
-      padding: 1rem 1.5rem; border-bottom: 1px solid #e2e8f0;
-      background: white; display: flex; align-items: center; gap: 0.75rem;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(47,79,127,0.1);
+      background: white;
+      display: flex; align-items: center; gap: 0.75rem;
       flex-shrink: 0; min-height: 70px;
     }
     .empty-header { justify-content: center; }
     .empty-chat-hint { text-align: center; color: #94a3b8; }
     .hint-icon { font-size: 2rem; margin-bottom: 0.5rem; }
     .empty-chat-hint p { margin: 0; font-size: 0.9rem; }
+
     .back-btn {
       display: none; background: none; border: none;
-      font-size: 1.3rem; cursor: pointer; color: #059669;
+      font-size: 1.3rem; cursor: pointer; color: #2f4f7f;
       padding: 0.25rem 0.5rem; border-radius: 8px;
       transition: background 0.2s;
     }
-    .back-btn:hover { background: #f0fdf4; }
+    .back-btn:hover { background: rgba(47,79,127,0.08); }
+
     .avatar-lg {
       width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
-      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      background: linear-gradient(135deg, #2f4f7f, #1e3a5f);
       color: white; display: flex; align-items: center; justify-content: center;
       font-weight: 700; font-size: 0.9rem;
     }
-    .avatar-lg.green { background: linear-gradient(135deg, #059669, #10b981); }
-    .contact-info h3 { margin: 0; font-size: 1rem; font-weight: 600; color: #0f172a; }
-    .role-tag {
-      font-size: 0.75rem; color: #059669; background: #d1fae5;
-      padding: 0.15rem 0.6rem; border-radius: 20px; font-weight: 500;
+    .avatar-lg.gold {
+      background: linear-gradient(135deg, #d4a017, #ffd700);
+      color: #2f4f7f;
     }
+
+    .contact-info h3 { margin: 0; font-size: 1rem; font-weight: 700; color: #2f4f7f; }
+    .role-tag {
+      font-size: 0.75rem; color: #2f4f7f;
+      background: rgba(47,79,127,0.1);
+      padding: 0.15rem 0.6rem; border-radius: 20px; font-weight: 600;
+      border: 1px solid rgba(47,79,127,0.2);
+    }
+
+    /* =============================================
+       MESSAGES AREA
+    ============================================= */
     .messages-area {
       flex: 1; overflow-y: auto; padding: 1.5rem;
       display: flex; flex-direction: column;
-      background: linear-gradient(180deg, #f8fafc 0%, #f0fdf4 100%);
+      background: linear-gradient(180deg, #f8fafc 0%, #f0f4ff 100%);
     }
+
     .loading-msgs {
       display: flex; align-items: center; justify-content: center;
       gap: 0.75rem; color: #64748b; font-size: 0.9rem; margin: auto;
     }
+
     .messages-list { display: flex; flex-direction: column; gap: 0.6rem; }
+
     .msg-row { display: flex; align-items: flex-end; gap: 0.5rem; }
     .msg-row.mine { flex-direction: row-reverse; }
+
     .msg-avatar {
       width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
-      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      background: linear-gradient(135deg, #2f4f7f, #1e3a5f);
       color: white; display: flex; align-items: center; justify-content: center;
       font-size: 0.7rem; font-weight: 700;
     }
+
     .msg-bubble {
       max-width: 60%; padding: 0.65rem 1rem;
       border-radius: 18px; background: white;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
-      border: 1px solid #f1f5f9;
+      box-shadow: 0 1px 6px rgba(47,79,127,0.08);
+      border: 1px solid rgba(47,79,127,0.1);
     }
     .mine .msg-bubble {
-      background: linear-gradient(135deg, #059669, #10b981);
+      background: linear-gradient(135deg, #2f4f7f, #1e3a5f);
       color: white; border-color: transparent;
       border-radius: 18px 18px 4px 18px;
     }
     .msg-row:not(.mine) .msg-bubble { border-radius: 18px 18px 18px 4px; }
     .msg-bubble p { margin: 0 0 0.25rem; font-size: 0.88rem; line-height: 1.5; word-wrap: break-word; }
+
     .msg-meta { display: flex; justify-content: flex-end; align-items: center; gap: 0.3rem; margin-top: 0.3rem; }
     .msg-time { font-size: 0.65rem; opacity: 0.65; }
     .msg-status { font-size: 0.65rem; opacity: 0.8; }
     .attach-count { font-size: 0.65rem; opacity: 0.75; }
 
-    /* ✅ Badge rôle expéditeur */
     .msg-sender-role {
       display: block;
-      font-size: 0.65rem;
-      font-weight: 700;
-      color: #059669;
-      background: #d1fae5;
-      padding: 0.1rem 0.5rem;
-      border-radius: 20px;
-      margin-bottom: 0.35rem;
-      width: fit-content;
+      font-size: 0.65rem; font-weight: 700;
+      color: #2f4f7f;
+      background: rgba(47,79,127,0.1);
+      padding: 0.1rem 0.5rem; border-radius: 20px;
+      margin-bottom: 0.35rem; width: fit-content;
+      border: 1px solid rgba(47,79,127,0.2);
     }
 
     .no-messages { text-align: center; margin: auto; color: #94a3b8; padding: 2rem; }
     .no-msg-icon { font-size: 3rem; margin-bottom: 0.75rem; }
     .no-messages p { font-size: 0.95rem; font-weight: 500; color: #64748b; margin: 0 0 0.4rem; }
     .no-messages small { font-size: 0.8rem; }
+
+    /* =============================================
+       PIÈCES JOINTES
+    ============================================= */
     .attachments-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.4rem; }
+
     .img-preview-wrapper {
       position: relative; border-radius: 10px; overflow: hidden;
       cursor: pointer; max-width: 220px;
     }
     .img-preview { width: 100%; display: block; border-radius: 10px; transition: filter 0.2s; }
     .img-overlay {
-      position: absolute; inset: 0; background: rgba(0,0,0,0.3);
+      position: absolute; inset: 0; background: rgba(47,79,127,0.4);
       display: flex; align-items: center; justify-content: center;
       opacity: 0; transition: opacity 0.2s; color: white;
     }
     .img-preview-wrapper:hover .img-overlay { opacity: 1; }
     .img-preview-wrapper:hover .img-preview { filter: brightness(0.85); }
+
     .att-footer {
       display: flex; align-items: center; justify-content: space-between;
       margin-top: 0.25rem; padding: 0 0.1rem;
@@ -581,10 +693,14 @@ interface Conversation {
       font-size: 0.72rem; opacity: 0.8;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px;
     }
+
     .file-att {
       display: flex; align-items: center; gap: 0.6rem;
-      padding: 0.5rem 0.65rem; background: rgba(255,255,255,0.15);
-      border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); min-width: 180px;
+      padding: 0.5rem 0.65rem;
+      background: rgba(255,255,255,0.15);
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.2);
+      min-width: 180px;
     }
     .mine .file-att { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.3); }
     .file-icon { font-size: 1.4rem; flex-shrink: 0; }
@@ -594,23 +710,33 @@ interface Conversation {
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;
     }
     .file-size { font-size: 0.68rem; opacity: 0.7; }
+
     .att-dl-btn {
       background: rgba(255,255,255,0.2); border: none; border-radius: 6px;
       cursor: pointer; padding: 0.3rem; display: flex; align-items: center;
       transition: background 0.2s; color: inherit; flex-shrink: 0;
     }
-    .att-dl-btn:hover { background: rgba(255,255,255,0.35); }
+    .att-dl-btn:hover { background: rgba(255,255,255,0.4); }
+
+    /* =============================================
+       INPUT AREA
+    ============================================= */
     .input-area {
-      padding: 0.75rem 1.5rem 0.75rem;
-      background: white; border-top: 1px solid #e2e8f0; flex-shrink: 0;
+      padding: 0.75rem 1.5rem;
+      background: white;
+      border-top: 1px solid rgba(47,79,127,0.1);
+      flex-shrink: 0;
     }
+
     .files-preview {
-      margin-bottom: 0.6rem; background: #f0fdf4;
-      border: 1px solid #d1fae5; border-radius: 12px; padding: 0.6rem 0.8rem;
+      margin-bottom: 0.6rem;
+      background: rgba(47,79,127,0.05);
+      border: 1px solid rgba(47,79,127,0.2);
+      border-radius: 12px; padding: 0.6rem 0.8rem;
     }
     .files-preview-header {
       display: flex; justify-content: space-between; align-items: center;
-      font-size: 0.78rem; color: #059669; font-weight: 600; margin-bottom: 0.4rem;
+      font-size: 0.78rem; color: #2f4f7f; font-weight: 600; margin-bottom: 0.4rem;
     }
     .clear-files-btn {
       background: none; border: none; color: #ef4444; cursor: pointer;
@@ -618,10 +744,11 @@ interface Conversation {
       border-radius: 4px; transition: background 0.15s;
     }
     .clear-files-btn:hover { background: #fee2e2; }
+
     .files-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
     .file-chip {
       display: flex; align-items: center; gap: 0.3rem;
-      background: white; border: 1px solid #d1fae5;
+      background: white; border: 1px solid rgba(47,79,127,0.2);
       border-radius: 20px; padding: 0.2rem 0.6rem;
       font-size: 0.75rem; color: #374151;
     }
@@ -633,52 +760,74 @@ interface Conversation {
       font-size: 0.8rem; padding: 0; line-height: 1; transition: color 0.15s;
     }
     .chip-remove:hover { color: #ef4444; }
+
     .input-wrapper { display: flex; gap: 0.6rem; align-items: flex-end; }
+
     .attach-btn {
       width: 44px; height: 44px; flex-shrink: 0;
-      background: #f1f5f9; border: 1.5px solid #e2e8f0;
+      background: #f8fafc;
+      border: 1.5px solid rgba(47,79,127,0.2);
       border-radius: 12px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      color: #64748b; transition: all 0.2s; position: relative;
+      color: #2f4f7f; transition: all 0.2s; position: relative;
     }
-    .attach-btn:hover { background: #d1fae5; border-color: #10b981; color: #059669; }
-    .attach-btn.has-files { background: #d1fae5; border-color: #10b981; color: #059669; }
+    .attach-btn:hover { background: rgba(47,79,127,0.08); border-color: #2f4f7f; }
+    .attach-btn.has-files { background: rgba(255,215,0,0.15); border-color: #ffd700; color: #2f4f7f; }
+
     .attach-badge {
       position: absolute; top: -5px; right: -5px;
-      background: #059669; color: white;
+      background: #ffd700; color: #2f4f7f;
       border-radius: 50%; width: 18px; height: 18px;
       font-size: 0.65rem; font-weight: 700;
       display: flex; align-items: center; justify-content: center;
       border: 2px solid white;
     }
+
     .msg-input {
       flex: 1; padding: 0.75rem 1rem;
-      border: 1.5px solid #d1fae5; border-radius: 14px;
-      resize: none; font-family: inherit; font-size: 0.9rem;
+      border: 1.5px solid rgba(47,79,127,0.2);
+      border-radius: 14px;
+      resize: none; font-family: 'Inter', sans-serif; font-size: 0.9rem;
       max-height: 120px; outline: none; line-height: 1.4;
-      transition: border-color 0.2s, box-shadow 0.2s; background: #fafffe;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background: #fafbff;
     }
-    .msg-input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
+    .msg-input:focus {
+      border-color: #2f4f7f;
+      box-shadow: 0 0 0 3px rgba(47,79,127,0.1);
+    }
+
     .send-btn {
       width: 44px; height: 44px; flex-shrink: 0;
-      background: linear-gradient(135deg, #059669, #10b981);
+      background: linear-gradient(135deg, #2f4f7f, #1e3a5f);
       color: white; border: none; border-radius: 12px;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       transition: all 0.2s;
     }
-    .send-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(5,150,105,0.4); }
+    .send-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(47,79,127,0.4);
+    }
     .send-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
     .input-hint { margin: 0.4rem 0 0; font-size: 0.72rem; color: #94a3b8; }
+
+    /* =============================================
+       IMAGE MODAL
+    ============================================= */
     .img-modal {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.88);
       z-index: 9999; display: flex; align-items: center; justify-content: center;
       animation: fadeIn 0.2s ease;
+      backdrop-filter: blur(6px);
     }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
     .img-modal-content {
       position: relative; background: #1e293b; border-radius: 16px; overflow: hidden;
       max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column;
       box-shadow: 0 25px 80px rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,215,0,0.3);
     }
     .modal-close {
       position: absolute; top: 0.75rem; right: 0.75rem; z-index: 10;
@@ -687,7 +836,7 @@ interface Conversation {
       cursor: pointer; font-size: 0.9rem; display: flex;
       align-items: center; justify-content: center; transition: background 0.2s;
     }
-    .modal-close:hover { background: rgba(0,0,0,0.8); }
+    .modal-close:hover { background: rgba(255,215,0,0.3); color: #ffd700; }
     .modal-img { max-width: 85vw; max-height: 78vh; object-fit: contain; display: block; }
     .modal-footer {
       display: flex; justify-content: space-between; align-items: center;
@@ -695,42 +844,33 @@ interface Conversation {
     }
     .modal-dl-btn {
       display: flex; align-items: center; gap: 0.4rem;
-      background: #059669; color: white; border: none;
+      background: #ffd700; color: #2f4f7f; border: none;
       border-radius: 8px; padding: 0.4rem 0.9rem;
-      cursor: pointer; font-size: 0.82rem; font-weight: 600; transition: background 0.2s;
+      cursor: pointer; font-size: 0.82rem; font-weight: 700; transition: opacity 0.2s;
     }
-    .modal-dl-btn:hover { background: #047857; }
+    .modal-dl-btn:hover { opacity: 0.85; }
+
+    /* =============================================
+       SPINNERS
+    ============================================= */
     .spinner {
       width: 28px; height: 28px;
-      border: 3px solid #d1fae5; border-top-color: #10b981;
+      border: 3px solid rgba(47,79,127,0.15);
+      border-top-color: #2f4f7f;
       border-radius: 50%; animation: spin 0.8s linear infinite;
     }
-    .conv-badges {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-
-.conv-unread-count {
-  background: #ef4444;
-  color: white;
-  border-radius: 20px;
-  padding: 0.1rem 0.45rem;
-  font-size: 0.65rem;
-  font-weight: 700;
-  min-width: 18px;
-  text-align: center;
-}
     .spinner-sm {
       width: 16px; height: 16px;
       border: 2px solid rgba(255,255,255,0.4); border-top-color: white;
       border-radius: 50%; animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* =============================================
+       RESPONSIVE
+    ============================================= */
     @media (max-width: 900px) {
-      app-navbar { width: 100%; height: auto; position: relative; }
-      .page-layout { flex-direction: column; }
-      .page-main { padding: 0; gap: 0; }
+      .page-main { padding: 0; gap: 0; height: calc(100vh - 90px); }
       .page-header { padding: 1rem; }
       .inbox-container { border-radius: 0; flex: 1; }
       .sidebar { width: 100%; }
@@ -743,6 +883,10 @@ interface Conversation {
   `]
 })
 export class PartenaireLocalMessagerieComponent implements OnInit, OnDestroy, AfterViewChecked {
+
+  // ============================================================
+  // LOGIQUE TYPESCRIPT — IDENTIQUE, AUCUN CHANGEMENT
+  // ============================================================
 
   conversations: Conversation[] = [];
   filteredConversations: Conversation[] = [];
@@ -758,12 +902,9 @@ export class PartenaireLocalMessagerieComponent implements OnInit, OnDestroy, Af
   unreadCount = 0;
   private shouldScroll = false;
 
-  // ── Pièces jointes ──
   selectedFiles: File[] = [];
   previewAtt: MessageAttachment | null = null;
   private blobUrlCache = new Map<number, string>();
-
-  // ✅ Cache des rôles par email — alimenté par /user-role/{email}
   private roleCache = new Map<string, string>();
 
   @ViewChild('messagesContainer') messagesContainer?: ElementRef;
@@ -820,85 +961,83 @@ export class PartenaireLocalMessagerieComponent implements OnInit, OnDestroy, Af
     }
   }
 
-  // ────────── Chargement conversations ──────────
-
   private loadRolesForConversations(conversations: Conversation[]): void {
-  conversations.forEach(conv => {
-    const otherEmail = this.getOtherEmail(conv);
-    if (otherEmail && !this.roleCache.has(otherEmail)) {
-      this.http.get<{ email: string; role: string }>(
-        `${this.API}/user-role/${otherEmail}`,
-        { headers: this.getHeaders() }
-      ).subscribe({
-        next: (data) => this.roleCache.set(data.email, data.role),
-        error: () => {}
-      });
-    }
-  });
-}
-loadConversations(showLoader = true): void {
-  if (showLoader) this.loadingConv = true;
-
-  this.http.get<Conversation[]>(`${this.API}/my-conversations`, {
-    headers: this.getHeaders()
-  }).subscribe({
-    next: (data) => {
-      this.conversations = data;
-      
-      // Pour chaque conversation, compter les messages non lus
-      let completedRequests = 0;
-      const totalRequests = data.length;
-      
-      if (totalRequests === 0) {
-        this.filterConversations();
-        this.unreadCount = 0;
-        this.loadingConv = false;
-        this.loadRolesForConversations(data);
-        return;
-      }
-      
-      data.forEach(conv => {
-        const otherEmail = this.getOtherEmail(conv);
-        
-        this.http.get<Message[]>(`${this.API}/conversation/${otherEmail}`, {
-          headers: this.getHeaders()
-        }).subscribe({
-          next: (messages) => {
-            // Compter les messages non lus envoyés par l'autre personne
-            const unreadMessages = messages.filter(m => 
-              m.senderEmail === otherEmail && !m.read
-            );
-            conv.unreadCount = unreadMessages.length;
-            console.log(`📊 Conversation avec ${otherEmail}: ${conv.unreadCount} messages non lus`); // Debug
-            
-            completedRequests++;
-            if (completedRequests === totalRequests) {
-              this.filterConversations();
-              this.unreadCount = this.conversations.filter(c => !this.isViewed(c)).length;
-              this.loadingConv = false;
-              this.loadRolesForConversations(data);
-            }
-          },
-          error: (err) => {
-            console.error(`Erreur chargement messages pour ${otherEmail}:`, err);
-            conv.unreadCount = 0;
-            completedRequests++;
-            if (completedRequests === totalRequests) {
-              this.filterConversations();
-              this.unreadCount = this.conversations.filter(c => !this.isViewed(c)).length;
-              this.loadingConv = false;
-              this.loadRolesForConversations(data);
-            }
-          }
+    conversations.forEach(conv => {
+      const otherEmail = this.getOtherEmail(conv);
+      if (otherEmail && !this.roleCache.has(otherEmail)) {
+        this.http.get<{ email: string; role: string }>(
+          `${this.API}/user-role/${otherEmail}`,
+          { headers: this.getHeaders() }
+        ).subscribe({
+          next: (data) => this.roleCache.set(data.email, data.role),
+          error: () => {}
         });
-      });
-    },
-    error: (err) => { 
-      console.error('Erreur chargement conversations:', err);
-      this.loadingConv = false; 
-    }
-  });
-}
+      }
+    });
+  }
+
+  loadConversations(showLoader = true): void {
+    if (showLoader) this.loadingConv = true;
+
+    this.http.get<Conversation[]>(`${this.API}/my-conversations`, {
+      headers: this.getHeaders()
+    }).subscribe({
+      next: (data) => {
+        this.conversations = data;
+
+        let completedRequests = 0;
+        const totalRequests = data.length;
+
+        if (totalRequests === 0) {
+          this.filterConversations();
+          this.unreadCount = 0;
+          this.loadingConv = false;
+          this.loadRolesForConversations(data);
+          return;
+        }
+
+        data.forEach(conv => {
+          const otherEmail = this.getOtherEmail(conv);
+
+          this.http.get<Message[]>(`${this.API}/conversation/${otherEmail}`, {
+            headers: this.getHeaders()
+          }).subscribe({
+            next: (messages) => {
+              const unreadMessages = messages.filter(m =>
+                m.senderEmail === otherEmail && !m.read
+              );
+              conv.unreadCount = unreadMessages.length;
+              console.log(`📊 Conversation avec ${otherEmail}: ${conv.unreadCount} messages non lus`);
+
+              completedRequests++;
+              if (completedRequests === totalRequests) {
+                this.filterConversations();
+                this.unreadCount = this.conversations.filter(c => !this.isViewed(c)).length;
+                this.loadingConv = false;
+                this.loadRolesForConversations(data);
+              }
+            },
+            error: (err) => {
+              console.error(`Erreur chargement messages pour ${otherEmail}:`, err);
+              conv.unreadCount = 0;
+              completedRequests++;
+              if (completedRequests === totalRequests) {
+                this.filterConversations();
+                this.unreadCount = this.conversations.filter(c => !this.isViewed(c)).length;
+                this.loadingConv = false;
+                this.loadRolesForConversations(data);
+              }
+            }
+          });
+        });
+      },
+      error: (err) => {
+        console.error('Erreur chargement conversations:', err);
+        this.loadingConv = false;
+      }
+    });
+  }
+
   filterConversations(): void {
     if (!this.searchQuery.trim()) {
       this.filteredConversations = this.conversations;
@@ -911,24 +1050,20 @@ loadConversations(showLoader = true): void {
     );
   }
 
-  // ────────── Sélectionner une conversation ──────────
+  selectConversation(conv: Conversation): void {
+    this.selectedConv = conv;
+    this.mobileShowChat = true;
+    this.loadMessages(conv);
 
-selectConversation(conv: Conversation): void {
-  this.selectedConv = conv;
-  this.mobileShowChat = true;
-  this.loadMessages(conv);
-  
-  // ✅ Marquer les messages comme lus quand on ouvre la conversation
-  const otherEmail = this.getOtherEmail(conv);
-  this.messagerieService.markConversationAsRead(otherEmail).subscribe({
-    next: () => {
-      conv.unreadCount = 0;
-      // Recharger les conversations pour mettre à jour l'affichage
-      setTimeout(() => this.loadConversations(false), 500);
-    },
-    error: (err) => console.error('Erreur marquage lecture:', err)
-  });
-}
+    const otherEmail = this.getOtherEmail(conv);
+    this.messagerieService.markConversationAsRead(otherEmail).subscribe({
+      next: () => {
+        conv.unreadCount = 0;
+        setTimeout(() => this.loadConversations(false), 500);
+      },
+      error: (err) => console.error('Erreur marquage lecture:', err)
+    });
+  }
 
   loadMessages(conv: Conversation): void {
     this.loadingMessages = true;
@@ -946,7 +1081,6 @@ selectConversation(conv: Conversation): void {
         this.messages = this.messages.map(m => ({ ...m, attachments: m.attachments || [] }));
         this.loadingMessages = false;
         this.shouldScroll = true;
-        // ✅ Charger les rôles depuis l'API pour tous les expéditeurs
         this.loadRolesForMessages(this.messages);
       },
       error: () => {
@@ -978,7 +1112,6 @@ selectConversation(conv: Conversation): void {
     });
   }
 
-  // ✅ Charge les rôles depuis /user-role/{email} pour chaque expéditeur reçu
   private loadRolesForMessages(messages: Message[]): void {
     const emails = [...new Set(
       messages
@@ -998,7 +1131,6 @@ selectConversation(conv: Conversation): void {
     });
   }
 
-  // ✅ Retourne le rôle depuis le cache (alimenté par l'API)
   getMsgSenderRole(msg: Message): string {
     const role = this.roleCache.get(msg.senderEmail) || '';
     const labels: Record<string, string> = {
@@ -1011,8 +1143,6 @@ selectConversation(conv: Conversation): void {
     };
     return labels[role] || '';
   }
-
-  // ────────── Ouvrir ou créer une conversation ──────────
 
   openOrCreate(contactEmail: string, contactName?: string): void {
     const existing = this.conversations.find(c =>
@@ -1039,8 +1169,6 @@ selectConversation(conv: Conversation): void {
     }
   }
 
-  // ────────── Gestion des fichiers ──────────
-
   onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input.files) return;
@@ -1056,8 +1184,6 @@ selectConversation(conv: Conversation): void {
   clearFiles(): void {
     this.selectedFiles = [];
   }
-
-  // ────────── Envoyer un message ──────────
 
   sendMessage(): void {
     const hasText = this.newMessage.trim().length > 0;
@@ -1133,12 +1259,8 @@ selectConversation(conv: Conversation): void {
     xhr.send(formData);
   }
 
-  // ────────── Prévisualisation image ──────────
-
   openImagePreview(att: MessageAttachment): void { this.previewAtt = att; }
   closeImagePreview(): void { this.previewAtt = null; }
-
-  // ────────── Téléchargement ──────────
 
   downloadFile(att: MessageAttachment): void {
     this.http.get(`${this.API}/attachment/${att.id}`, {
@@ -1175,15 +1297,11 @@ selectConversation(conv: Conversation): void {
     return '';
   }
 
-  // ────────── Auto-resize textarea ──────────
-
   autoResize(event: Event): void {
     const textarea = event.target as HTMLTextAreaElement;
     textarea.style.height = 'auto';
     textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
   }
-
-  // ────────── Helpers ──────────
 
   getOtherEmail(conv: Conversation): string {
     return conv.senderEmail === this.myEmail ? conv.recipientEmail : conv.senderEmail;
@@ -1203,26 +1321,25 @@ selectConversation(conv: Conversation): void {
     return name.substring(0, 2).toUpperCase();
   }
 
- getRoleLabel(conv: Conversation): string {
-  let role = conv.senderEmail === this.myEmail ? conv.recipientRole : conv.senderRole;
+  getRoleLabel(conv: Conversation): string {
+    let role = conv.senderEmail === this.myEmail ? conv.recipientRole : conv.senderRole;
 
-  // ✅ Si UNKNOWN ou vide → chercher dans le roleCache
-  if (!role || role === 'UNKNOWN') {
-    const otherEmail = this.getOtherEmail(conv);
-    role = this.roleCache.get(otherEmail) || '';
+    if (!role || role === 'UNKNOWN') {
+      const otherEmail = this.getOtherEmail(conv);
+      role = this.roleCache.get(otherEmail) || '';
+    }
+
+    const labels: Record<string, string> = {
+      'LOCAL_PARTNER': 'Local Partner',
+      'INVESTOR': 'Investor',
+      'PARTNER': 'Economic Partner',
+      'TOURIST': 'Tourist',
+      'ADMIN': 'Administrator',
+      'INTERNATIONAL_COMPANY': 'International Company'
+    };
+
+    return labels[role] || '';
   }
-
-  const labels: Record<string, string> = {
-  'LOCAL_PARTNER': 'Local Partner',
-  'INVESTOR': 'Investor',
-  'PARTNER': 'Economic Partner',
-  'TOURIST': 'Tourist',
-  'ADMIN': 'Administrator',
-  'INTERNATIONAL_COMPANY': 'International Company'
-};
-
-  return labels[role] || ''; 
-}
 
   isViewed(conv: Conversation): boolean {
     return conv.senderEmail === this.myEmail ? conv.senderViewed : conv.partnerViewed;

@@ -13,9 +13,18 @@ export interface SubscriptionStatus {
 
 export interface SubscriptionPaymentInit {
   paymentId: string;
-  paymentUrl: string;
+  payUrl: string;        // ✅ Konnect utilise "payUrl" pas "paymentUrl"
+  paymentRef: string;    // ✅ Ajout du paymentRef Konnect
   amount: number;
   description: string;
+}
+
+export interface SubscriptionConfirmResult {
+  success: boolean;
+  subscriberEmail?: string;
+  expiresAt?: string;
+  daysRemaining?: number;
+  message?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -26,12 +35,18 @@ export class SubscriptionService {
   constructor(private http: HttpClient) {}
 
   private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('auth_token') || '';
-    return new HttpHeaders({ Authorization: `Bearer ${token}` });
+    // ✅ Cherche le token dans localStorage ET sessionStorage
+    const token = localStorage.getItem('auth_token')
+               || sessionStorage.getItem('auth_token')
+               || '';
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
   }
 
   /**
-   * Vérifie si l'utilisateur connecté a un abonnement actif.
+   * Vérifie si l'utilisateur a un abonnement actif.
    */
   checkSubscription(): Observable<SubscriptionStatus> {
     return this.http.get<SubscriptionStatus>(
@@ -41,8 +56,7 @@ export class SubscriptionService {
   }
 
   /**
-   * Initie le paiement de l'abonnement mensuel (40 TND).
-   * Retourne l'URL de paiement Flouci.
+   * Initie le paiement Konnect → retourne payUrl + paymentRef.
    */
   initiateSubscription(): Observable<SubscriptionPaymentInit> {
     return this.http.post<SubscriptionPaymentInit>(
@@ -53,24 +67,33 @@ export class SubscriptionService {
   }
 
   /**
-   * Callback appelé par Flouci après le paiement.
-   * À appeler depuis SubscriptionSuccessComponent.
+   * Confirme le paiement après callback Konnect.
+   * ✅ Nécessite paymentId + paymentRef (plus transactionId optionnel)
    */
- // subscription.service.ts
-confirmPayment(paymentId: string, transactionId?: string): Observable<any> {
-  // ✅ Priorité à sessionStorage si localStorage est vide
-  let token = localStorage.getItem('auth_token');
-  if (!token) {
-    token = sessionStorage.getItem('auth_token');
+  confirmPayment(
+    paymentId: string,
+    paymentRef: string,          // ✅ Ajout obligatoire
+    transactionId?: string
+  ): Observable<SubscriptionConfirmResult> {
+    let url = `${this.apiUrl}/subscription/payment-success`
+            + `?paymentId=${paymentId}`
+            + `&paymentRef=${paymentRef}`;  // ✅ Ajout dans l'URL
+
+    if (transactionId) {
+      url += `&transaction_id=${transactionId}`;
+    }
+
+    return this.http.get<SubscriptionConfirmResult>(url, {
+      headers: this.getHeaders()
+    });
   }
-  
-  const headers = new HttpHeaders({
-    'Authorization': `Bearer ${token || ''}`,
-    'Content-Type': 'application/json'
-  });
-  
-  let url = `${this.apiUrl}/subscription/payment-success?paymentId=${paymentId}`;
-  if (transactionId) url += `&transaction_id=${transactionId}`;
-  return this.http.get(url, { headers });
-}
+
+  /**
+   * Callback si paiement échoué.
+   */
+  paymentFailed(paymentId?: string): Observable<any> {
+    let url = `${this.apiUrl}/subscription/payment-failed`;
+    if (paymentId) url += `?paymentId=${paymentId}`;
+    return this.http.get(url, { headers: this.getHeaders() });
+  }
 }

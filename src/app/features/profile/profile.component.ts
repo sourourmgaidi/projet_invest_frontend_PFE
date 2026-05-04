@@ -60,6 +60,10 @@ export class ProfileComponent implements OnInit {
   phoneError: string = '';
   newEmail: string = '';
   emailError: string = '';
+businessRegError = '';
+taxNumberError = '';
+siretError = '';
+
   
   // Propriétés pour la photo
   selectedFile: File | null = null;
@@ -166,7 +170,7 @@ export class ProfileComponent implements OnInit {
     { code: 'AU', name: 'Australian' },
   ];
 
-  // ✅ Liste des régions de Tunisie (comme dans register.ts)
+  // Liste des régions de Tunisie (comme dans register.ts)
   tunisianRegions: Region[] = [
     { value: 'TUNIS', label: 'Tunis', governorate: 'Tunis' },
     { value: 'ARIANA', label: 'Ariana', governorate: 'Ariana' },
@@ -311,7 +315,7 @@ export class ProfileComponent implements OnInit {
       firstName: response.firstName || response.prenom || '',
       lastName: response.lastName || response.nom || '',
       phone: response.phone || response.telephone || '',
-     photo: response.profilePicture || response.photo || response.profilePhoto || response.photoProfil || '',
+      photo: response.profilePicture || response.photo || response.profilePhoto || response.photoProfil || '',
       role: this.userRole,
       registrationDate: response.registrationDate || response.dateInscription || new Date().toISOString(),
       isActive: response.active ?? true,
@@ -343,54 +347,28 @@ export class ProfileComponent implements OnInit {
       case Role.LOCAL_PARTNER:
         return {
           ...base,
-          // Téléphone (backend utilise "telephone")
           phone: response.telephone || response.phone || base.phone,
-          
-          // Site web (backend utilise "siteWeb")
           website: response.siteWeb || response.website || base.website,
-          
-          // Secteur d'activité (backend utilise "domaineActivite")
           activitySector: response.domaineActivite || response.activitySector || '',
-          
-          // ✅ Région (prendre le nom ou le label)
           region: response.region || '',
-          
-          // Adresse (backend utilise "adresse")
           address: response.adresse || response.address || '',
-          
-          // Documents
           businessRegistrationNumber: response.numeroRegistreCommerce || response.businessRegistrationNumber || '',
           professionalTaxNumber: response.taxeProfessionnelle || response.professionalTaxNumber || '',
-          
-          // LinkedIn
           linkedinProfile: response.linkedinProfile || '',
         };
         
       case Role.INTERNATIONAL_COMPANY:
-      return {
-    ...base,
-    // ✅ Prénom et nom du contact (depuis contactFirstName/contactLastName)
-    firstName: response.contactFirstName || response.firstName || response.prenom || base.firstName,
-    lastName: response.contactLastName || response.lastName || response.nom || base.lastName,
-    
-    // ✅ Nom de l'entreprise
-    companyName: response.companyName || '',
-    
-    // ✅ Pays d'origine
-    originCountry: response.originCountry || response.paysOrigine || '',
-    
-    // ✅ Secteur d'activité (depuis activitySector)
-    activitySector: response.activitySector || '',
-    
-    // ✅ SIRET
-    siret: response.siret || '',
-    
-    // ✅ Site web
-    website: response.website || response.siteWeb || '',
-    
-    // ✅ LinkedIn
-    linkedinProfile: response.linkedinProfile || '',
-  };
+        return {
+          ...base,
+          firstName: response.contactFirstName || response.firstName || response.prenom || base.firstName,
+          lastName: response.contactLastName || response.lastName || response.nom || base.lastName,
+          companyName: response.companyName || '',
+          originCountry: response.originCountry || response.paysOrigine || '',
+          activitySector: response.activitySector || '',
+          siret: response.siret || '',
+          website: response.website || response.siteWeb || '',
+          linkedinProfile: response.linkedinProfile || '',
+        };
         
       case Role.TOURIST:
         return {
@@ -418,6 +396,160 @@ export class ProfileComponent implements OnInit {
 
   getSectorsByCategory(category: string): ActivityOption[] {
     return this.activitySectors.filter(s => s.category === category);
+  }
+
+  // ========================================
+  // MÉTHODES DE VALIDATION (comme dans RegisterComponent)
+  // ========================================
+
+  validateGmail(email: string): boolean {
+    if (!email) return false;
+    const domain = email.substring(email.indexOf('@') + 1).toLowerCase();
+    const gmailDomains = [
+      'gmail.com', 'googlemail.com', 'gmail.co.uk', 'gmail.fr',
+      'gmail.de', 'gmail.it', 'gmail.es', 'gmail.ca', 'gmail.com.au', 'gmail.co.in'
+    ];
+    return gmailDomains.includes(domain);
+  }
+
+  validateEmailAddress(): boolean {
+    if (!this.newEmail || this.newEmail.trim() === '') {
+      this.emailError = 'Email is required';
+      return false;
+    }
+    if (!this.validateGmail(this.newEmail)) {
+      this.emailError = 'Only Gmail addresses are allowed (e.g., @gmail.com, @gmail.fr, etc.)';
+      return false;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(this.newEmail)) {
+      this.emailError = 'Invalid email format';
+      return false;
+    }
+    this.emailError = '';
+    return true;
+  }
+
+  validatePhoneNumber(): boolean {
+    if (!this.phoneNumber || this.phoneNumber.trim() === '') {
+      // Pour certains rôles, le téléphone peut être optionnel
+      if (this.userRole === Role.TOURIST) {
+        this.phoneError = '';
+        return true;
+      }
+      this.phoneError = 'Phone number is required';
+      return false;
+    }
+    
+    const digitsOnly = this.phoneNumber.replace(/\D/g, '');
+    if (digitsOnly.length === 0) {
+      this.phoneError = 'Phone number must contain only digits';
+      return false;
+    }
+    
+    const phoneLengthByDialCode: { [key: string]: number } = {
+      '+216': 8,  '+33': 9,   '+213': 9,  '+212': 9,  '+218': 9,
+      '+20': 10,  '+966': 9,  '+971': 9,  '+974': 8,  '+965': 8,
+      '+1': 10,   '+44': 10,  '+49': 10,  '+39': 10,  '+34': 9,
+      '+32': 9,   '+41': 9,   '+31': 9,   '+46': 9,   '+47': 8,
+      '+45': 8,   '+358': 9,  '+7': 10,   '+86': 11,  '+81': 10,
+      '+82': 10,  '+91': 10,  '+55': 11,  '+61': 9
+    };
+    
+    const expectedLength = phoneLengthByDialCode[this.selectedCountryCode];
+    if (expectedLength !== undefined && digitsOnly.length !== expectedLength) {
+      this.phoneError = `Phone number for ${this.selectedCountryCode} must have exactly ${expectedLength} digits (got ${digitsOnly.length}).`;
+      return false;
+    }
+    
+    if (expectedLength === undefined) {
+      if (digitsOnly.length < 8) {
+        this.phoneError = 'Phone number must have at least 8 digits';
+        return false;
+      }
+      if (digitsOnly.length > 15) {
+        this.phoneError = 'Phone number must not exceed 15 digits';
+        return false;
+      }
+    }
+    
+    this.phoneError = '';
+    return true;
+  }
+
+  validateWebsite(url: string): boolean {
+    if (!url || url.trim() === '') return true;
+    const urlPattern = /^(https?:\/\/)([\w\-]+\.)+[\w]{2,}(\/.*)?$/;
+    return urlPattern.test(url.trim());
+  }
+
+  validateLinkedin(url: string): boolean {
+    if (!url || url.trim() === '') return true;
+    const linkedinPattern = /^(https?:\/\/)?(www\.)?linkedin\.com\/in\/[\w\-]+\/?$/;
+    return linkedinPattern.test(url.trim());
+  }
+
+  validateCompanyName(value: string): boolean {
+    if (!value || value.trim() === '') return true;
+    if (value.trim().length < 2 || value.trim().length > 100) {
+      this.error = 'Company name must be between 2 and 100 characters';
+      return false;
+    }
+    return true;
+  }
+
+  validateOriginCountry(country: string): boolean {
+    if (!country || country.trim() === '') return true;
+    if (country.trim().length < 2 || country.trim().length > 60) {
+      this.error = 'Country must be between 2 and 60 characters';
+      return false;
+    }
+    const validPattern = /^[\p{L}\-\s']+$/u;
+    if (!validPattern.test(country.trim())) {
+      this.error = 'Country must contain only letters, spaces, hyphens or apostrophes';
+      return false;
+    }
+    return true;
+  }
+
+  validateNationalityValue(nationality: string): boolean {
+    if (!nationality || nationality.trim() === '') return true;
+    if (nationality.trim().length < 2 || nationality.trim().length > 60) {
+      this.error = 'Nationality must be between 2 and 60 characters';
+      return false;
+    }
+    const validPattern = /^[\p{L}\-\s']+$/u;
+    if (!validPattern.test(nationality.trim())) {
+      this.error = 'Nationality must contain only letters, spaces, hyphens or apostrophes';
+      return false;
+    }
+    return true;
+  }
+
+  validateSiretNumber(siret: string): boolean {
+    if (!siret || siret.trim() === '') return true;
+    const siretRegex = /^\d{14}$/;
+    if (!siretRegex.test(siret.trim())) {
+      this.error = 'SIRET number must be exactly 14 digits';
+      return false;
+    }
+    return true;
+  }
+
+  onWebsiteBlur(): void {
+    if (this.editData.website && !this.validateWebsite(this.editData.website)) {
+      this.error = 'Invalid website URL. Expected: https://www.example.com';
+    }
+  }
+
+  onLinkedinBlur(): void {
+    if (this.editData.linkedinProfile && !this.validateLinkedin(this.editData.linkedinProfile)) {
+      this.error = 'Invalid LinkedIn URL. Expected: https://www.linkedin.com/in/your-profile';
+    }
+  }
+
+  onEmailInput(): void {
+    this.validateEmailAddress();
   }
 
   // ========================================
@@ -452,217 +584,194 @@ export class ProfileComponent implements OnInit {
     this.error = '';
   }
 
-async uploadPhoto() {
-  if (!this.selectedFile || !this.profile) return;
+  async uploadPhoto() {
+    if (!this.selectedFile || !this.profile) return;
 
-  this.uploadingPhoto = true;
-  this.error = '';
-  this.success = '';
+    this.uploadingPhoto = true;
+    this.error = '';
+    this.success = '';
 
-  const token = this.authService.getToken();
-  if (!token) {
-    this.error = 'Non authentifié';
-    this.uploadingPhoto = false;
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append('fichier', this.selectedFile);
-
-  try {
-    const uploadEndpoint = 'http://localhost:8089/api/upload/profile-photo';
-    
-    console.log('📤 Upload vers:', uploadEndpoint);
-    console.log('📤 Fichier:', this.selectedFile.name);
-
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-    
-    // 1. Upload de la photo
-    const response: any = await lastValueFrom(
-      this.http.post(uploadEndpoint, formData, { headers })
-    );
-
-    console.log('✅ Réponse upload:', response);
-    
-    // Récupérer l'URL de la photo
-    const photoUrl = response.photoUrl;
-    console.log('📸 URL photo reçue:', photoUrl);
-    
-    // 2. Mettre à jour le profil local
-    if (this.profile) {
-      this.profile.photo = photoUrl;
-    }
-    
-    // 3. Mettre à jour dans AuthService
-    this.authService.updateProfilePhoto(photoUrl);
-    
-    // 4. Mettre à jour la prévisualisation
-    this.photoPreview = photoUrl;
-    
-    // 5. ✅ CRUCIAL: Sauvegarder la photo dans la base de données
-    await this.savePhotoToDatabase(photoUrl);
-    
-    // 6. ✅ Forcer un rafraîchissement final
-    await this.authService.refreshUserProfile();
-    await this.loadProfile();
-    
-    this.success = 'Photo mise à jour avec succès';
-    this.selectedFile = null;
-    
-    if (this.fileInput) {
-      this.fileInput.nativeElement.value = '';
-    }
-    
-  } catch (error: any) {
-    console.error('❌ Erreur upload photo:', error);
-    this.error = error.error?.erreur || 'Échec de l\'upload de la photo';
-  } finally {
-    this.uploadingPhoto = false;
-  }
-}
-// ========================================
-// SAUVEGARDER LA PHOTO DANS LA BASE DE DONNÉES
-// ========================================
-async savePhotoToDatabase(photoUrl: string) {
-  try {
     const token = this.authService.getToken();
-    const endpoint = this.getUpdateEndpoint();
-    
-    const headers = new HttpHeaders()
-      .set('Authorization', `Bearer ${token}`)
-      .set('Content-Type', 'application/json');
-
-    // Déterminer le nom du champ photo selon le rôle
-    let photoField = '';
-    let updateData: any = {};
-    
-    switch (this.userRole) {
-      case Role.INVESTOR:
-        photoField = 'profilePicture';
-        break;
-      case Role.PARTNER:
-        photoField = 'profilePhoto';
-        break;
-      case Role.LOCAL_PARTNER:
-        photoField = 'photoProfil';
-        break;
-      case Role.INTERNATIONAL_COMPANY:
-        photoField = 'profilePicture';
-        break;
-      case Role.TOURIST:
-        photoField = 'profilePhoto';
-        break;
-      case Role.ADMIN:
-        photoField = 'profilePhoto';
-        break;
-      default:
-        photoField = 'photo';
+    if (!token) {
+      this.error = 'Non authentifié';
+      this.uploadingPhoto = false;
+      return;
     }
-    
-    updateData[photoField] = photoUrl;
-    
-    console.log(`📤 Sauvegarde en base: ${photoField} = ${photoUrl}`);
-    
-    const response: any = await lastValueFrom(
-      this.http.put(endpoint, updateData, { headers })
-    );
-    
-    console.log('✅ Photo sauvegardée en base:', response);
-    
-    // Forcer le rafraîchissement du profil
-    await this.forceReloadProfile();
-    
-    return response;
-    
-  } catch (error) {
-    console.error('❌ Erreur sauvegarde base:', error);
-    throw error;
-  }
-}
-// ========================================
-// FORCER LE RECHARGEMENT DU PROFIL
-// ========================================
-async forceReloadProfile() {
-  console.log('🔄 Force reload profile...');
-  
-  const token = this.authService.getToken();
-  if (!token) {
-    console.error('❌ Pas de token');
-    return;
+
+    const formData = new FormData();
+    formData.append('fichier', this.selectedFile);
+
+    try {
+      const uploadEndpoint = 'http://localhost:8089/api/upload/profile-photo';
+      
+      console.log('📤 Upload vers:', uploadEndpoint);
+      console.log('📤 Fichier:', this.selectedFile.name);
+
+      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+      
+      const response: any = await lastValueFrom(
+        this.http.post(uploadEndpoint, formData, { headers })
+      );
+
+      console.log('✅ Réponse upload:', response);
+      
+      const photoUrl = response.photoUrl;
+      console.log('📸 URL photo reçue:', photoUrl);
+      
+      if (this.profile) {
+        this.profile.photo = photoUrl;
+      }
+      
+      this.authService.updateProfilePhoto(photoUrl);
+      this.photoPreview = photoUrl;
+      await this.savePhotoToDatabase(photoUrl);
+      await this.authService.refreshUserProfile();
+      await this.loadProfile();
+      
+      this.success = 'Photo mise à jour avec succès';
+      this.selectedFile = null;
+      
+      if (this.fileInput) {
+        this.fileInput.nativeElement.value = '';
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Erreur upload photo:', error);
+      this.error = error.error?.erreur || 'Échec de l\'upload de la photo';
+    } finally {
+      this.uploadingPhoto = false;
+    }
   }
 
-  try {
-    const endpoint = this.getProfileEndpoint();
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-    
-    const response: any = await lastValueFrom(
-      this.http.get(endpoint, { headers })
-    );
+  async savePhotoToDatabase(photoUrl: string) {
+    try {
+      const token = this.authService.getToken();
+      const endpoint = this.getUpdateEndpoint();
+      
+      const headers = new HttpHeaders()
+        .set('Authorization', `Bearer ${token}`)
+        .set('Content-Type', 'application/json');
 
-    console.log('✅ Force reload - Données brutes:', response);
-    
-    // ✅ Afficher tous les champs photo
-    console.log('📸 Champs photo dans réponse:', {
-      profilePicture: response.profilePicture,
-      photo: response.photo,
-      profilePhoto: response.profilePhoto,
-      photoProfil: response.photoProfil,
-      picture: response.picture
-    });
-    
-    // ✅ Sauvegarder l'ancienne photo
-    const oldPhoto = this.profile?.photo;
-    
-    // ✅ Mapper la réponse
-    this.profile = this.mapResponseToProfile(response);
-    
-    console.log('📸 Ancienne photo:', oldPhoto);
-    console.log('📸 Nouvelle photo:', this.profile?.photo);
-    
-    if (this.profile?.phone) {
-      this.phoneNumber = this.profile.phone.replace(/[^0-9]/g, '');
+      let photoField = '';
+      let updateData: any = {};
+      
+      switch (this.userRole) {
+        case Role.INVESTOR:
+          photoField = 'profilePicture';
+          break;
+        case Role.PARTNER:
+          photoField = 'profilePhoto';
+          break;
+        case Role.LOCAL_PARTNER:
+          photoField = 'photoProfil';
+          break;
+        case Role.INTERNATIONAL_COMPANY:
+          photoField = 'profilePicture';
+          break;
+        case Role.TOURIST:
+          photoField = 'profilePhoto';
+          break;
+        case Role.ADMIN:
+          photoField = 'profilePhoto';
+          break;
+        default:
+          photoField = 'photo';
+      }
+      
+      updateData[photoField] = photoUrl;
+      
+      console.log(`📤 Sauvegarde en base: ${photoField} = ${photoUrl}`);
+      
+      const response: any = await lastValueFrom(
+        this.http.put(endpoint, updateData, { headers })
+      );
+      
+      console.log('✅ Photo sauvegardée en base:', response);
+      await this.forceReloadProfile();
+      
+      return response;
+      
+    } catch (error) {
+      console.error('❌ Erreur sauvegarde base:', error);
+      throw error;
     }
+  }
+
+  async forceReloadProfile() {
+    console.log('🔄 Force reload profile...');
     
-    // ✅ Mettre à jour la prévisualisation
-    if (this.profile?.photo) {
-      this.photoPreview = this.profile.photo;
+    const token = this.authService.getToken();
+    if (!token) {
+      console.error('❌ Pas de token');
+      return;
     }
-    
-    // ✅ Mettre à jour AuthService
-    this.authService.updateProfilePhoto(this.profile?.photo || '');
-    this.authService.forceUpdate();
-    
-  } catch (error: any) {
-    console.error('❌ Erreur force reload:', error);
+
+    try {
+      const endpoint = this.getProfileEndpoint();
+      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+      
+      const response: any = await lastValueFrom(
+        this.http.get(endpoint, { headers })
+      );
+
+      console.log('✅ Force reload - Données brutes:', response);
+      
+      console.log('📸 Champs photo dans réponse:', {
+        profilePicture: response.profilePicture,
+        photo: response.photo,
+        profilePhoto: response.profilePhoto,
+        photoProfil: response.photoProfil,
+        picture: response.picture
+      });
+      
+      const oldPhoto = this.profile?.photo;
+      this.profile = this.mapResponseToProfile(response);
+      
+      console.log('📸 Ancienne photo:', oldPhoto);
+      console.log('📸 Nouvelle photo:', this.profile?.photo);
+      
+      if (this.profile?.phone) {
+        this.phoneNumber = this.profile.phone.replace(/[^0-9]/g, '');
+      }
+      
+      if (this.profile?.photo) {
+        this.photoPreview = this.profile.photo;
+      }
+      
+      this.authService.updateProfilePhoto(this.profile?.photo || '');
+      this.authService.forceUpdate();
+      
+    } catch (error: any) {
+      console.error('❌ Erreur force reload:', error);
+    }
   }
-}
-// Ajoutez aussi cette méthode pour tester
-async testPhotoInBackend() {
-  const token = this.authService.getToken();
-  if (!token) return;
-  
-  try {
-    const endpoint = this.getProfileEndpoint();
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+  async testPhotoInBackend() {
+    const token = this.authService.getToken();
+    if (!token) return;
     
-    const response: any = await lastValueFrom(
-      this.http.get(endpoint, { headers })
-    );
-    
-    console.log('🔍 TEST - Réponse brute:', response);
-    console.log('📸 Photos:', {
-      profilePicture: response.profilePicture,
-      photo: response.photo,
-      profilePhoto: response.profilePhoto,
-      photoProfil: response.photoProfil
-    });
-    
-    alert('Vérifiez la console (F12)');
-    
-  } catch (error) {
-    console.error('❌ Erreur test:', error);
+    try {
+      const endpoint = this.getProfileEndpoint();
+      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+      
+      const response: any = await lastValueFrom(
+        this.http.get(endpoint, { headers })
+      );
+      
+      console.log('🔍 TEST - Réponse brute:', response);
+      console.log('📸 Photos:', {
+        profilePicture: response.profilePicture,
+        photo: response.photo,
+        profilePhoto: response.profilePhoto,
+        photoProfil: response.photoProfil
+      });
+      
+      alert('Vérifiez la console (F12)');
+      
+    } catch (error) {
+      console.error('❌ Erreur test:', error);
+    }
   }
-}
 
   removePhoto() {
     this.selectedFile = null;
@@ -689,36 +798,8 @@ async testPhotoInBackend() {
     this.emailError = '';
   }
 
-  validateGmail(email: string): boolean {
-    if (!email) return false;
-    const domain = email.substring(email.indexOf('@') + 1).toLowerCase();
-    const gmailDomains = ['gmail.com', 'googlemail.com', 'gmail.fr', 'gmail.co.uk'];
-    return gmailDomains.includes(domain);
-  }
-
-  validateEmail(): boolean {
-    if (!this.newEmail || this.newEmail.trim() === '') {
-      this.emailError = 'Email is required';
-      return false;
-    }
-    
-    if (!this.validateGmail(this.newEmail)) {
-      this.emailError = 'Only Gmail addresses are allowed';
-      return false;
-    }
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(this.newEmail)) {
-      this.emailError = 'Invalid email format';
-      return false;
-    }
-    
-    this.emailError = '';
-    return true;
-  }
-
   async saveEmail() {
-    if (!this.validateEmail()) {
+    if (!this.validateEmailAddress()) {
       this.error = this.emailError;
       return;
     }
@@ -767,33 +848,6 @@ async testPhotoInBackend() {
   // ========================================
   // GESTION DU TÉLÉPHONE
   // ========================================
-  validatePhoneNumber(): boolean {
-    if (!this.phoneNumber || this.phoneNumber.trim() === '') {
-      this.phoneError = 'Phone number is required';
-      return false;
-    }
-    
-    const digitsOnly = this.phoneNumber.replace(/\D/g, '');
-    
-    if (digitsOnly.length === 0) {
-      this.phoneError = 'Phone number must contain only digits';
-      return false;
-    }
-    
-    if (digitsOnly.length < 8) {
-      this.phoneError = 'Phone number must have at least 8 digits';
-      return false;
-    }
-    
-    if (digitsOnly.length > 15) {
-      this.phoneError = 'Phone number must not exceed 15 digits';
-      return false;
-    }
-    
-    this.phoneError = '';
-    return true;
-  }
-
   updatePhoneNumber(): void {
     if (this.phoneNumber) {
       const digitsOnly = this.phoneNumber.replace(/\D/g, '');
@@ -854,6 +908,7 @@ async testPhotoInBackend() {
           this.editData.siret = this.profile?.siret;
           this.editData.website = this.profile?.website;
           this.editData.linkedinProfile = this.profile?.linkedinProfile;
+          this.editData.activitySector = this.profile?.activitySector;
           break;
         case Role.TOURIST:
           this.editData.nationality = this.profile?.nationality;
@@ -876,110 +931,56 @@ async testPhotoInBackend() {
     this.success = '';
   }
 
- prepareUpdateData(): any {
-  const updateData: any = {};
+  prepareUpdateData(): any {
+    const updateData: any = {};
 
-  // ✅ CORRECTION CRUCIALE: "telephone" au lieu de "phone" pour le backend
-  if (this.editData.firstName !== this.profile?.firstName) {
-    updateData.firstName = this.editData.firstName;
-  }
-  if (this.editData.lastName !== this.profile?.lastName) {
-    updateData.lastName = this.editData.lastName;
-  }
-  
-  // ✅ MODIFICATION POUR LE TOURISTE - Gestion du téléphone selon le rôle
-  if (this.editData.phone !== this.profile?.phone) {
-    if (this.userRole === Role.LOCAL_PARTNER) {
-      // Pour LOCAL_PARTNER seulement, le backend attend "telephone"
-      updateData.telephone = this.editData.phone;
-    } else {
-      // Pour TOURIST et tous les autres rôles, le backend attend "phone"
-      updateData.phone = this.editData.phone;
+    if (this.editData.firstName !== this.profile?.firstName) {
+      updateData.firstName = this.editData.firstName;
     }
-  }
+    if (this.editData.lastName !== this.profile?.lastName) {
+      updateData.lastName = this.editData.lastName;
+    }
+    
+    if (this.editData.phone !== this.profile?.phone) {
+      if (this.userRole === Role.LOCAL_PARTNER) {
+        updateData.telephone = this.editData.phone;
+      } else {
+        updateData.phone = this.editData.phone;
+      }
+    }
 
-  switch (this.userRole) {
-    case Role.INVESTOR:
-      if (this.editData.companyName !== this.profile?.companyName) {
-        updateData.company = this.editData.companyName;
-      }
-      if (this.editData.originCountry !== this.profile?.originCountry) {
-        updateData.originCountry = this.editData.originCountry;
-      }
-      if (this.editData.activitySector !== this.profile?.activitySector) {
-        updateData.activitySector = this.editData.activitySector;
-      }
-      if (this.editData.website !== this.profile?.website) {
-        updateData.website = this.editData.website;
-      }
-      if (this.editData.linkedinProfile !== this.profile?.linkedinProfile) {
-        updateData.linkedinProfile = this.editData.linkedinProfile;
-      }
-      if (this.editData.nationality !== this.profile?.nationality) {
-        updateData.nationality = this.editData.nationality;
-      }
-      break;
-
-    case Role.PARTNER:
-      if (this.editData.originCountry !== this.profile?.originCountry) {
-        updateData.countryOfOrigin = this.editData.originCountry;
-      }
-      if (this.editData.activitySector !== this.profile?.activitySector) {
-        updateData.businessSector = this.editData.activitySector;
-      }
-      if (this.editData.headquartersAddress !== this.profile?.headquartersAddress) {
-        updateData.headquartersAddress = this.editData.headquartersAddress;
-      }
-      if (this.editData.website !== this.profile?.website) {
-        updateData.website = this.editData.website;
-      }
-      if (this.editData.linkedinProfile !== this.profile?.linkedinProfile) {
-        updateData.linkedinProfile = this.editData.linkedinProfile;
-      }
-      break;
-
-    case Role.LOCAL_PARTNER:
-      if (this.editData.activitySector !== this.profile?.activitySector) {
-        updateData.domaineActivite = this.editData.activitySector;
-      }
-      if (this.editData.region !== this.profile?.region) {
-        // ✅ Envoyer la valeur de la région (le label ou le nom)
-        updateData.region = this.editData.region;
-      }
-      if (this.editData.address !== this.profile?.address) {
-        updateData.adresse = this.editData.address;
-      }
-      if (this.editData.website !== this.profile?.website) {
-        updateData.siteWeb = this.editData.website;
-      }
-      if (this.editData.businessRegistrationNumber !== this.profile?.businessRegistrationNumber) {
-        updateData.numeroRegistreCommerce = this.editData.businessRegistrationNumber;
-      }
-      if (this.editData.professionalTaxNumber !== this.profile?.professionalTaxNumber) {
-        updateData.taxeProfessionnelle = this.editData.professionalTaxNumber;
-      }
-      if (this.editData.linkedinProfile !== this.profile?.linkedinProfile) {
-        updateData.linkedinProfile = this.editData.linkedinProfile;
-      }
-      break;
-
-    case Role.INTERNATIONAL_COMPANY:
-      if (this.editData.firstName !== this.profile?.firstName) {
-    updateData.contactFirstName = this.editData.firstName;
-  }
-  if (this.editData.lastName !== this.profile?.lastName) {
-    updateData.contactLastName = this.editData.lastName;
-  }
+    switch (this.userRole) {
+      case Role.INVESTOR:
         if (this.editData.companyName !== this.profile?.companyName) {
-          updateData.companyName = this.editData.companyName;
+          updateData.company = this.editData.companyName;
         }
         if (this.editData.originCountry !== this.profile?.originCountry) {
           updateData.originCountry = this.editData.originCountry;
         }
-         if (this.editData.siret !== this.profile?.siret) {
-        updateData.siret = this.editData.siret;
-        console.log(' SIRET modifié - ancien:', this.profile?.siret, 'nouveau:', this.editData.siret);
-      }
+        if (this.editData.activitySector !== this.profile?.activitySector) {
+          updateData.activitySector = this.editData.activitySector;
+        }
+        if (this.editData.website !== this.profile?.website) {
+          updateData.website = this.editData.website;
+        }
+        if (this.editData.linkedinProfile !== this.profile?.linkedinProfile) {
+          updateData.linkedinProfile = this.editData.linkedinProfile;
+        }
+        if (this.editData.nationality !== this.profile?.nationality) {
+          updateData.nationality = this.editData.nationality;
+        }
+        break;
+
+      case Role.PARTNER:
+        if (this.editData.originCountry !== this.profile?.originCountry) {
+          updateData.countryOfOrigin = this.editData.originCountry;
+        }
+        if (this.editData.activitySector !== this.profile?.activitySector) {
+          updateData.businessSector = this.editData.activitySector;
+        }
+        if (this.editData.headquartersAddress !== this.profile?.headquartersAddress) {
+          updateData.headquartersAddress = this.editData.headquartersAddress;
+        }
         if (this.editData.website !== this.profile?.website) {
           updateData.website = this.editData.website;
         }
@@ -988,22 +989,139 @@ async testPhotoInBackend() {
         }
         break;
 
-    case Role.TOURIST:
-      if (this.editData.nationality !== this.profile?.nationality) {
-        updateData.nationality = this.editData.nationality;
-      }
-      // ✅ Le téléphone est déjà géré dans la partie commune avec "phone"
-      break;
+      case Role.LOCAL_PARTNER:
+        if (this.editData.activitySector !== this.profile?.activitySector) {
+          updateData.domaineActivite = this.editData.activitySector;
+        }
+        if (this.editData.region !== this.profile?.region) {
+          updateData.region = this.editData.region;
+        }
+        if (this.editData.address !== this.profile?.address) {
+          updateData.adresse = this.editData.address;
+        }
+        if (this.editData.website !== this.profile?.website) {
+          updateData.siteWeb = this.editData.website;
+        }
+        if (this.editData.businessRegistrationNumber !== this.profile?.businessRegistrationNumber) {
+          updateData.numeroRegistreCommerce = this.editData.businessRegistrationNumber;
+        }
+        if (this.editData.professionalTaxNumber !== this.profile?.professionalTaxNumber) {
+          updateData.taxeProfessionnelle = this.editData.professionalTaxNumber;
+        }
+        if (this.editData.linkedinProfile !== this.profile?.linkedinProfile) {
+          updateData.linkedinProfile = this.editData.linkedinProfile;
+        }
+        break;
+case Role.INTERNATIONAL_COMPANY:
+  // ⚠️ Envoyer TOUS les champs obligatoires
+  updateData.contactFirstName = this.editData.firstName;
+  updateData.contactLastName = this.editData.lastName;
+  updateData.companyName = this.editData.companyName;
+  updateData.originCountry = this.editData.originCountry;
+  updateData.activitySector = this.editData.activitySector;
+  updateData.siret = this.editData.siret;
+  updateData.website = this.editData.website;
+  updateData.linkedinProfile = this.editData.linkedinProfile;
+  updateData.phone = this.editData.phone;  // ⚠️ TRÈS IMPORTANT
+  break;
+
+      case Role.TOURIST:
+        if (this.editData.nationality !== this.profile?.nationality) {
+          updateData.nationality = this.editData.nationality;
+        }
+        break;
+    }
+
+    return updateData;
   }
 
-  return updateData;
-}
-
   async saveProfile() {
-  
+    // Validation téléphone avancée
     if (!this.validatePhoneNumber()) {
       this.error = this.phoneError;
       return;
+    }
+
+    // Validations selon le rôle
+    if (this.userRole === Role.INVESTOR) {
+      if (this.editData.companyName && !this.validateCompanyName(this.editData.companyName)) {
+        return;
+      }
+      if (this.editData.originCountry && !this.validateOriginCountry(this.editData.originCountry)) {
+        return;
+      }
+      if (this.editData.nationality && !this.validateNationalityValue(this.editData.nationality)) {
+        return;
+      }
+      if (this.editData.website && !this.validateWebsite(this.editData.website)) {
+        this.error = 'Invalid website URL. Expected format: https://www.example.com';
+        return;
+      }
+      if (this.editData.linkedinProfile && !this.validateLinkedin(this.editData.linkedinProfile)) {
+        this.error = 'Invalid LinkedIn URL. Expected format: https://www.linkedin.com/in/your-profile';
+        return;
+      }
+    }
+
+    if (this.userRole === Role.INTERNATIONAL_COMPANY) {
+      if (this.editData.companyName && !this.validateCompanyName(this.editData.companyName)) {
+        return;
+      }
+      if (this.editData.originCountry && !this.validateOriginCountry(this.editData.originCountry)) {
+        return;
+      }
+       if (this.editData.siret && !this.validateSiret(this.editData.siret)) {
+    this.error = this.siretError;
+    return;
+  }
+      if (this.editData.website && !this.validateWebsite(this.editData.website)) {
+        this.error = 'Invalid website URL';
+        return;
+      }
+      if (this.editData.linkedinProfile && !this.validateLinkedin(this.editData.linkedinProfile)) {
+        this.error = 'Invalid LinkedIn URL';
+        return;
+      }
+    }
+
+    if (this.userRole === Role.PARTNER) {
+      if (this.editData.originCountry && !this.validateOriginCountry(this.editData.originCountry)) {
+        return;
+      }
+      if (this.editData.website && !this.validateWebsite(this.editData.website)) {
+        this.error = 'Invalid website URL';
+        return;
+      }
+      if (this.editData.linkedinProfile && !this.validateLinkedin(this.editData.linkedinProfile)) {
+        this.error = 'Invalid LinkedIn URL';
+
+        return;
+      }
+    }
+
+    if (this.userRole === Role.LOCAL_PARTNER) {
+       if (this.editData.businessRegistrationNumber && !this.validateBusinessRegistrationNumber(this.editData.businessRegistrationNumber)) {
+    this.error = this.businessRegError;
+    return;
+  }
+  if (this.editData.professionalTaxNumber && !this.validateTaxNumber(this.editData.professionalTaxNumber)) {
+    this.error = this.taxNumberError;
+    return;
+  }
+      if (this.editData.website && !this.validateWebsite(this.editData.website)) {
+        this.error = 'Invalid website URL';
+        return;
+      }
+      if (this.editData.linkedinProfile && !this.validateLinkedin(this.editData.linkedinProfile)) {
+        this.error = 'Invalid LinkedIn URL';
+        return;
+      }
+    }
+
+    if (this.userRole === Role.TOURIST) {
+      if (this.editData.nationality && !this.validateNationalityValue(this.editData.nationality)) {
+        return;
+      }
     }
 
     this.saving = true;
@@ -1018,6 +1136,7 @@ async testPhotoInBackend() {
     }
 
     const updateData = this.prepareUpdateData();
+    console.log('📤 Données envoyées au backend:', JSON.stringify(updateData, null, 2));
     
     if (Object.keys(updateData).length === 0) {
       this.isEditing = false;
@@ -1042,9 +1161,18 @@ async testPhotoInBackend() {
       this.isEditing = false;
       
     } catch (error: any) {
-      console.error('❌ Error updating profile:', error);
-      this.error = error.error?.message || 'Failed to update profile';
-    } finally {
+  console.error('❌ Error updating profile:', error);
+  
+  const errorMessage = error.error?.message || error.message || 'Failed to update profile';
+  
+  // Vérifier si l'erreur concerne le SIRET déjà utilisé
+  if (errorMessage.includes('SIRET number is already in use')) {
+    this.siretError = 'This SIRET number is already in use by another company. Please use a different SIRET.';
+    this.error = this.siretError;
+  } else {
+    this.error = errorMessage;
+  }
+}finally {
       this.saving = false;
     }
   }
@@ -1091,7 +1219,6 @@ async testPhotoInBackend() {
       this.deleting = false;
     }
   }
-
 
   // ========================================
   // CHANGEMENT DE MOT DE PASSE
@@ -1170,11 +1297,103 @@ async testPhotoInBackend() {
       this.changingPassword = false;
     }
   }
-    // ========================================
+  // Ajoutez ces méthodes après validateSiretNumber() (vers ligne 520)
+
+// Validation Business Registration Number
+validateBusinessRegistrationNumber(value: string): boolean {
+  if (!value || value.trim() === '') {
+    this.businessRegError = '';
+    return true;
+  }
+  
+  const trimmed = value.trim();
+  
+  if (trimmed.length < 3) {
+    this.businessRegError = 'Business registration number must be at least 3 characters';
+    return false;
+  }
+  if (trimmed.length > 30) {
+    this.businessRegError = 'Business registration number must not exceed 30 characters';
+    return false;
+  }
+  
+  const regex = /^[A-Z0-9\-]+$/;
+  if (!regex.test(trimmed)) {
+    this.businessRegError = 'Business registration number can only contain uppercase letters, numbers, and hyphens';
+    return false;
+  }
+  
+  this.businessRegError = '';
+  return true;
+}
+
+// Validation Professional Tax Number
+validateTaxNumber(value: string): boolean {
+  if (!value || value.trim() === '') {
+    this.taxNumberError = '';
+    return true;
+  }
+  
+  const trimmed = value.trim();
+  
+  if (trimmed.length < 5) {
+    this.taxNumberError = 'Professional tax number must be at least 5 characters';
+    return false;
+  }
+  if (trimmed.length > 25) {
+    this.taxNumberError = 'Professional tax number must not exceed 25 characters';
+    return false;
+  }
+  
+  const regex = /^[A-Z0-9\-]+$/;
+  if (!regex.test(trimmed)) {
+    this.taxNumberError = 'Professional tax number can only contain uppercase letters, numbers, and hyphens';
+    return false;
+  }
+  
+  this.taxNumberError = '';
+  return true;
+}
+
+// Méthodes appelées depuis le HTML
+onBusinessRegBlur(): void {
+  this.validateBusinessRegistrationNumber(this.editData.businessRegistrationNumber);
+}
+
+onTaxNumberBlur(): void {
+  this.validateTaxNumber(this.editData.professionalTaxNumber);
+}
+  
+  // ========================================
   // PROPRIÉTÉS POUR HIDE/SHOW PASSWORD
   // ========================================
   showOldPassword: boolean = false;
   showNewPassword: boolean = false;
   showConfirmPassword: boolean = false;
+  // Ajoutez cette méthode après validateTaxNumber() (vers ligne 650)
 
+// Validation SIRET (14 chiffres exactement)
+validateSiret(value: string): boolean {
+  if (!value || value.trim() === '') {
+    this.siretError = '';
+    return true; // Optionnel, peut être vide
+  }
+  
+  const trimmed = value.trim();
+  
+  // Le SIRET doit contenir exactement 14 chiffres
+  const siretRegex = /^\d{14}$/;
+  if (!siretRegex.test(trimmed)) {
+    this.siretError = 'SIRET number must be exactly 14 digits';
+    return false;
+  }
+  
+  this.siretError = '';
+  return true;
+}
+
+// Méthode appelée depuis le HTML
+onSiretBlur(): void {
+  this.validateSiret(this.editData.siret);
+}
 }

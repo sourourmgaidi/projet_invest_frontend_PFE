@@ -266,56 +266,40 @@ updateInvestmentService(id: number, service: any, files?: File[]): Observable<an
       service.documents.filter((doc: any) => !doc.fileType?.startsWith('image/')) : []);
   }
 
- createTouristService(service: any, files?: File[]): Observable<any> {
+createTouristService(service: any, files?: File[]): Observable<any> {
   console.log('📝 createTouristService appelé', { 
     service, 
     filesCount: files?.length 
   });
-  
-  // CAS 1: Avec fichiers
+
+  // ✅ TOUJOURS FormData (avec ou sans fichiers)
+  const formData = new FormData();
+  formData.append('service', JSON.stringify(service));
+
   if (files && files.length > 0) {
-    const formData = new FormData();
-    formData.append('service', JSON.stringify(service));
-    
     for (let i = 0; i < files.length; i++) {
       formData.append('files', files[i]);
       console.log(`📎 Fichier ${i}:`, files[i].name, files[i].type, files[i].size);
     }
-
-    // Headers avec seulement Authorization
-    const token = this.authService.getToken();
-    let headers = new HttpHeaders();
-    if (token) {
-      headers = headers.set('Authorization', `Bearer ${token}`);
-    }
-
-    return this.http.post(
-      `${this.API_URL}/tourist-services`,  // ⚠️ Note: pas /create
-      formData,
-      { headers: headers }
-    ).pipe(
-      tap(response => console.log('✅ Service touristique créé avec succès (avec fichiers)', response)),
-      catchError(error => {
-        console.error('❌ Erreur création service touristique:', error);
-        return throwError(() => error);
-      })
-    );
-  } 
-  
-  // CAS 2: Sans fichiers
-  else {
-    return this.http.post(
-      `${this.API_URL}/tourist-services`,  // ⚠️ Même URL, pas /create
-      service,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      tap(response => console.log('✅ Service touristique créé avec succès (sans fichiers)', response)),
-      catchError(error => {
-        console.error('❌ Erreur création service touristique:', error);
-        return throwError(() => error);
-      })
-    );
   }
+
+  const token = this.authService.getToken();
+  let headers = new HttpHeaders();
+  if (token) {
+    headers = headers.set('Authorization', `Bearer ${token}`);
+  }
+
+  return this.http.post(
+    `${this.API_URL}/tourist-services`,
+    formData,
+    { headers: headers } // ⚠️ Pas de Content-Type, le browser gère automatiquement
+  ).pipe(
+    tap(response => console.log('✅ Service touristique créé avec succès', response)),
+    catchError(error => {
+      console.error('❌ Erreur création service touristique:', error);
+      return throwError(() => error);
+    })
+  );
 }
 
   getTouristServicesByProvider(providerId: number): Observable<any[]> {

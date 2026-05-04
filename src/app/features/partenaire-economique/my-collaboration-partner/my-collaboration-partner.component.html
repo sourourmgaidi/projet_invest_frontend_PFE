@@ -1,0 +1,177 @@
+<app-navbar></app-navbar>
+
+<div class="page-layout">
+  <div class="page-main">
+    <div class="page-content">
+
+      <!-- Header -->
+      <div class="page-header">
+        <div>
+          <a routerLink="/partenaire-economique/dashboard" class="back-link">← Back to Dashboard</a>
+          <h1>My Collaborations</h1>
+          <p class="subtitle">Track your collaboration requests and acquired services</p>
+        </div>
+        <div class="header-actions">
+          <button class="new-btn" (click)="goToServices()">🤝 Browse Services</button>
+          <app-notification-bell></app-notification-bell>
+        </div>
+      </div>
+
+      <!-- Alerts -->
+      <div class="alert alert-success" *ngIf="success">✅ {{ success }}</div>
+      <div class="alert alert-error"   *ngIf="error">❌ {{ error }}</div>
+
+      <!-- Loading -->
+      <div class="loading-state" *ngIf="loading">
+        <div class="spinner"></div>
+        <p>Loading your collaborations...</p>
+      </div>
+
+      <ng-container *ngIf="!loading">
+
+        <!-- TABS -->
+        <div class="tabs-wrapper">
+          <button class="tab-btn" [class.active]="activeTab === 'requests'"
+                  (click)="setTab('requests')">
+            ⏳ Pending Requests
+            <span class="tab-badge" *ngIf="pendingRequests.length > 0">{{ pendingRequests.length }}</span>
+          </button>
+          <button class="tab-btn" [class.active]="activeTab === 'reserved'"
+                  (click)="setTab('reserved')">
+            🎉 Reserved
+            <span class="tab-badge reserved" *ngIf="reservedServices.length > 0">{{ reservedServices.length }}</span>
+          </button>
+          <button class="tab-btn" [class.active]="activeTab === 'taken'"
+                  (click)="setTab('taken')">
+            ✅ Acquired Services
+            <span class="tab-badge taken" *ngIf="takenServices.length > 0">{{ takenServices.length }}</span>
+          </button>
+        </div>
+
+        <!-- ═══ TAB 1 : PENDING REQUESTS ═══ -->
+        <div *ngIf="activeTab === 'requests'">
+          <div class="empty-state" *ngIf="pendingRequests.length === 0">
+            <div class="empty-icon">⏳</div>
+            <h3>No pending requests</h3>
+            <p>You have no collaboration requests awaiting approval.</p>
+            <button class="browse-btn" (click)="goToServices()">Browse Services</button>
+          </div>
+
+          <div class="cards-grid" *ngIf="pendingRequests.length > 0">
+            <div class="acq-card pending" *ngFor="let acq of pendingRequests">
+              <div class="card-banner pending-banner">
+                <span class="banner-icon">⏳</span>
+                <span class="banner-text">Awaiting Partner Approval</span>
+              </div>
+              <div class="card-body">
+                <h3 class="service-name">{{ acq.serviceName }}</h3>
+                <div class="info-row">
+                  <span class="info-label">💰 Amount</span>
+                  <span class="info-value amount">{{ formatAmount(acq.amount) }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">📅 Requested</span>
+                  <span class="info-value">{{ formatDate(acq.createdAt || acq.approvedAt) }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">🔖 Order ID</span>
+                  <span class="info-value order-id">{{ acq.orderId }}</span>
+                </div>
+                <p class="status-message">
+                  Your request has been sent to the local partner and is waiting for their review.
+                </p>
+                <button class="cancel-btn"
+                        (click)="cancelRequest(acq)"
+                        [disabled]="cancellingMap.get(acq.id)">
+                  <span *ngIf="!cancellingMap.get(acq.id)">✖ Cancel Request</span>
+                  <span *ngIf="cancellingMap.get(acq.id)">⏳ Cancelling...</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ TAB 2 : RESERVED ═══ -->
+        <div *ngIf="activeTab === 'reserved'">
+          <div class="empty-state" *ngIf="reservedServices.length === 0">
+            <div class="empty-icon">🎉</div>
+            <h3>No reserved services</h3>
+            <p>No services are currently reserved for you.</p>
+          </div>
+
+          <div class="cards-grid" *ngIf="reservedServices.length > 0">
+            <div class="acq-card reserved" *ngFor="let acq of reservedServices">
+              <div class="card-banner reserved-banner">
+                <span class="banner-icon">🎉</span>
+                <span class="banner-text">Approved — Payment Pending</span>
+              </div>
+              <div class="card-body">
+                <h3 class="service-name">{{ acq.serviceName }}</h3>
+                <div class="info-row">
+                  <span class="info-label">💰 Amount to Pay</span>
+                  <span class="info-value amount highlight">{{ formatAmount(acq.amount) }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">📅 Approved On</span>
+                  <span class="info-value">{{ formatDate(acq.approvedAt) }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">🔖 Order ID</span>
+                  <span class="info-value order-id">{{ acq.orderId }}</span>
+                </div>
+                <div class="pay-info-box">
+                  <p>🏦 Please contact the local partner to arrange your offline payment.</p>
+                  <p>Once payment is received, the partner will validate and finalize your acquisition.</p>
+                </div>
+                <button class="cancel-btn"
+                        (click)="cancelReservation(acq)"
+                        [disabled]="cancellingMap.get(acq.id)">
+                  <span *ngIf="!cancellingMap.get(acq.id)">✖ Cancel Reservation</span>
+                  <span *ngIf="cancellingMap.get(acq.id)">⏳ Cancelling...</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ TAB 3 : TAKEN / ACQUIRED ═══ -->
+        <div *ngIf="activeTab === 'taken'">
+          <div class="empty-state" *ngIf="takenServices.length === 0">
+            <div class="empty-icon">✅</div>
+            <h3>No acquired services yet</h3>
+            <p>Complete the payment process to see your acquired services here.</p>
+            <button class="browse-btn" (click)="goToServices()">Browse Services</button>
+          </div>
+
+          <div class="cards-grid" *ngIf="takenServices.length > 0">
+            <div class="acq-card taken" *ngFor="let acq of takenServices">
+              <div class="card-banner taken-banner">
+                <span class="banner-icon">✅</span>
+                <span class="banner-text">Service Acquired</span>
+              </div>
+              <div class="card-body">
+                <h3 class="service-name">{{ acq.serviceName }}</h3>
+                <div class="info-row">
+                  <span class="info-label">💰 Amount Paid</span>
+                  <span class="info-value amount">{{ formatAmount(acq.amount) }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">📅 Acquired On</span>
+                  <span class="info-value">{{ formatDate(acq.acquiredAt || acq.paidAt) }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">🔖 Order ID</span>
+                  <span class="info-value order-id">{{ acq.orderId }}</span>
+                </div>
+                <div class="taken-badge">
+                  🎊 This service is now officially yours!
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </ng-container>
+    </div>
+  </div>
+</div>

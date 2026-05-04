@@ -17,6 +17,7 @@ import { ChatbotWidgetComponent } from '../../../shared/Agents/chatbot-widget.co
 export class DashboardComponent implements OnInit {
   collaborationCount = 0;
   unreadCount = 0;
+  myCollaborationsCount = 0; 
 
   private http = inject(HttpClient);
   private messagerieService = inject(MessagerieService);
@@ -29,6 +30,7 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     this.loadCollaborationCount();
     this.loadUnreadCount();
+    this.loadMyCollaborationsCount();
   }
 
   loadCollaborationCount(): void {
@@ -54,4 +56,21 @@ export class DashboardComponent implements OnInit {
       }
     });
   }
+loadMyCollaborationsCount(): void {
+  this.http.get<any[]>('http://localhost:8089/api/acquisitions/my-all',
+    { headers: this.getHeaders() }
+  ).subscribe({
+    next: (data) => {
+      console.log('✅ Acquisitions:', data); // debug
+      this.myCollaborationsCount = data.filter(a =>
+        a.serviceType === 'COLLABORATION' &&
+        !['CANCELLED', 'PARTNER_REJECTED'].includes(a.paymentStatus)
+      ).length;
+    },
+    error: (err) => {
+      console.error('❌ Erreur:', err);
+      this.myCollaborationsCount = 0;
+    }
+  });
+}
 }

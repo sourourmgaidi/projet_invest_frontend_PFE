@@ -1,5 +1,5 @@
+
 <div class="page-layout">
-  <app-navbar></app-navbar>
   <div class="page-main">
     <div class="page-content">
 
@@ -18,28 +18,20 @@
         </div>
       </div>
 
-      <!-- Messages -->
-      <div class="alert alert-success" *ngIf="success">
-        ✅ {{ success }}
-      </div>
-      <div class="alert alert-error" *ngIf="error">
-        ❌ {{ error }}
-      </div>
+      <!-- Alerts -->
+      <div class="alert alert-success" *ngIf="success">✅ {{ success }}</div>
+      <div class="alert alert-error" *ngIf="error">❌ {{ error }}</div>
 
-      <!-- Search Bar -->
+      <!-- Search -->
       <div class="search-wrapper">
         <div class="search-box">
           <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
-          <input
-            type="text"
-            [(ngModel)]="searchQuery"
-            (ngModelChange)="onSearch()"
-            placeholder="Search by name, description, region, contact..."
-            class="search-input"
-          />
+          <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearch()"
+                 placeholder="Search by name, description, region, contact..."
+                 class="search-input"/>
           <button class="clear-btn" *ngIf="searchQuery" (click)="clearSearch()">✕</button>
         </div>
         <span class="results-count" *ngIf="searchQuery">
@@ -61,132 +53,241 @@
         <button class="clear-search-btn" *ngIf="searchQuery" (click)="clearSearch()">Clear search</button>
       </div>
 
-      <!-- Services Grid -->
+      <!-- Grid -->
       <div class="services-grid" *ngIf="!loading && filtered.length > 0">
         <div class="service-card" *ngFor="let s of filtered">
-          <div class="card-top collaboration-top">
+
+          <!-- Top Banner -->
+          <div class="card-top">
             <span class="card-type">🤝 Collaboration</span>
-            <span class="card-domain" *ngIf="s.activityDomain">{{ s.activityDomain }}</span>
+            <span class="card-domain" *ngIf="s.activityDomain">{{ formatEnum(s.activityDomain) }}</span>
           </div>
-          
+
+          <!-- Body -->
           <div class="card-body">
+
+            <!-- Title + Favorite -->
             <div class="card-header-row">
               <h3>{{ s.name }}</h3>
-              <!-- BOUTON FAVORI -->
-              <button 
-                class="favorite-btn"
-                [class.is-favorite]="s.isFavorite"
-                (click)="toggleFavorite(s)"
-                [disabled]="s.favoriteLoading"
-                [title]="s.isFavorite ? 'Remove from favorites' : 'Add to favorites'"
-              >
-                <span class="heart">{{ s.isFavorite ? '❤️' : '🤍' }}</span>
-                <span class="btn-text">{{ s.favoriteLoading ? '...' : '' }}</span>
-                <span class="loading-spinner" *ngIf="s.favoriteLoading"></span>
+              <button class="favorite-btn"
+                      [class.is-favorite]="s.isFavorite"
+                      (click)="toggleFavorite(s)"
+                      [disabled]="s.favoriteLoading"
+                      [title]="s.isFavorite ? 'Remove from favorites' : 'Add to favorites'">
+                <span>{{ s.isFavorite ? '❤️' : '🤍' }}</span>
+                <span *ngIf="s.favoriteLoading">...</span>
               </button>
             </div>
-            
-            <p class="card-desc">{{ (s.description || '') | slice:0:120 }}{{ (s.description?.length || 0) > 120 ? '...' : '' }}</p>
 
-            <!-- Informations principales -->
+            <!-- Description -->
+            <p class="card-desc">
+              {{ (s.description || 'No description available.') | slice:0:150 }}
+              {{ (s.description?.length || 0) > 150 ? '...' : '' }}
+            </p>
+
+            <!-- Meta -->
             <div class="card-meta" *ngIf="s.region">
-              <span class="meta-label">📍 Region:</span>
+              <span class="meta-label">📍 Region</span>
               <span>{{ s.region.name }}</span>
             </div>
             <div class="card-meta" *ngIf="s.collaborationType">
-              <span class="meta-label">🔗 Type:</span>
+              <span class="meta-label">🔗 Type</span>
               <span>{{ formatEnum(s.collaborationType) }}</span>
             </div>
             <div class="card-meta" *ngIf="s.collaborationDuration">
-              <span class="meta-label">⏱ Duration:</span>
+              <span class="meta-label">⏱ Duration</span>
               <span>{{ s.collaborationDuration }}</span>
             </div>
             <div class="card-meta" *ngIf="s.expectedBenefits">
-              <span class="meta-label">✨ Benefits:</span>
-              <span>{{ s.expectedBenefits | slice:0:60 }}...</span>
+              <span class="meta-label">✨ Benefits</span>
+              <span>{{ s.expectedBenefits | slice:0:80 }}{{ (s.expectedBenefits?.length || 0) > 80 ? '...' : '' }}</span>
+            </div>
+            <div class="card-meta" *ngIf="s.requiredSkills">
+              <span class="meta-label">🛠 Skills</span>
+              <span>{{ s.requiredSkills | slice:0:60 }}...</span>
             </div>
             <div class="card-meta" *ngIf="s.contactPerson">
-              <span class="meta-label">👤 Contact:</span>
+              <span class="meta-label">👤 Contact</span>
               <span>{{ s.contactPerson }}</span>
             </div>
             <div class="card-meta" *ngIf="s.provider">
-              <span class="meta-label">🏢 Provider:</span>
+              <span class="meta-label">🏢 Provider</span>
               <span>{{ s.provider.firstName }} {{ s.provider.lastName }}</span>
             </div>
             <div class="card-meta" *ngIf="s.address">
-              <span class="meta-label">🏠 Address:</span>
+              <span class="meta-label">🏠 Address</span>
               <span>{{ s.address }}</span>
             </div>
             <div class="card-meta" *ngIf="s.requestedBudget">
-  <span class="meta-label">💰 Budget:</span>
-  <span>{{ s.requestedBudget | number }} TND</span>
-</div>
-<div class="currency-converter-wrap" *ngIf="s.requestedBudget">
-  <app-currency-converter
-    [initialAmount]="s.requestedBudget"
-    [initialCurrency]="'TND'">
-  </app-currency-converter>
-</div>
+              <span class="meta-label">💰 Budget</span>
+              <span style="font-weight:700; color:#2f4f7f;">{{ s.requestedBudget | number }} TND</span>
+            </div>
 
-            <!-- ✅ SECTION DOCUMENTS - AJOUTÉE ICI -->
+            <!-- Currency Converter -->
+            <div class="currency-converter-wrap" *ngIf="s.requestedBudget">
+              <app-currency-converter [initialAmount]="s.requestedBudget" [initialCurrency]="'TND'">
+              </app-currency-converter>
+            </div>
+
+            <!-- Documents -->
             <div class="documents-section" *ngIf="s.documents && s.documents.length > 0">
               <h4 class="documents-title">📎 Documents ({{ s.documents.length }})</h4>
               <div class="documents-grid">
                 <ng-container *ngFor="let doc of s.documents">
-                  <!-- Images -->
                   <div class="document-item image-item" *ngIf="doc.fileType?.startsWith('image/')">
-                    <img 
-                      [src]="getImageUrl(doc)" 
-                      class="document-thumbnail" 
-                      alt="{{ doc.fileName }}"
-                      (click)="openImage(doc)"
-                      loading="lazy"
-                    >
+                    <img [src]="getImageUrl(doc)" class="document-thumbnail"
+                         alt="{{ doc.fileName }}" (click)="openImage(doc)" loading="lazy">
                     <span class="document-name">{{ doc.fileName }}</span>
                     <span class="document-size" *ngIf="doc.fileSize">{{ formatFileSize(doc.fileSize) }}</span>
-                    <span class="primary-badge-small" *ngIf="doc.isPrimary">⭐</span>
                   </div>
-                  
-                  <!-- PDF -->
                   <div class="document-item" *ngIf="doc.fileType === 'application/pdf'">
                     <a href="javascript:void(0)" (click)="downloadFile(doc)" class="document-link">
                       <span class="document-icon">📄</span>
                       <span class="document-name">{{ doc.fileName }}</span>
-                      <span class="document-size" *ngIf="doc.fileSize">{{ formatFileSize(doc.fileSize) }}</span>
                     </a>
                   </div>
-                  
-                  <!-- Autres fichiers -->
-                  <div class="document-item" *ngIf="!doc.fileType?.startsWith('image/') && doc.fileType !== 'application/pdf'">
+                  <div class="document-item"
+                       *ngIf="!doc.fileType?.startsWith('image/') && doc.fileType !== 'application/pdf'">
                     <a href="javascript:void(0)" (click)="downloadFile(doc)" class="document-link">
                       <span class="document-icon">📎</span>
                       <span class="document-name">{{ doc.fileName }}</span>
-                      <span class="document-size" *ngIf="doc.fileSize">{{ formatFileSize(doc.fileSize) }}</span>
                     </a>
                   </div>
                 </ng-container>
               </div>
             </div>
 
-            <!-- Contact Provider -->
+            <!-- Contact -->
             <div class="card-contact" *ngIf="s.provider">
               <button class="contact-btn" (click)="contactProvider(s.provider)">
                 <span>💬</span> Contact Provider
               </button>
             </div>
+
+            <!-- ✅ ACQUISITION STATUS — UN SEUL BLOC -->
+            <div class="card-status-section">
+
+              <!-- ⏳ MA demande en attente d'approbation -->
+              <div class="my-pending-card" *ngIf="s.isPendingApproval">
+                <div class="pending-header">
+                  <span class="pending-icon">⏳</span>
+                  <span class="pending-title">Request Pending Approval</span>
+                </div>
+                <p class="pending-message">
+                  Your request has been sent to the local partner. Waiting for their response...
+                </p>
+                <button class="cancel-request-btn"
+                        (click)="cancelRequest(s)"
+                        [disabled]="cancellingRequests.get(s.id)">
+                  <span *ngIf="!cancellingRequests.get(s.id)">✖ Cancel Request</span>
+                  <span *ngIf="cancellingRequests.get(s.id)">⏳ Cancelling...</span>
+                </button>
+              </div>
+
+              <!-- 🎉 MA réservation confirmée -->
+              <div class="my-reserved-card" *ngIf="s.isMyReservation">
+                <div class="reserved-mine-header">
+                  <span class="reserved-mine-icon">🎉</span>
+                  <span class="reserved-mine-title">Your Reservation is Confirmed!</span>
+                </div>
+                <p class="reserved-mine-message">
+                  The local partner approved your request. Please proceed with the offline payment to finalize.
+                </p>
+                <div class="reserved-mine-amount" *ngIf="s.amount">
+                  💰 Amount to pay: <strong>{{ s.amount | number }} TND</strong>
+                </div>
+                <button class="cancel-reservation-btn"
+                        (click)="cancelReservation(s)"
+                        [disabled]="cancellingRequests.get(s.id)">
+                  <span *ngIf="!cancellingRequests.get(s.id)">✖ Cancel Reservation</span>
+                  <span *ngIf="cancellingRequests.get(s.id)">⏳ Cancelling...</span>
+                </button>
+              </div>
+
+              <!-- ✅ En attente validation paiement -->
+              <div class="my-reservation-card" *ngIf="s.awaitingMyPayment">
+                <div class="reservation-header">
+                  <span class="res-icon">✅</span>
+                  <span class="res-title">
+                    {{ s.status === 'AWAITING_VALIDATION'
+                        ? 'Awaiting Payment Confirmation'
+                        : 'Approved — Please Pay Offline' }}
+                  </span>
+                </div>
+                <div class="offline-pay-info" *ngIf="s.status === 'AWAITING_VALIDATION'">
+                  <p>🕐 Your payment is being verified by the local partner.</p>
+                </div>
+              </div>
+
+              <!-- ✅ Déjà acquis par MOI -->
+              <div class="my-taken-card" *ngIf="s.isMyAcquisition">
+                <span class="taken-icon">✅</span>
+                <div class="taken-info">
+                  <span class="taken-text">You own this service</span>
+                  <span class="taken-date" *ngIf="s.acquiredAt">
+                    Acquired on {{ s.acquiredAt | date:'dd/MM/yyyy' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- 🟠 Demandé par un AUTRE utilisateur (PENDING) -->
+              <div class="requested-by-other-card"
+                   *ngIf="s.isRequestedByOther && s.status === 'PENDING_ACQUISITION'">
+                <div class="requested-header">
+                  <span class="requested-icon">⏳</span>
+                  <span class="requested-title">Service Already Requested</span>
+                </div>
+                <p class="requested-message">
+                  This service has already been requested by another user and is awaiting partner approval.
+                </p>
+              </div>
+
+              <!-- 🔴 Réservé par un AUTRE utilisateur -->
+              <div class="reserved-by-other-card"
+                   *ngIf="s.isRequestedByOther && s.status === 'RESERVED'">
+                <div class="reserved-header">
+                  <span class="reserved-icon">🔒</span>
+                  <span class="reserved-title">Service Currently Reserved</span>
+                </div>
+                <p class="reserved-message">
+                  This service is reserved by another user and awaiting payment confirmation.
+                </p>
+              </div>
+
+              <!-- 🟢 APPROVED — disponible → bouton Request -->
+              <button class="take-btn"
+                *ngIf="s.status === 'APPROVED'
+                       && !s.isPendingApproval
+                       && !s.awaitingMyPayment
+                       && !s.isMyAcquisition
+                       && !s.isMyReservation
+                       && !s.isRequestedByOther"
+                (click)="takeService(s)"
+                [disabled]="s.takeLoading">
+                <span *ngIf="!s.takeLoading">🤝 Request This Service</span>
+                <span *ngIf="s.takeLoading">⏳ Sending Request...</span>
+              </button>
+
+            </div>
+            <!-- FIN card-status-section -->
+
           </div>
-          
+          <!-- FIN card-body -->
+
+          <!-- Footer -->
           <div class="card-footer">
-            <span class="availability-badge collaboration-badge">{{ s.availability }}</span>
+            <span class="availability-badge">{{ s.availability }}</span>
             <span class="price">{{ s.requestedBudget | number }} TND</span>
           </div>
+
         </div>
       </div>
+
     </div>
   </div>
 </div>
 
-<!-- ✅ IMAGE MODAL - AJOUTÉE ICI -->
+<!-- IMAGE MODAL -->
 <div class="image-modal" *ngIf="selectedImage" (click)="closeImage()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <span class="close" (click)="closeImage()">&times;</span>
@@ -194,11 +295,12 @@
     <div class="image-footer">
       <p class="image-name">{{ selectedImage.name }}</p>
       <button class="btn-download" (click)="downloadFile(selectedImage.doc)">
-        <span class="btn-icon">📥</span> Télécharger
+        <span>📥</span> Download
       </button>
     </div>
   </div>
 </div>
+
 <!-- SUBSCRIPTION MODAL -->
 @if (showSubscriptionModal) {
   <app-subscription-modal

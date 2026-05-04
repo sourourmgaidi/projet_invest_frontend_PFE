@@ -1,341 +1,170 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
+/* =======================
+   LAYOUT
+======================= */
 .dashboard-container {
   display: flex;
   min-height: 100vh;
-  width: 100%;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: var(--secondary);
 }
 
-app-navbar {
+/* NAVBAR */
+.dashboard-navbar {
   width: 280px;
   flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  z-index: 100;
 }
 
-.dashboard-content {
+/* MAIN */
+.dashboard-main {
   flex: 1;
-  min-height: 100vh;
   padding: 2rem;
-  animation: fadeIn 0.6s ease;
+  margin-top: 80px;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+/* =======================
+   HEADER
+======================= */
 .dashboard-content h1 {
-  font-size: 2.5rem;
+  font-size: 2.3rem;
   font-weight: 700;
-  color: #0f172a;
-  margin: 0 0 0.5rem;
-  letter-spacing: -0.02em;
-}
-
-.dashboard-content h1::after {
-  content: '';
-  display: block;
-  width: 80px;
-  height: 4px;
-  background: linear-gradient(90deg, #2563eb, #7c3aed);
-  margin-top: 0.5rem;
-  border-radius: 2px;
+  color: var(--primary);
+  margin: 0;
 }
 
 .dashboard-content p {
-  color: #475569;
-  font-size: 1.1rem;
+  color: #64748b;
+}
+
+/* =======================
+   HEADER BOX (GLASS)
+======================= */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(12px);
+
+  padding: 20px;
+  border-radius: 25px;
+
+  border: 1px solid rgba(47,79,127,0.1);
   margin-bottom: 2rem;
 }
 
-.stats-cards {
+/* =======================
+   STATS GRID
+======================= */
+.stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.5rem;
-  margin-top: 2rem;
 }
 
+/* CARD */
 .stat-card {
-  background: white;
-  border-radius: 20px;
-  padding: 2rem 1.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  border: 1px solid #e2e8f0;
-  position: relative;
-  overflow: hidden;
-}
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(10px);
 
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: linear-gradient(180deg, #2563eb, #7c3aed);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
+  border-radius: 25px;
+  padding: 1.5rem;
 
-.stat-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 30px rgba(37, 99, 235, 0.15);
-  border-color: transparent;
-}
-
-.stat-card:hover::before {
-  opacity: 1;
-}
-
-.stat-card h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #64748b;
-  margin-bottom: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.stat-number {
-  font-size: 3rem;
-  font-weight: 700;
-  color: #0f172a;
-  line-height: 1.2;
-  margin: 0;
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .dashboard-content h1 {
-    font-size: 2rem;
-  }
-
-  .stats-cards {
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .dashboard-container {
-    flex-direction: column;
-  }
-
-  app-navbar {
-    width: 100%;
-    height: auto;
-    position: relative;
-  }
-
-  .dashboard-content {
-    padding: 1.5rem;
-  }
-
-  .dashboard-content h1 {
-    font-size: 1.75rem;
-  }
-
-  .stats-cards {
-    grid-template-columns: 1fr;
-  }
-
-  .stat-card {
-    padding: 1.5rem;
-  }
-
-  .stat-number {
-    font-size: 2.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .dashboard-content {
-    padding: 1rem;
-  }
-
-  .dashboard-content h1 {
-    font-size: 1.5rem;
-  }
-
-  .stat-card {
-    padding: 1.25rem;
-  }
-
-  .stat-number {
-    font-size: 2rem;
-  }
-}
-
-.stat-card {
-  animation: cardAppear 0.5s ease;
-  animation-fill-mode: both;
-}
-
-.stat-card:nth-child(1) {
-  animation-delay: 0.1s;
-}
-
-.stat-card:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.stat-card:nth-child(3) {
-  animation-delay: 0.3s;
-}
-
-@keyframes cardAppear {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-/* Gardez tout votre CSS existant et ajoutez ces styles à la fin */
-
-/* Style pour les liens favorites */
-.favorites-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: white;
-  border-radius: 40px;
+  cursor: pointer;
   text-decoration: none;
-  color: #0f172a;
-  font-weight: 500;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s ease;
-}
 
-.favorites-link:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(37, 99, 235, 0.15);
-  border-color: #2563eb;
-}
+  border: 1px solid rgba(47,79,127,0.1);
 
-/* Style pour les stat-card en tant que liens */
-.stat-card[routerLink] {
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.stat-card[routerLink]:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 30px rgba(37, 99, 235, 0.15);
-  border-color: #2563eb;
-}
-
-.stat-card[routerLink]:hover .stat-number {
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* Responsive pour les favorites */
-@media (max-width: 768px) {
-  .favorites-link {
-    width: 100%;
-    justify-content: center;
-  }
-}
-/* Stats cards grid */
-.stats-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.stat-card {
-  background: white;
-  border-radius: 16px;
-  padding: 1.25rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s, box-shadow 0.2s;
-  cursor: pointer;
+  transition: 0.3s ease;
 }
 
 .stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-6px);
+  box-shadow: 0 10px 30px rgba(47,79,127,0.15);
 }
 
+/* TEXT */
 .stat-card h3 {
-  font-size: 0.9rem;
-  font-weight: 600;
   color: #64748b;
-  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
 }
 
 .stat-number {
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 700;
-  color: #0f172a;
-  margin: 0;
+  color: var(--primary);
 }
 
 .stat-label {
-  display: block;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   color: #94a3b8;
-  margin-top: 0.5rem;
 }
 
-/* Activity card */
+/* =======================
+   ACTIVITY CARD
+======================= */
 .activity-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16px;
-  padding: 1.25rem;
-  margin-bottom: 1.5rem;
-  color: white;
+  margin-top: 1.5rem;
+  background: rgba(255,255,255,0.75);
+  border-radius: 25px;
+  padding: 1.5rem;
+  border: 1px solid rgba(47,79,127,0.1);
 }
 
-.activity-card .stat-details h3,
-.activity-card .stat-value,
-.activity-card .stat-trend {
-  color: white;
+/* =======================
+   FAVORITES
+======================= */
+.favorites-section {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.activity-card .stat-value {
-  font-size: 1.2rem;
-  font-weight: 600;
-}
-
-/* Favorites links */
 .favorites-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.2rem;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  color: #475569;
-  font-weight: 500;
-  transition: all 0.2s;
+  padding: 10px 16px;
+  border-radius: 999px;
+
+  background: rgba(255,255,255,0.8);
+  border: 1px solid rgba(47,79,127,0.1);
+
+  cursor: pointer;
+  transition: 0.3s;
+  color: var(--primary);
 }
 
 .favorites-link:hover {
-  background: #f8fafc;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background: var(--primary);
+  color: white;
+}
+
+/* =======================
+   BUTTON STYLE GLOBAL FIX
+======================= */
+.stat-card, .favorites-link {
+  user-select: none;
+}
+
+/* =======================
+   FIX FULL BACKGROUND (NO WHITE AREA)
+======================= */
+.dashboard-layout {
+  min-height: 100vh;
+  background: var(--secondary);
+}
+/* =======================
+   FIX NOTIFICATION Z-INDEX
+======================= */
+.dashboard-header {
+  position: relative;
+  z-index: 100;
+}
+
+.stats-grid {
+  position: relative;
+  z-index: 1;
+}
+
+.stat-card {
+  position: relative;
+  z-index: 1;
 }

@@ -1,12 +1,12 @@
+// partner-acquisition-requests.component.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { NavbarComponent } from '../../../shared/navbar/navbar';
-import { AcquisitionService } from '../../../core/services/acquisition.service';
+import { AcquisitionService, ServiceAcquisition } from '../../../core/services/acquisition.service';
 
 @Component({
-  selector: 'app-partner-acquisition-requests',
+  selector: 'app-partner-validation',
   standalone: true,
   imports: [CommonModule, FormsModule, NavbarComponent],
   template: `
@@ -16,168 +16,308 @@ import { AcquisitionService } from '../../../core/services/acquisition.service';
         <div class="page-content">
 
           <div class="page-header">
-            <h1>Acquisition Requests</h1>
-            <p class="subtitle">Manage requests from investors and partners</p>
+            <h1>Manage Acquisition Requests</h1>
+            <p class="subtitle">Approve requests and confirm offline payments</p>
           </div>
 
+          <!-- Tabs -->
+          <div class="tabs">
+            <button class="tab" [class.active]="activeTab === 'pending-approval'"
+              (click)="activeTab = 'pending-approval'">
+              Pending Approval
+              <span class="badge" *ngIf="pendingApprovalRequests.length > 0">
+                {{ pendingApprovalRequests.length }}
+              </span>
+            </button>
+            <button class="tab" [class.active]="activeTab === 'awaiting-validation'"
+              (click)="activeTab = 'awaiting-validation'">
+              Awaiting Validation
+              <span class="badge" *ngIf="awaitingValidationRequests.length > 0">
+                {{ awaitingValidationRequests.length }}
+              </span>
+            </button>
+            <button class="tab" [class.active]="activeTab === 'completed'"
+              (click)="activeTab = 'completed'">
+              Completed
+              <span class="badge completed-badge" *ngIf="completedRequests.length > 0">
+                {{ completedRequests.length }}
+              </span>
+            </button>
+          </div>
+
+          <!-- Loading -->
           <div class="loading-state" *ngIf="loading">
             <div class="spinner"></div>
             <p>Loading requests...</p>
           </div>
 
-          <div class="empty-state" *ngIf="!loading && requests.length === 0">
-            <div class="empty-icon">📭</div>
-            <h3>No pending requests</h3>
-            <p>You have no acquisition requests at the moment.</p>
-          </div>
-
-          <div class="requests-list" *ngIf="!loading && requests.length > 0">
-            <div class="request-card" *ngFor="let r of requests">
-
-              <!-- En-tête avec type et montant -->
-              <div class="request-header">
-                <div class="service-info">
-                  <span class="service-type-badge"
-                    [class.investment]="r.serviceType === 'INVESTMENT'"
-                    [class.collaboration]="r.serviceType === 'COLLABORATION'">
-                    {{ r.serviceType === 'INVESTMENT' ? '📈' : '🤝' }}
-                    {{ r.serviceType }}
-                  </span>
-                  <h3 class="service-name">{{ r.serviceName }}</h3>
-                </div>
-                <span class="amount-badge">{{ r.amount | number }} TND</span>
-              </div>
-
-              <!-- Informations du demandeur -->
-              <div class="section-title">👤 Requester Information</div>
-              <div class="info-grid">
-                <div class="info-row">
-                  <span class="info-label">Email:</span>
-                  <span class="info-value">{{ r.acquirerEmail }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Role:</span>
-                  <span class="info-value role-badge">{{ r.acquirerRole }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">ID:</span>
-                  <span class="info-value">{{ r.acquirerId }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Request Date:</span>
-                  <span class="info-value">{{ r.acquiredAt | date:'dd/MM/yyyy HH:mm' }}</span>
-                </div>
-              </div>
-
-              <!-- Informations détaillées du service (chargées dynamiquement) -->
-              <div class="section-title" *ngIf="r.serviceDetails">📋 Service Details</div>
-              <div class="info-grid" *ngIf="r.serviceDetails">
-                <div class="info-row">
-                  <span class="info-label">Title:</span>
-                  <span class="info-value">{{ r.serviceDetails.title || r.serviceDetails.name }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Description:</span>
-                  <span class="info-value description-text">{{ r.serviceDetails.description | slice:0:200 }}{{ (r.serviceDetails.description?.length || 0) > 200 ? '...' : '' }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Region:</span>
-                  <span class="info-value">{{ r.serviceDetails.region?.name || 'N/A' }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Zone:</span>
-                  <span class="info-value">{{ r.serviceDetails.zone || 'N/A' }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Economic Sector:</span>
-                  <span class="info-value">{{ r.serviceDetails.economicSector?.name || 'N/A' }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Total Amount:</span>
-                  <span class="info-value">{{ r.serviceDetails.totalAmount | number }} TND</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Minimum Amount:</span>
-                  <span class="info-value">{{ r.serviceDetails.minimumAmount | number }} TND</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Deadline:</span>
-                  <span class="info-value">{{ r.serviceDetails.deadlineDate | date:'dd/MM/yyyy' }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Project Duration:</span>
-                  <span class="info-value">{{ r.serviceDetails.projectDuration || 'N/A' }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Availability:</span>
-                  <span class="info-value">{{ r.serviceDetails.availability || 'N/A' }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Contact Person:</span>
-                  <span class="info-value">{{ r.serviceDetails.contactPerson || 'N/A' }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Service Status:</span>
-                  <span class="info-value">
-                    <span class="status-badge" [class.pending]="r.serviceDetails.status === 'PENDING_ACQUISITION'">
-                      {{ r.serviceDetails.status === 'PENDING_ACQUISITION' ? '⏳ Pending Approval' : r.serviceDetails.status }}
-                    </span>
-                  </span>
-                </div>
-              </div>
-
-              <!-- Documents section -->
-              <div class="section-title" *ngIf="r.serviceDetails?.documents?.length > 0">📎 Documents</div>
-              <div class="documents-list" *ngIf="r.serviceDetails?.documents?.length > 0">
-                <div class="document-item" *ngFor="let doc of r.serviceDetails.documents">
-                  <span class="doc-icon">📄</span>
-                  <span class="doc-name">{{ doc.fileName }}</span>
-                  <button class="view-doc-btn" (click)="viewDocument(doc)">View</button>
-                </div>
-              </div>
-
-              <!-- Actions -->
-              <div class="request-actions">
-                <button
-                  class="approve-btn"
-                  (click)="approve(r)"
-                  [disabled]="r.loading">
-                  <span *ngIf="!r.loading">✅ Approve</span>
-                  <span *ngIf="r.loading">Processing...</span>
-
-                </button>
-
-                <button
-                  class="reject-btn"
-                  (click)="showRejectModal(r)"
-                  [disabled]="r.loading">
-                  ❌ Reject
-                </button>
-              </div>
-
+          <!-- ==================== PENDING APPROVAL TAB ==================== -->
+          <ng-container *ngIf="!loading && activeTab === 'pending-approval'">
+            <div class="empty-state" *ngIf="pendingApprovalRequests.length === 0">
+              <div class="empty-icon">📋</div>
+              <h3>No pending approvals</h3>
+              <p>All acquisition requests have been processed.</p>
             </div>
-          </div>
+
+            <div class="cards-list" *ngIf="pendingApprovalRequests.length > 0">
+              <div class="service-card pending-approval" *ngFor="let r of pendingApprovalRequests">
+
+                <div class="card-top approval-top">
+                  <div class="card-top-left">
+                    <span class="service-badge"
+                      [class.investment]="r.serviceType === 'INVESTMENT'"
+                      [class.collaboration]="r.serviceType === 'COLLABORATION'">
+                      {{ r.serviceType === 'INVESTMENT' ? '📈' : '🤝' }}
+                      {{ r.serviceType }}
+                    </span>
+                    <h3 class="card-title">{{ r.serviceName }}</h3>
+                  </div>
+                  <span class="amount-pill">{{ r.amount | number }} TND</span>
+                </div>
+
+                <div class="card-body">
+                  <div class="section-label">Acquirer Information</div>
+                  <div class="info-grid">
+                    <div class="info-row">
+                      <span class="info-label">Email:</span>
+                      <span class="info-val">{{ r.acquirerEmail }}</span>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">Role:</span>
+                      <span class="info-val">
+                        <span class="role-badge" [class.investor]="r.acquirerRole === 'INVESTOR'"
+                          [class.company]="r.acquirerRole === 'INTERNATIONAL_COMPANY'">
+                          {{ r.acquirerRole }}
+                        </span>
+                      </span>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">Status:</span>
+                      <span class="info-val">
+                        <span class="status-pill pending-approval-pill">⏳ PENDING_APPROVAL</span>
+                      </span>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">Request Date:</span>
+                      <span class="info-val">{{ r.acquiredAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Instruction -->
+                  <div class="approval-notice">
+                    <span class="notice-icon">📝</span>
+                    <span>The user wants to acquire this service for <strong>{{ r.amount | number }} TND</strong>.
+                      Review the request and approve or reject.</span>
+                  </div>
+                </div>
+
+                <div class="card-footer">
+                  <button class="btn btn-reject"
+                    (click)="showRejectApprovalModal(r)"
+                    [disabled]="r.cancelLoading">
+                    ❌ Reject
+                  </button>
+                  <button class="btn btn-approve"
+                    (click)="showApproveModal(r)"
+                    [disabled]="r.cancelLoading">
+                    <span *ngIf="!r.cancelLoading">✅ Approve Request</span>
+                    <span *ngIf="r.cancelLoading">Processing...</span>
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- ==================== AWAITING VALIDATION TAB ==================== -->
+          <ng-container *ngIf="!loading && activeTab === 'awaiting-validation'">
+            <div class="empty-state" *ngIf="awaitingValidationRequests.length === 0">
+              <div class="empty-icon">✅</div>
+              <h3>No pending validations</h3>
+              <p>All approved payments have been validated.</p>
+            </div>
+
+            <div class="cards-list" *ngIf="awaitingValidationRequests.length > 0">
+              <div class="service-card" *ngFor="let r of awaitingValidationRequests">
+
+                <div class="card-top validation-top">
+                  <div class="card-top-left">
+                    <span class="service-badge"
+                      [class.investment]="r.serviceType === 'INVESTMENT'"
+                      [class.collaboration]="r.serviceType === 'COLLABORATION'">
+                      {{ r.serviceType === 'INVESTMENT' ? '📈' : '🤝' }}
+                      {{ r.serviceType }}
+                    </span>
+                    <h3 class="card-title">{{ r.serviceName }}</h3>
+                  </div>
+                  <span class="amount-pill">{{ r.amount | number }} TND</span>
+                </div>
+
+                <div class="card-body">
+                  <div class="section-label">Acquirer Information</div>
+                  <div class="info-grid">
+                    <div class="info-row">
+                      <span class="info-label">Email:</span>
+                      <span class="info-val">{{ r.acquirerEmail }}</span>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">Role:</span>
+                      <span class="info-val">
+                        <span class="role-badge" [class.investor]="r.acquirerRole === 'INVESTOR'"
+                          [class.company]="r.acquirerRole === 'INTERNATIONAL_COMPANY'">
+                          {{ r.acquirerRole }}
+                        </span>
+                      </span>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">Status:</span>
+                      <span class="info-val">
+                        <span class="status-pill awaiting">⏳ AWAITING_VALIDATION</span>
+                      </span>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">Approved on:</span>
+                      <span class="info-val">{{ r.approvedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Instruction -->
+                  <div class="payment-notice">
+                    <span class="notice-icon">💳</span>
+                    <span>The user has been instructed to pay <strong>{{ r.amount | number }} TND</strong>
+                      offline. Confirm only after receiving the payment.</span>
+                  </div>
+                </div>
+
+                <div class="card-footer">
+                  <button class="btn btn-reject"
+                    (click)="showRejectValidationModal(r)"
+                    [disabled]="r.cancelLoading">
+                    ❌ Reject Payment
+                  </button>
+                  <button class="btn btn-validate"
+                    (click)="showValidateModal(r)"
+                    [disabled]="r.cancelLoading">
+                    <span *ngIf="!r.cancelLoading">✅ Confirm Payment</span>
+                    <span *ngIf="r.cancelLoading">Processing...</span>
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- ==================== COMPLETED TAB ==================== -->
+          <ng-container *ngIf="!loading && activeTab === 'completed'">
+            <div class="empty-state" *ngIf="completedRequests.length === 0">
+              <div class="empty-icon">📭</div>
+              <h3>No completed requests yet</h3>
+            </div>
+
+            <div class="cards-list" *ngIf="completedRequests.length > 0">
+              <div class="service-card completed-card" *ngFor="let r of completedRequests">
+                <div class="card-top completed-top">
+                  <div class="card-top-left">
+                    <span class="service-badge"
+                      [class.investment]="r.serviceType === 'INVESTMENT'"
+                      [class.collaboration]="r.serviceType === 'COLLABORATION'">
+                      {{ r.serviceType === 'INVESTMENT' ? '📈' : '🤝' }}
+                      {{ r.serviceType }}
+                    </span>
+                    <h3 class="card-title">{{ r.serviceName }}</h3>
+                  </div>
+                  <span class="amount-pill">{{ r.amount | number }} TND</span>
+                </div>
+                <div class="card-body">
+                  <div class="info-grid">
+                    <div class="info-row">
+                      <span class="info-label">Email:</span>
+                      <span class="info-val">{{ r.acquirerEmail }}</span>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">Status:</span>
+                      <span class="info-val">
+                        <span class="status-pill completed">✅ COMPLETED</span>
+                      </span>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">Paid on:</span>
+                      <span class="info-val">{{ r.paidAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
 
         </div>
       </div>
     </div>
 
-    <!-- Reject Modal -->
-    <div class="modal-overlay" *ngIf="rejectingRequest" (click)="closeModal()">
+    <!-- ==================== APPROVE MODAL ==================== -->
+    <div class="modal-overlay" *ngIf="approvingRequest" (click)="closeModals()">
       <div class="modal-card" (click)="$event.stopPropagation()">
-        <h3>Reject Request</h3>
-        <p>Service: <strong>{{ rejectingRequest.serviceName }}</strong></p>
-        <p>Requester: {{ rejectingRequest.acquirerEmail }}</p>
+        <div class="modal-icon success-icon">✅</div>
+        <h3>Approve Acquisition Request</h3>
+        <p class="modal-service">{{ approvingRequest.serviceName }}</p>
+        <p class="modal-sub">From: {{ approvingRequest.acquirerEmail }}</p>
+        <div class="modal-warning">
+          <span>⚠️</span>
+          <span>This will mark the service as <strong>RESERVED</strong> and notify the user
+            to proceed with offline payment. The service will be reserved for 48 hours.</span>
+        </div>
+        <div class="modal-amount">
+          Amount to approve: <strong>{{ approvingRequest.amount | number }} TND</strong>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" (click)="closeModals()">Cancel</button>
+          <button class="btn-confirm-approve" (click)="confirmApprove()">
+            ✅ Approve Request
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== VALIDATE MODAL ==================== -->
+    <div class="modal-overlay" *ngIf="validatingRequest" (click)="closeModals()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-icon success-icon">✅</div>
+        <h3>Confirm Payment Receipt</h3>
+        <p class="modal-service">{{ validatingRequest.serviceName }}</p>
+        <p class="modal-sub">From: {{ validatingRequest.acquirerEmail }}</p>
+        <div class="modal-warning">
+          <span>⚠️</span>
+          <span>This will mark the service as <strong>COMPLETED</strong> and grant access
+            to the acquirer. This action is irreversible.</span>
+        </div>
+        <div class="modal-amount">
+          Amount to confirm: <strong>{{ validatingRequest.amount | number }} TND</strong>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" (click)="closeModals()">Cancel</button>
+          <button class="btn-confirm-validate" (click)="confirmValidate()">
+            ✅ Confirm Payment
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== REJECT APPROVAL MODAL ==================== -->
+    <div class="modal-overlay" *ngIf="rejectingApprovalRequest" (click)="closeModals()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-icon danger-icon">❌</div>
+        <h3>Reject Acquisition Request</h3>
+        <p class="modal-service">{{ rejectingApprovalRequest.serviceName }}</p>
+        <p class="modal-sub">From: {{ rejectingApprovalRequest.acquirerEmail }}</p>
         <textarea
           [(ngModel)]="rejectReason"
-          placeholder="Please provide a reason for rejection..."
+          placeholder="Provide a reason for rejection..."
           rows="4"
           class="reject-textarea">
         </textarea>
         <div class="modal-actions">
-          <button class="cancel-btn" (click)="closeModal()">Cancel</button>
-          <button class="confirm-reject-btn"
-            (click)="confirmReject()"
+          <button class="btn-cancel" (click)="closeModals()">Cancel</button>
+          <button class="btn-confirm-reject" (click)="confirmRejectApproval()"
             [disabled]="!rejectReason.trim()">
             Confirm Rejection
           </button>
@@ -185,303 +325,451 @@ import { AcquisitionService } from '../../../core/services/acquisition.service';
       </div>
     </div>
 
-    <!-- Document View Modal -->
-    <div class="modal-overlay" *ngIf="viewingDocument" (click)="closeDocumentModal()">
-      <div class="modal-card document-modal" (click)="$event.stopPropagation()">
-        <div class="document-modal-header">
-          <h3>{{ viewingDocument.fileName }}</h3>
-          <button class="close-modal-btn" (click)="closeDocumentModal()">✕</button>
-        </div>
-        <div class="document-preview" *ngIf="isImage(viewingDocument.fileName)">
-          <img [src]="documentUrl" alt="{{ viewingDocument.fileName }}" class="preview-image">
-        </div>
-        <div class="document-preview" *ngIf="!isImage(viewingDocument.fileName)">
-          <div class="file-icon">📄</div>
-          <p>Preview not available for this file type.</p>
-        </div>
-        <div class="document-actions">
-          <button class="download-btn" (click)="downloadDocument(viewingDocument)">
-            📥 Download
+    <!-- ==================== REJECT VALIDATION MODAL ==================== -->
+    <div class="modal-overlay" *ngIf="rejectingValidationRequest" (click)="closeModals()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-icon danger-icon">❌</div>
+        <h3>Reject Payment</h3>
+        <p class="modal-service">{{ rejectingValidationRequest.serviceName }}</p>
+        <p class="modal-sub">From: {{ rejectingValidationRequest.acquirerEmail }}</p>
+        <textarea
+          [(ngModel)]="rejectReason"
+          placeholder="Provide a reason for rejection..."
+          rows="4"
+          class="reject-textarea">
+        </textarea>
+        <div class="modal-actions">
+          <button class="btn-cancel" (click)="closeModals()">Cancel</button>
+          <button class="btn-confirm-reject" (click)="confirmRejectValidation()"
+            [disabled]="!rejectReason.trim()">
+            Confirm Rejection
           </button>
         </div>
       </div>
     </div>
+
+    <!-- Toast notification -->
+    <div class="toast" [class.show]="toastVisible" [class.success]="toastType === 'success'"
+      [class.error]="toastType === 'error'">
+      {{ toastMessage }}
+    </div>
   `,
   styles: [`
-    .page-layout { display: flex; min-height: 100vh; background: #f8fafc; }
+    /* ─── Layout ─── */
+    .page-layout { display: flex; min-height: 100vh; background: #f2f2f2; }
     app-navbar { width: 280px; flex-shrink: 0; position: sticky; top: 0; height: 100vh; }
     .page-main { flex: 1; padding: 2rem; overflow-y: auto; }
-    .page-content { max-width: 900px; margin: 0 auto; }
-    .page-header { margin-bottom: 2rem; }
-    h1 { font-size: 1.8rem; font-weight: 700; color: #0f172a; margin: 0 0 0.25rem; }
-    h1::after { content: ''; display: block; width: 50px; height: 4px;
-      background: linear-gradient(90deg, #7c3aed, #2563eb); margin-top: 0.4rem;
-      border-radius: 2px; }
-    .subtitle { color: #64748b; margin: 0; }
-    .loading-state, .empty-state { text-align: center; padding: 4rem;
-      background: white; border-radius: 16px; }
+    .page-content { max-width: 860px; margin: 0 auto; }
+
+    /* ─── Header ─── */
+    .page-header { margin-bottom: 1.5rem; }
+    h1 { font-size: 1.75rem; font-weight: 700; color: #2f4f7f; margin: 0 0 0.25rem; }
+    h1::after {
+      content: ''; display: block; width: 44px; height: 4px;
+      background: #ffd700; border-radius: 2px; margin-top: 0.4rem;
+    }
+    .subtitle { color: #64748b; margin: 0.5rem 0 0; font-size: 0.9rem; }
+
+    /* ─── Tabs ─── */
+    .tabs {
+      display: flex; gap: 0; margin-bottom: 1.5rem;
+      background: white; border-radius: 10px; padding: 4px;
+      border: 1px solid #e2e8f0; width: fit-content;
+    }
+    .tab {
+      padding: 0.45rem 1.1rem; border-radius: 7px; font-size: 0.83rem;
+      font-weight: 600; cursor: pointer; color: #64748b;
+      transition: all 0.2s; border: none; background: none;
+    }
+    .tab.active { background: #2f4f7f; color: #ffd700; }
+    .badge {
+      background: #ffd700; color: #2f4f7f; border-radius: 50px;
+      font-size: 0.68rem; font-weight: 700; padding: 0.05rem 0.45rem; margin-left: 0.3rem;
+    }
+    .completed-badge { background: #059669; color: white; }
+
+    /* ─── States ─── */
+    .loading-state, .empty-state {
+      text-align: center; padding: 4rem;
+      background: white; border-radius: 14px; border: 1px solid #e2e8f0;
+    }
     .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
-    .spinner { width: 36px; height: 36px; border: 3px solid #e2e8f0;
-      border-top-color: #7c3aed; border-radius: 50%;
-      animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+    .empty-state h3 { color: #2f4f7f; margin: 0 0 0.5rem; }
+    .empty-state p { color: #64748b; margin: 0; }
+    .spinner {
+      width: 36px; height: 36px; border: 3px solid #e2e8f0;
+      border-top-color: #2f4f7f; border-radius: 50%;
+      animation: spin 0.8s linear infinite; margin: 0 auto 1rem;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .requests-list { display: flex; flex-direction: column; gap: 1.5rem; }
-    .request-card { background: white; border-radius: 14px; border: 1px solid #e2e8f0;
-      padding: 1.5rem; transition: box-shadow 0.2s; }
-    .request-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-    .request-header { display: flex; justify-content: space-between;
-      align-items: flex-start; margin-bottom: 1.5rem; }
-    .service-info { display: flex; flex-direction: column; gap: 0.3rem; }
-    .service-type-badge { display: inline-flex; align-items: center; gap: 0.3rem;
-      font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.6rem;
-      border-radius: 50px; width: fit-content; }
-    .service-type-badge.investment { background: #eff6ff; color: #1d4ed8; }
-    .service-type-badge.collaboration { background: #f3e8ff; color: #7c3aed; }
-    .service-name { font-size: 1.1rem; font-weight: 600; color: #0f172a; margin: 0; }
-    .amount-badge { background: #f0fdf4; color: #15803d; border: 1px solid #86efac;
-      padding: 0.3rem 0.8rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem; }
-    .section-title { font-size: 0.9rem; font-weight: 600; color: #1e293b;
-      margin: 1rem 0 0.75rem 0; padding-bottom: 0.3rem; border-bottom: 2px solid #e2e8f0; }
-    .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem;
-      background: #f8fafc; padding: 0.8rem; border-radius: 8px; margin-bottom: 0.5rem; }
-    .info-row { display: flex; gap: 0.5rem; font-size: 0.85rem; }
-    .info-label { color: #64748b; font-weight: 500; min-width: 110px; }
-    .info-value { color: #1e293b; word-break: break-word; }
-    .description-text { line-height: 1.4; }
-    .role-badge { background: #e0f2fe; color: #0369a1;
-      padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.78rem;
-      display: inline-block; }
-    .status-badge { padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.78rem;
-      background: #fef3c7; color: #92400e; }
-    .status-badge.pending { background: #fef3c7; color: #92400e; }
-    .documents-list { display: flex; flex-wrap: wrap; gap: 0.5rem;
-      background: #f8fafc; padding: 0.8rem; border-radius: 8px; margin-bottom: 0.5rem; }
-    .document-item { display: flex; align-items: center; gap: 0.5rem;
-      background: white; padding: 0.3rem 0.6rem; border-radius: 6px;
-      border: 1px solid #e2e8f0; font-size: 0.8rem; }
-    .doc-icon { font-size: 1rem; }
-    .doc-name { max-width: 150px; overflow: hidden; text-overflow: ellipsis;
-      white-space: nowrap; color: #334155; }
-    .view-doc-btn { background: #2563eb; color: white; border: none;
-      padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem;
-      cursor: pointer; transition: background 0.2s; }
-    .view-doc-btn:hover { background: #1d4ed8; }
-    .request-actions { display: flex; gap: 0.75rem; margin-top: 1rem; }
-    .approve-btn { flex: 1; padding: 0.65rem; background: #059669;
-      color: white; border: none; border-radius: 8px; font-weight: 600;
-      cursor: pointer; transition: all 0.2s; }
-    .approve-btn:hover:not(:disabled) { background: #047857; transform: translateY(-1px); }
-    .approve-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .reject-btn { flex: 1; padding: 0.65rem; background: white;
-      color: #dc2626; border: 1px solid #fca5a5; border-radius: 8px;
-      font-weight: 600; cursor: pointer; transition: all 0.2s; }
-    .reject-btn:hover:not(:disabled) { background: #fef2f2; transform: translateY(-1px); }
-    .reject-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    /* Modal styles */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5); display: flex; align-items: center;
-      justify-content: center; z-index: 1000; padding: 1rem; }
-    .modal-card { background: white; border-radius: 16px; padding: 1.5rem;
-      max-width: 500px; width: 100%; }
-    .document-modal { max-width: 700px; }
-    .document-modal-header { display: flex; justify-content: space-between;
-      align-items: center; margin-bottom: 1rem; }
-    .close-modal-btn { background: none; border: none; font-size: 1.5rem;
-      cursor: pointer; color: #64748b; }
-    .close-modal-btn:hover { color: #dc2626; }
-    .modal-card h3 { font-size: 1.2rem; font-weight: 700; color: #0f172a;
-      margin: 0; }
-    .modal-card p { color: #64748b; font-size: 0.88rem; margin: 0 0 0.3rem; }
-    .modal-card p strong { color: #0f172a; }
-    .reject-textarea { width: 100%; margin-top: 0.75rem; padding: 0.75rem;
-      border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.88rem;
-      resize: vertical; outline: none; font-family: inherit;
-      box-sizing: border-box; }
-    .reject-textarea:focus { border-color: #7c3aed; }
-    .modal-actions { display: flex; gap: 0.75rem; margin-top: 1rem; }
-    .cancel-btn { flex: 1; padding: 0.65rem; background: #f1f5f9;
-      color: #374151; border: none; border-radius: 8px; font-weight: 600;
-      cursor: pointer; }
-    .cancel-btn:hover { background: #e2e8f0; }
-    .confirm-reject-btn { flex: 1; padding: 0.65rem; background: #dc2626;
-      color: white; border: none; border-radius: 8px; font-weight: 600;
-      cursor: pointer; transition: all 0.2s; }
-    .confirm-reject-btn:hover:not(:disabled) { background: #b91c1c; }
-    .confirm-reject-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    /* Document preview */
-    .document-preview { text-align: center; padding: 1rem;
-      background: #f8fafc; border-radius: 8px; margin: 1rem 0;
-      min-height: 200px; display: flex; align-items: center;
-      justify-content: center; flex-direction: column; }
-    .preview-image { max-width: 100%; max-height: 400px; border-radius: 8px; }
-    .file-icon { font-size: 4rem; margin-bottom: 0.5rem; }
-    .document-actions { display: flex; justify-content: center; margin-top: 1rem; }
-    .download-btn { padding: 0.6rem 1.2rem; background: #059669;
-      color: white; border: none; border-radius: 8px; font-weight: 600;
-      cursor: pointer; transition: background 0.2s; }
-    .download-btn:hover { background: #047857; }
+
+    /* ─── Cards ─── */
+    .cards-list { display: flex; flex-direction: column; gap: 1.25rem; }
+    .service-card {
+      background: white; border-radius: 14px;
+      border: 1px solid #e2e8f0; overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .service-card:hover { box-shadow: 0 6px 24px rgba(47,79,127,0.12); }
+    .completed-card { opacity: 0.85; }
+
+    /* Card top banners */
+    .card-top {
+      padding: 1rem 1.25rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .approval-top { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+    .validation-top { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .completed-top { background: linear-gradient(135deg, #059669, #10b981); }
+    .card-top-left { display: flex; flex-direction: column; gap: 0.25rem; }
+    .card-title { color: white; font-size: 1rem; font-weight: 600; margin: 0; }
+
+    /* Badges */
+    .service-badge {
+      display: inline-flex; align-items: center; gap: 0.25rem;
+      font-size: 0.68rem; font-weight: 700; padding: 0.15rem 0.5rem;
+      border-radius: 50px; width: fit-content;
+    }
+    .service-badge.investment {
+      background: rgba(255,215,0,0.2); color: #ffd700;
+      border: 1px solid rgba(255,215,0,0.35);
+    }
+    .service-badge.collaboration {
+      background: rgba(255,255,255,0.15); color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .amount-pill {
+      background: #ffd700; color: #1e3355;
+      padding: 0.3rem 0.9rem; border-radius: 20px;
+      font-weight: 700; font-size: 0.88rem;
+    }
+
+    /* Card body */
+    .card-body { padding: 1rem 1.25rem; }
+    .section-label {
+      font-size: 0.7rem; font-weight: 700; color: #2f4f7f;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 0.5rem;
+    }
+    .info-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem; background: #f8fafc;
+      padding: 0.75rem; border-radius: 8px; margin-bottom: 0.75rem;
+    }
+    .info-row { display: flex; gap: 0.4rem; font-size: 0.82rem; }
+    .info-label { color: #64748b; font-weight: 500; min-width: 90px; }
+    .info-val { color: #1e293b; }
+
+    .role-badge {
+      padding: 0.1rem 0.45rem; border-radius: 4px;
+      font-size: 0.75rem; font-weight: 600; display: inline-block;
+    }
+    .role-badge.investor { background: #e0f2fe; color: #0369a1; }
+    .role-badge.company { background: #f3e8ff; color: #7c3aed; }
+
+    .status-pill {
+      padding: 0.15rem 0.55rem; border-radius: 4px;
+      font-size: 0.75rem; font-weight: 600; display: inline-block;
+    }
+    .pending-approval-pill { background: #dbeafe; color: #1e40af; }
+    .status-pill.awaiting { background: #fffbeb; color: #92400e; }
+    .status-pill.completed { background: #f0fdf4; color: #166534; }
+
+    /* Notices */
+    .approval-notice {
+      display: flex; align-items: flex-start; gap: 0.5rem;
+      background: #eff6ff; border: 1px solid #bfdbfe;
+      border-radius: 8px; padding: 0.65rem 0.85rem;
+      font-size: 0.82rem; color: #1e40af;
+    }
+    .payment-notice {
+      display: flex; align-items: flex-start; gap: 0.5rem;
+      background: #fffbeb; border: 1px solid #ffd700;
+      border-radius: 8px; padding: 0.65rem 0.85rem;
+      font-size: 0.82rem; color: #78350f;
+    }
+    .notice-icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.05rem; }
+
+    /* Card footer */
+    .card-footer {
+      padding: 0.85rem 1.25rem; background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      display: flex; gap: 0.75rem; justify-content: flex-end;
+    }
+    .btn {
+      padding: 0.5rem 1.1rem; border-radius: 8px; font-weight: 600;
+      font-size: 0.83rem; border: none; cursor: pointer;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem;
+    }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; }
+    .btn-approve { background: #2563eb; color: white; }
+    .btn-approve:hover:not(:disabled) { background: #1d4ed8; transform: translateY(-1px); }
+    .btn-validate { background: #d97706; color: white; }
+    .btn-validate:hover:not(:disabled) { background: #b45309; transform: translateY(-1px); }
+    .btn-reject { background: white; color: #dc2626; border: 1px solid #fca5a5; }
+    .btn-reject:hover:not(:disabled) { background: #fef2f2; }
+
+    /* ─── Modals ─── */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); display: flex;
+      align-items: center; justify-content: center; z-index: 1000; padding: 1rem;
+    }
+    .modal-card {
+      background: white; border-radius: 16px; padding: 1.75rem;
+      max-width: 440px; width: 100%; text-align: center;
+    }
+    .modal-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .modal-card h3 { color: #2f4f7f; font-size: 1.2rem; margin: 0 0 0.3rem; }
+    .modal-service { font-weight: 600; color: #1e293b; margin: 0 0 0.2rem; font-size: 0.95rem; }
+    .modal-sub { color: #64748b; font-size: 0.83rem; margin: 0 0 1rem; }
+    .modal-warning {
+      display: flex; align-items: flex-start; gap: 0.5rem; text-align: left;
+      background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px;
+      padding: 0.65rem 0.85rem; margin-bottom: 0.75rem;
+      font-size: 0.82rem; color: #78350f;
+    }
+    .modal-amount {
+      background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px;
+      padding: 0.55rem 0.85rem; margin-bottom: 1.25rem;
+      font-size: 0.88rem; color: #0369a1;
+    }
+    .modal-amount strong { font-size: 1.05rem; }
+    .reject-textarea {
+      width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0;
+      border-radius: 8px; font-size: 0.85rem; resize: vertical;
+      outline: none; font-family: inherit; box-sizing: border-box;
+      margin-bottom: 1.25rem; text-align: left;
+    }
+    .reject-textarea:focus { border-color: #2f4f7f; }
+    .modal-actions { display: flex; gap: 0.75rem; }
+    .btn-cancel {
+      flex: 1; padding: 0.6rem; background: #f1f5f9; color: #374151;
+      border: none; border-radius: 8px; font-weight: 600; cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .btn-cancel:hover { background: #e2e8f0; }
+    .btn-confirm-approve {
+      flex: 2; padding: 0.6rem; background: #2563eb; color: white;
+      border: none; border-radius: 8px; font-weight: 700; cursor: pointer;
+      font-size: 0.85rem; transition: background 0.2s;
+    }
+    .btn-confirm-approve:hover { background: #1d4ed8; }
+    .btn-confirm-validate {
+      flex: 2; padding: 0.6rem; background: #d97706; color: white;
+      border: none; border-radius: 8px; font-weight: 700; cursor: pointer;
+      font-size: 0.85rem; transition: background 0.2s;
+    }
+    .btn-confirm-validate:hover { background: #b45309; }
+    .btn-confirm-reject {
+      flex: 2; padding: 0.6rem; background: #dc2626; color: white;
+      border: none; border-radius: 8px; font-weight: 700; cursor: pointer;
+      font-size: 0.85rem; transition: background 0.2s;
+    }
+    .btn-confirm-reject:hover:not(:disabled) { background: #b91c1c; }
+    .btn-confirm-reject:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ─── Toast ─── */
+    .toast {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      padding: 0.75rem 1.25rem; border-radius: 10px;
+      font-size: 0.88rem; font-weight: 600; color: white;
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.3s ease; z-index: 2000; pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { background: #059669; }
+    .toast.error { background: #dc2626; }
+
+    /* ─── Responsive ─── */
     @media (max-width: 768px) {
       .page-layout { flex-direction: column; }
       app-navbar { width: 100%; height: auto; position: relative; }
       .info-grid { grid-template-columns: 1fr; }
-      .request-header { flex-direction: column; gap: 0.5rem; }
+      .page-main { padding: 1rem; }
     }
   `]
 })
 export class PartnerAcquisitionRequestsComponent implements OnInit {
 
-  requests: any[] = [];
+  // Trois listes distinctes
+  pendingApprovalRequests: ServiceAcquisition[] = [];
+  awaitingValidationRequests: ServiceAcquisition[] = [];
+  completedRequests: ServiceAcquisition[] = [];
+  
   loading = false;
-  rejectingRequest: any = null;
+  activeTab: 'pending-approval' | 'awaiting-validation' | 'completed' = 'pending-approval';
+
+  // Modals pour approval
+  approvingRequest: ServiceAcquisition | null = null;
+  rejectingApprovalRequest: ServiceAcquisition | null = null;
+  
+  // Modals pour validation
+  validatingRequest: ServiceAcquisition | null = null;
+  rejectingValidationRequest: ServiceAcquisition | null = null;
+  
   rejectReason = '';
-  viewingDocument: any = null;
-  documentUrl: string = '';
+
+  toastVisible = false;
+  toastMessage = '';
+  toastType: 'success' | 'error' = 'success';
 
   private acquisitionService = inject(AcquisitionService);
-  private http = inject(HttpClient);
 
   ngOnInit(): void {
-    this.loadRequests();
+    this.loadData();
   }
 
-  private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('auth_token') || '';
-    return new HttpHeaders({ Authorization: `Bearer ${token}` });
-  }
-
-  loadRequests(): void {
+  loadData(): void {
     this.loading = true;
+    
+    // 1. Charger les demandes en attente d'approbation (PENDING_PARTNER_APPROVAL)
     this.acquisitionService.getPartnerPendingRequests().subscribe({
-      next: (data) => {
-        this.requests = data;
-        // Charger les détails de chaque service
-        this.requests.forEach(request => {
-          this.loadServiceDetails(request);
-        });
+      next: (data: ServiceAcquisition[]) => {
+        this.pendingApprovalRequests = data.filter(
+          (r: ServiceAcquisition) => r.paymentStatus === 'PENDING_PARTNER_APPROVAL'
+        );
         this.loading = false;
       },
-      error: () => { this.loading = false; }
-    });
-  }
-
-  loadServiceDetails(request: any): void {
-    const serviceType = request.serviceType.toLowerCase();
-    const endpoint = `http://localhost:8089/api/${serviceType}-services/${request.serviceId}`;
-    
-    this.http.get<any>(endpoint, { headers: this.getHeaders() }).subscribe({
-      next: (service) => {
-        request.serviceDetails = service;
-        // Séparer les images des autres documents
-        if (service.documents && service.documents.length > 0) {
-          request.serviceDetails.images = service.documents.filter((d: any) => 
-            d.fileType && d.fileType.startsWith('image/'));
-          request.serviceDetails.otherDocuments = service.documents.filter((d: any) => 
-            !d.fileType || !d.fileType.startsWith('image/'));
-        }
-      },
-      error: (err) => {
-        console.error(`❌ Error loading service ${request.serviceId}:`, err);
-        request.serviceDetails = null;
+      error: (err: any) => {
+        console.error('Error loading pending approvals:', err);
+        this.loading = false;
       }
     });
-  }
 
-  approve(request: any): void {
-    request.loading = true;
-    this.acquisitionService.approveRequest(request.id).subscribe({
-      next: (res) => {
-        request.loading = false;
-        this.requests = this.requests.filter(r => r.id !== request.id);
-        const link = res?.result?.link;
-        if (link) {
-          alert('✅ Request approved! The user will receive a payment link.');
-        } else {
-          alert('✅ Request approved successfully!');
-        }
+    // 2. Charger les demandes en attente de validation (AWAITING_VALIDATION)
+    this.acquisitionService.getPartnerAwaitingValidation().subscribe({
+      next: (data: ServiceAcquisition[]) => {
+        this.awaitingValidationRequests = data.filter(
+          (r: ServiceAcquisition) => r.paymentStatus === 'AWAITING_VALIDATION'
+        );
       },
-      error: (err) => {
-        request.loading = false;
-        alert('❌ ' + (err.error?.error || 'Error approving request'));
-      }
+      error: (err: any) => console.error('Error loading awaiting validation:', err)
+    });
+
+    // 3. Charger les demandes complétées (COMPLETED)
+    this.acquisitionService.getMyAllAcquisitions().subscribe({
+      next: (data: ServiceAcquisition[]) => {
+        this.completedRequests = data.filter(
+          (r: ServiceAcquisition) => r.paymentStatus === 'COMPLETED'
+        );
+      },
+      error: (err: any) => console.error('Error loading completed:', err)
     });
   }
 
-  showRejectModal(request: any): void {
-    this.rejectingRequest = request;
+  // ==================== APPROVAL MODALS ====================
+  showApproveModal(request: ServiceAcquisition): void {
+    this.approvingRequest = request;
+  }
+
+  showRejectApprovalModal(request: ServiceAcquisition): void {
+    this.rejectingApprovalRequest = request;
     this.rejectReason = '';
   }
 
-  closeModal(): void {
-    this.rejectingRequest = null;
-    this.rejectReason = '';
-  }
+  confirmApprove(): void {
+    if (!this.approvingRequest) return;
+    const req = this.approvingRequest;
+    this.closeModals();
 
-  confirmReject(): void {
-    if (!this.rejectReason.trim()) return;
-
-    this.rejectingRequest.loading = true;
-    this.acquisitionService.rejectRequest(this.rejectingRequest.id, this.rejectReason)
-      .subscribe({
-        next: () => {
-          this.requests = this.requests.filter(
-            r => r.id !== this.rejectingRequest.id);
-          this.closeModal();
-          alert('✅ Request rejected.');
-        },
-        error: (err) => {
-          this.rejectingRequest.loading = false;
-          alert('❌ ' + (err.error?.error || 'Error rejecting request'));
-        }
-      });
-  }
-
-  viewDocument(doc: any): void {
-    this.viewingDocument = doc;
-    const url = `http://localhost:8089${doc.downloadUrl}`;
-    
-    if (doc.fileType && doc.fileType.startsWith('image/')) {
-      this.http.get(url, { headers: this.getHeaders(), responseType: 'blob' }).subscribe({
-        next: (blob: Blob) => {
-          this.documentUrl = URL.createObjectURL(blob);
-        },
-        error: (err) => {
-          console.error('Error loading image:', err);
-          this.documentUrl = '';
-        }
-      });
-    } else {
-      this.documentUrl = url;
-    }
-  }
-
-  closeDocumentModal(): void {
-    if (this.documentUrl && this.documentUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(this.documentUrl);
-    }
-    this.viewingDocument = null;
-    this.documentUrl = '';
-  }
-
-  downloadDocument(doc: any): void {
-    const url = `http://localhost:8089${doc.downloadUrl}`;
-    this.http.get(url, { headers: this.getHeaders(), responseType: 'blob' }).subscribe({
-      next: (blob: Blob) => {
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = downloadUrl;
-        a.download = doc.fileName;
-        a.click();
-        window.URL.revokeObjectURL(downloadUrl);
+    req.cancelLoading = true;
+    this.acquisitionService.approveRequest(req.id).subscribe({
+      next: () => {
+        req.cancelLoading = false;
+        this.pendingApprovalRequests = this.pendingApprovalRequests.filter(r => r.id !== req.id);
+        this.showToast('✅ Request approved — user notified for payment.', 'success');
+        this.loadData(); // Rafraîchir toutes les listes
       },
-      error: (err) => {
-        console.error('Download error:', err);
-        alert('Error downloading file');
+      error: (err: any) => {
+        req.cancelLoading = false;
+        this.showToast('❌ ' + (err.error?.error || 'Error approving request'), 'error');
       }
     });
   }
 
-  isImage(fileName: string): boolean {
-    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
-    return imageExtensions.some(ext => fileName.toLowerCase().endsWith(ext));
+  confirmRejectApproval(): void {
+    if (!this.rejectingApprovalRequest || !this.rejectReason.trim()) return;
+    const req = this.rejectingApprovalRequest;
+    const reason = this.rejectReason;
+    this.closeModals();
+
+    req.cancelLoading = true;
+    this.acquisitionService.rejectRequest(req.id, reason).subscribe({
+      next: () => {
+        req.cancelLoading = false;
+        this.pendingApprovalRequests = this.pendingApprovalRequests.filter(r => r.id !== req.id);
+        this.showToast('Request rejected.', 'success');
+      },
+      error: (err: any) => {
+        req.cancelLoading = false;
+        this.showToast('❌ ' + (err.error?.error || 'Error rejecting request'), 'error');
+      }
+    });
+  }
+
+  // ==================== VALIDATION MODALS ====================
+  showValidateModal(request: ServiceAcquisition): void {
+    this.validatingRequest = request;
+  }
+
+  showRejectValidationModal(request: ServiceAcquisition): void {
+    this.rejectingValidationRequest = request;
+    this.rejectReason = '';
+  }
+
+  confirmValidate(): void {
+    if (!this.validatingRequest) return;
+    const req = this.validatingRequest;
+    this.closeModals();
+
+    req.cancelLoading = true;
+    this.acquisitionService.validatePayment(req.id).subscribe({
+      next: () => {
+        req.cancelLoading = false;
+        this.awaitingValidationRequests = this.awaitingValidationRequests.filter(r => r.id !== req.id);
+        this.showToast('✅ Payment confirmed — service is now COMPLETED.', 'success');
+        this.loadData(); // Rafraîchir toutes les listes
+      },
+      error: (err: any) => {
+        req.cancelLoading = false;
+        this.showToast('❌ ' + (err.error?.error || 'Error confirming payment'), 'error');
+      }
+    });
+  }
+
+  confirmRejectValidation(): void {
+    if (!this.rejectingValidationRequest || !this.rejectReason.trim()) return;
+    const req = this.rejectingValidationRequest;
+    const reason = this.rejectReason;
+    this.closeModals();
+
+    req.cancelLoading = true;
+    this.acquisitionService.rejectRequest(req.id, reason).subscribe({
+      next: () => {
+        req.cancelLoading = false;
+        this.awaitingValidationRequests = this.awaitingValidationRequests.filter(r => r.id !== req.id);
+        this.showToast('Payment rejected.', 'success');
+      },
+      error: (err: any) => {
+        req.cancelLoading = false;
+        this.showToast('❌ ' + (err.error?.error || 'Error rejecting payment'), 'error');
+      }
+    });
+  }
+
+  closeModals(): void {
+    this.approvingRequest = null;
+    this.rejectingApprovalRequest = null;
+    this.validatingRequest = null;
+    this.rejectingValidationRequest = null;
+    this.rejectReason = '';
+  }
+
+  private showToast(message: string, type: 'success' | 'error'): void {
+    this.toastMessage = message;
+    this.toastType = type;
+    this.toastVisible = true;
+    setTimeout(() => { this.toastVisible = false; }, 3500);
   }
 }

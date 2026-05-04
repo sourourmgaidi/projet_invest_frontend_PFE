@@ -5,7 +5,6 @@ import { Role } from './shared/models/user.model';
 import { AdminNotificationsComponent } from './features/admin/notifications/notifications.component';
 import { RegionServicesComponent } from './features/public/home/region/region-services.component';
 import { InboxComponent } from './shared/inbox/inbox.component';
-import { PartnerAcquisitionRequestsComponent } from './features/partenaire-local/myRequests/partner-acquisition-requests.component';
 
 export const routes: Routes = [
 
@@ -55,13 +54,13 @@ export const routes: Routes = [
     path: 'chat',
     loadComponent: () => import('./shared/chat/chat.component')
       .then(m => m.ChatComponent),
-    canActivate: [authGuard]  // Protection par authentification
+    canActivate: [authGuard]
   },
   {
     path: 'chat/:userId/:role',
     loadComponent: () => import('./shared/chat/chat.component')
       .then(m => m.ChatComponent),
-    canActivate: [authGuard]  // Protection par authentification
+    canActivate: [authGuard]
   },
 
   // ── Admin ─────────────────────────────────────────
@@ -94,7 +93,6 @@ export const routes: Routes = [
   loadComponent: () => import('./features/admin/admin-stats/admin-stats.component')
     .then(m => m.AdminStatsComponent)
 },
-      // ✅ NOUVELLES ROUTES POUR LES DEMANDES (ADMIN)
       {
         path: 'requests',
         loadComponent: () => import('./features/admin/requests/admin-requests.component')
@@ -105,14 +103,13 @@ export const routes: Routes = [
       loadComponent: () => import('./features/admin/requests/request-detail.component')
         .then(m => m.AdminRequestDetailComponent)
     },
-    // ✅ Route pour les détails des demandes de collaboration
     {
       path: 'requests/collaboration/:id',
       loadComponent: () => import('./features/admin/requests/collaboration-request-detail.component')
         .then(m => m.CollaborationRequestDetailComponent)
     },
     {
-  path: 'requests/tourist/:id',  // ✅ CORRECT: sans 'admin' car déjà dans le children
+  path: 'requests/tourist/:id',
   loadComponent: () => import('./features/admin/requests/tourist-request-detail.component')
     .then(m => m.TouristRequestDetailComponent)
 },
@@ -138,7 +135,7 @@ export const routes: Routes = [
           .then(m => m.DashboardComponent)
       },
        {
-        path: 'favoris',  // ✅ Route pour les favoris avec le chemin CORRECT
+        path: 'favoris',
         loadComponent: () => import('./features/touriste/favoris/favorites.component')
           .then(m => m.TouristFavoritesComponent)
       },
@@ -146,6 +143,11 @@ export const routes: Routes = [
         path: 'services',
         loadComponent: () => import('./features/touriste/services/services.component')
           .then(m => m.TouristServicesComponent)
+      },
+         {
+        path: 'my-requests',
+        loadComponent: () => import('./features/touriste/tourist-requests/tourist-requests.component')
+          .then(m => m.TouristRequestsComponent)
       }
     ]
   },
@@ -171,21 +173,22 @@ export const routes: Routes = [
         loadComponent: () => import('./shared/favoritesInvestservice/favorites-list/favorites-list.component')
           .then(m => m.FavoritesListComponent)
       },
+      // ✅ CORRIGÉ : lazy load au lieu de component statique
       {
-  path: 'acquisition-requests',
-  loadComponent: () => import('./features/partenaire-local/myRequests/partner-acquisition-requests.component')
-    .then(m => m.PartnerAcquisitionRequestsComponent)
-},
-  {
-      path: 'my-requests',
-      loadComponent: () => import('./features/public/my-acquired-services/my-acquired-services.component')
-        .then(m => m.MyAcquiredServicesComponent)
-    },
-    {
-      path: 'my-taken-services',
-      loadComponent: () => import('./features/investisseur/MyTakenService/my-taken-services.component')
-        .then(m => m.MyTakenServicesComponent)
-    }
+        path: 'acquisition-requests',
+        loadComponent: () => import('./features/partenaire-local/myRequests/partner-acquisition-requests.component')
+          .then(m => m.PartnerAcquisitionRequestsComponent)
+      },
+      {
+        path: 'my-requests',
+        loadComponent: () => import('./features/public/my-acquired-services/my-acquired-services.component')
+          .then(m => m.MyAcquiredServicesComponent)
+      },
+      {
+        path: 'my-taken-services',
+        loadComponent: () => import('./features/investisseur/MyTakenService/my-taken-services.component')
+          .then(m => m.MyTakenServicesComponent)
+      }
     ]
   },
 
@@ -204,11 +207,18 @@ export const routes: Routes = [
         path: 'services',
         loadComponent: () => import('./features/partenaire-economique/services/services.components')
           .then(m => m.EconomicPartnerServicesComponent)
-      },  {
+      },
+      {
         path: 'favorites-collaboration',
         loadComponent: () => import('./shared/favorites-collaboration/favorites-list/favorites-list.component')
           .then(m => m.FavoritesCollaborationListComponent)
-      }
+      },
+      {
+  path: 'my-collaborations',
+  loadComponent: () => import('./features/partenaire-economique/my-collaboration-partner/my-collaboration-partner.component')
+    .then(m => m.MyCollaborationPartnerComponent)
+},
+
     ]
   },
 
@@ -228,11 +238,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/partenaire-local/messagerie/partenaire-local-messagerie.component')
           .then(m => m.PartenaireLocalMessagerieComponent)
       },
-        {
+      // ✅ CORRIGÉ : lazy load au lieu de component statique
+      {
         path: 'acquisition-requests',
-        component: PartnerAcquisitionRequestsComponent
+        loadComponent: () => import('./features/partenaire-local/myRequests/partner-acquisition-requests.component')
+          .then(m => m.PartnerAcquisitionRequestsComponent)
       },
-      // ✅ NOUVELLES ROUTES POUR LES DEMANDES (PARTENAIRE LOCAL)
       {
         path: 'requests',
         loadComponent: () => import('./features/partenaire-local/requests/partner-requests.component')
@@ -257,21 +268,19 @@ export const routes: Routes = [
         loadComponent: () => import('./features/societe-international/dashboard/dashboard')
           .then(m => m.DashboardComponent)
       },
-     // ✅ APRÈS — même composant que l'investor mais avec userRole
-{
-  path: 'services',
-  loadComponent: () => import('./features/investisseur/services/services.component')
-    .then(m => m.InvestorServicesComponent),
-  data: { userRole: 'INT_COMPANY' }
-},
-       
-  {
-      path: 'collaboration-services',  // ← Changé ici !
-      loadComponent: () => import('./features/societe-international/collaboration/collaboration-services.component')
-        .then(m => m.CollaborationServicesComponent),
-      canActivate: [authGuard, roleGuard],
-      data: { roles: [Role.INTERNATIONAL_COMPANY] }
-    },
+      {
+        path: 'services',
+        loadComponent: () => import('./features/investisseur/services/services.component')
+          .then(m => m.InvestorServicesComponent),
+        data: { userRole: 'INT_COMPANY' }
+      },
+      {
+        path: 'collaboration-services',
+        loadComponent: () => import('./features/societe-international/collaboration/collaboration-services.component')
+          .then(m => m.CollaborationServicesComponent),
+        canActivate: [authGuard, roleGuard],
+        data: { roles: [Role.INTERNATIONAL_COMPANY] }
+      },
       {
         path: 'notifications',
         loadComponent: () => import('./features/societe-international/notifications/notifications.component')
@@ -282,7 +291,7 @@ export const routes: Routes = [
         loadComponent: () => import('./shared/favoritesInvestservice/favorites-list/favorites-list.component')
           .then(m => m.FavoritesListComponent)
       },
-         {
+      {
         path: 'favorites-collaboration',
         loadComponent: () => import('./shared/favorites-collaboration/favorites-list/favorites-list.component')
           .then(m => m.FavoritesCollaborationListComponent)
@@ -291,20 +300,25 @@ export const routes: Routes = [
         path: 'messagerie',
         loadComponent: () => import('./features/societe-international/messagerie/societe-international-messagerie.component')
           .then(m => m.SocieteInternationalMessagerieComponent)
-      }
-      ,
-         {
-      path: 'my-requests',  
-      loadComponent: () => import('./features/public/my-acquired-services/my-acquired-services.component')
-        .then(m => m.MyAcquiredServicesComponent)
-    },
-    {
-      path: 'my-taken-services',  
-      loadComponent: () => import('./features/investisseur/MyTakenService/my-taken-services.component')
-        .then(m => m.MyTakenServicesComponent)
-    }
+      },
+      {
+        path: 'my-requests',  
+        loadComponent: () => import('./features/public/my-acquired-services/my-acquired-services.component')
+          .then(m => m.MyAcquiredServicesComponent)
+      },
+      {
+        path: 'my-taken-services',  
+        loadComponent: () => import('./features/investisseur/MyTakenService/my-taken-services.component')
+          .then(m => m.MyTakenServicesComponent)
+      },
+      {
+  path: 'my-collaborations',
+  loadComponent: () => import('./features/societe-international/my-collaboration/my-collaboration.component')
+    .then(m => m.MyCollaborationComponent)
+}
     ]
   },
+
   {
     path: 'messagerie',
     loadComponent: () => import('./shared/inbox/inbox.component')
@@ -312,31 +326,29 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
-  path: 'subscription/payment-success',
-  loadComponent: () => import('./shared/Subscription/subscription-success.component')
-    .then(m => m.SubscriptionSuccessComponent),
-  canActivate: [authGuard]  // ✅ AJOUTER
-},
-{
-  path: 'investisseur/subscription/payment-success',
-  loadComponent: () => import('./shared/Subscription/subscription-success.component')
-    .then(m => m.SubscriptionSuccessComponent),
-  canActivate: [authGuard]  // ✅ AJOUTER
-},
-{
-  path: 'societe-international/subscription/payment-success',
-  loadComponent: () => import('./shared/Subscription/subscription-success.component')
-    .then(m => m.SubscriptionSuccessComponent),
-  canActivate: [authGuard]  // ✅ AJOUTER
-},
-  
-   
+    path: 'subscription/payment-success',
+    loadComponent: () => import('./shared/Subscription/subscription-success.component')
+      .then(m => m.SubscriptionSuccessComponent),
+    canActivate: [authGuard]
+  },
   {
-  path: 'my-stats',
-  loadComponent: () => import('./shared/user-stats/user-stats.component')
-    .then(m => m.UserStatsComponent),
-  canActivate: [authGuard]  // ✅ Juste authGuard — accessible à TOUS les rôles
-},
+    path: 'investisseur/subscription/payment-success',
+    loadComponent: () => import('./shared/Subscription/subscription-success.component')
+      .then(m => m.SubscriptionSuccessComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'societe-international/subscription/payment-success',
+    loadComponent: () => import('./shared/Subscription/subscription-success.component')
+      .then(m => m.SubscriptionSuccessComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'my-stats',
+    loadComponent: () => import('./shared/user-stats/user-stats.component')
+      .then(m => m.UserStatsComponent),
+    canActivate: [authGuard]
+  },
 
   // ── Wildcard ──────────────────────────────────────
   { path: '**', redirectTo: '' }

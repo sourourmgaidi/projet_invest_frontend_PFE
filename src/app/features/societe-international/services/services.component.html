@@ -15,7 +15,7 @@
         </div>
       </div>
 
-      <!-- Tabs -->
+      <!-- Tabs (inchangé) -->
       <div class="tabs">
         <button class="tab-btn" [class.active]="activeTab === 'collaboration'" (click)="switchTab('collaboration')">
           <span class="tab-icon">🤝</span>
@@ -27,7 +27,17 @@
         </button>
       </div>
 
-      <!-- Search Bar -->
+      <!-- ↓↓ AJOUT : Filter Panel ↓↓ -->
+      <app-filter-panel
+        [config]="filterConfig"
+        [regions]="availableRegions"
+        [budgetMax]="budgetMax"
+        [budgetStep]="budgetStep"
+        (filtersChanged)="onFiltersChanged($event)">
+      </app-filter-panel>
+      <!-- ↑↑ FIN AJOUT ↑↑ -->
+
+      <!-- Search Bar (inchangé) -->
       <div class="search-wrapper">
         <div class="search-box">
           <input
@@ -41,7 +51,7 @@
         </div>
       </div>
 
-      <!-- Messages -->
+      <!-- Messages (inchangé) -->
       <div class="alert alert-success" *ngIf="success">
         ✅ {{ success }}
       </div>
@@ -49,28 +59,28 @@
         ❌ {{ error }}
       </div>
 
-      <!-- Loading -->
+      <!-- Loading (inchangé) -->
       <div class="loading-state" *ngIf="loading">
         <div class="spinner"></div>
         <p>Loading services...</p>
       </div>
 
-      <!-- Empty State -->
+      <!-- Empty State (inchangé) -->
       <div class="empty-state" *ngIf="!loading && filtered.length === 0">
         <div class="empty-icon">{{ activeTab === 'collaboration' ? '🤝' : '📈' }}</div>
         <h3>No {{ activeTab }} services available</h3>
         <p>Check back later for new opportunities</p>
       </div>
 
-      <!-- Services Grid -->
+      <!-- Services Grid (inchangé) -->
       <div class="services-grid" *ngIf="!loading && filtered.length > 0">
         <!-- Collaboration Card -->
         <ng-container *ngIf="activeTab === 'collaboration'">
           <div class="service-card collaboration-card" *ngFor="let s of filtered">
             <div class="card-header">
               <h3>{{ s.name }}</h3>
-              <button 
-                class="favorite-btn" 
+              <button
+                class="favorite-btn"
                 [class.is-favorite]="s.isFavorite"
                 (click)="toggleFavorite(s)"
                 [disabled]="s.favoriteLoading"
@@ -92,8 +102,8 @@
           <div class="service-card investment-card" *ngFor="let s of filtered">
             <div class="card-header">
               <h3>{{ s.title || s.name }}</h3>
-              <button 
-                class="favorite-btn" 
+              <button
+                class="favorite-btn"
                 [class.is-favorite]="s.isFavorite"
                 (click)="toggleFavorite(s)"
                 [disabled]="s.favoriteLoading"
@@ -110,6 +120,7 @@
           </div>
         </ng-container>
       </div>
+
     </div>
   </div>
 </div>

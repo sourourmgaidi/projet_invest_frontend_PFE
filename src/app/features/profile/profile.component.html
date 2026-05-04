@@ -682,29 +682,39 @@
               />
             </div>
 
-            <div class="form-group">
-              <label for="businessRegNumber">Business Registration Number</label>
-              <input
-                type="text"
-                id="businessRegNumber"
-                [(ngModel)]="editData.businessRegistrationNumber"
-                name="businessRegistrationNumber"
-                class="form-control"
-                placeholder="RC12345"
-              />
-            </div>
+            <!-- Business Registration Number -->
+<div class="form-group">
+  <label for="businessRegNumber">Business Registration Number (Optional)</label>
+  <input
+    type="text"
+    id="businessRegNumber"
+    [(ngModel)]="editData.businessRegistrationNumber"
+    name="businessRegistrationNumber"
+    class="form-control"
+    placeholder="RC12345"
+    (blur)="onBusinessRegBlur()"
+    [class.is-invalid]="businessRegError"
+  />
+  <div class="field-error" *ngIf="businessRegError">{{ businessRegError }}</div>
+  <small class="form-hint">Uppercase letters, numbers, hyphens only (3-30 characters)</small>
+</div>
 
-            <div class="form-group">
-              <label for="taxNumber">Professional Tax Number</label>
-              <input
-                type="text"
-                id="taxNumber"
-                [(ngModel)]="editData.professionalTaxNumber"
-                name="professionalTaxNumber"
-                class="form-control"
-                placeholder="TP67890"
-              />
-            </div>
+<!-- Professional Tax Number -->
+<div class="form-group">
+  <label for="taxNumber">Professional Tax Number (Optional)</label>
+  <input
+    type="text"
+    id="taxNumber"
+    [(ngModel)]="editData.professionalTaxNumber"
+    name="professionalTaxNumber"
+    class="form-control"
+    placeholder="TP67890"
+    (blur)="onTaxNumberBlur()"
+    [class.is-invalid]="taxNumberError"
+  />
+  <div class="field-error" *ngIf="taxNumberError">{{ taxNumberError }}</div>
+  <small class="form-hint">Uppercase letters, numbers, hyphens only (5-25 characters)</small>
+</div>
 
             <div class="form-group">
               <label for="website">Website</label>
@@ -732,68 +742,92 @@
           </ng-container>
 
           <!-- INTERNATIONAL COMPANY -->
-          <ng-container *ngIf="userRole === Role.INTERNATIONAL_COMPANY">
-            <div class="form-group">
-              <label for="companyName">Company Name</label>
-              <input
-                type="text"
-                id="companyName"
-                [(ngModel)]="editData.companyName"
-                name="companyName"
-                class="form-control"
-              />
-            </div>
+         <!-- INTERNATIONAL COMPANY -->
+<ng-container *ngIf="userRole === Role.INTERNATIONAL_COMPANY">
+  <div class="form-group">
+    <label for="companyName">Company Name</label>
+    <input
+      type="text"
+      id="companyName"
+      [(ngModel)]="editData.companyName"
+      name="companyName"
+      class="form-control"
+    />
+  </div>
 
-            <div class="form-group">
-              <label for="originCountryInt">Country of Origin</label>
-              <select
-                id="originCountryInt"
-                [(ngModel)]="editData.originCountry"
-                name="originCountry"
-                class="form-control"
-              >
-                <option value="">Select country</option>
-                <option *ngFor="let country of countries" [value]="country.name">
-                  {{ country.flag }} {{ country.name }}
-                </option>
-              </select>
-            </div>
+  <div class="form-group">
+    <label for="originCountryInt">Country of Origin</label>
+    <select
+      id="originCountryInt"
+      [(ngModel)]="editData.originCountry"
+      name="originCountry"
+      class="form-control"
+    >
+      <option value="">Select country</option>
+      <option *ngFor="let country of countries" [value]="country.name">
+        {{ country.flag }} {{ country.name }}
+      </option>
+    </select>
+  </div>
 
-            <div class="form-group">
-              <label for="siret">SIRET Number</label>
-              <input
-                type="text"
-                id="siret"
-                [(ngModel)]="editData.siret"
-                name="siret"
-                class="form-control"
-              />
-            </div>
+  <!-- ✅ AJOUTER LE CHAMP ACTIVITY SECTOR -->
+  <div class="form-group">
+    <label for="activitySectorInt">Activity Sector</label>
+    <select
+      id="activitySectorInt"
+      [(ngModel)]="editData.activitySector"
+      name="activitySector"
+      class="form-control"
+    >
+      <option value="">Select activity sector</option>
+      <optgroup *ngFor="let category of getActivityCategories()" [label]="category">
+        <option *ngFor="let sector of getSectorsByCategory(category)" [value]="sector.value">
+          {{ sector.label }}
+        </option>
+      </optgroup>
+    </select>
+  </div>
 
-            <div class="form-group">
-              <label for="website">Website</label>
-              <input
-                type="url"
-                id="website"
-                [(ngModel)]="editData.website"
-                name="website"
-                placeholder="https://..."
-                class="form-control"
-              />
-            </div>
+  <div class="form-group">
+    <label for="siret">SIRET Number</label>
+    <input
+      type="text"
+      id="siret"
+      [(ngModel)]="editData.siret"
+      name="siret"
+      class="form-control"
+      placeholder="12345678901234"
+      (blur)="onSiretBlur()"
+      [class.is-invalid]="siretError"
+    />
+    <div class="field-error" *ngIf="siretError">{{ siretError }}</div>
+    <small class="form-hint">SIRET number must be exactly 14 digits (optional)</small>
+  </div>
 
-            <div class="form-group">
-              <label for="linkedin">LinkedIn Profile</label>
-              <input
-                type="url"
-                id="linkedin"
-                [(ngModel)]="editData.linkedinProfile"
-                name="linkedinProfile"
-                placeholder="https://linkedin.com/company/..."
-                class="form-control"
-              />
-            </div>
-          </ng-container>
+  <div class="form-group">
+    <label for="website">Website</label>
+    <input
+      type="url"
+      id="website"
+      [(ngModel)]="editData.website"
+      name="website"
+      placeholder="https://..."
+      class="form-control"
+    />
+  </div>
+
+  <div class="form-group">
+    <label for="linkedin">LinkedIn Profile</label>
+    <input
+      type="url"
+      id="linkedin"
+      [(ngModel)]="editData.linkedinProfile"
+      name="linkedinProfile"
+      placeholder="https://linkedin.com/company/..."
+      class="form-control"
+    />
+  </div>
+</ng-container>
 
           <!-- TOURIST -->
           <ng-container *ngIf="userRole === Role.TOURIST">
@@ -838,7 +872,7 @@
     <!-- SECTION DANGER ZONE - SUPPRESSION DE COMPTE -->
     <div class="danger-zone">
       <div class="section-header danger-header">
-        <h3>⚠️ Danger Zone</h3>
+        <h3>Danger Zone</h3>
       </div>
       
       <div class="danger-content">
@@ -847,7 +881,6 @@
           <p>Once you delete your account, there is no going back. All your data will be permanently removed.</p>
         </div>
         <button class="btn-delete-account" (click)="openDeleteModal()">
-          <span class="btn-icon">🗑️</span>
           Delete my account
         </button>
       </div>

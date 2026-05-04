@@ -1,218 +1,174 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* =======================
+   🎨 THEME
+======================= */
+:root {
+  --primary: #2f4f7f;
+  --secondary: #f2f2f2;
+  --accent: #ffd700;
+}
+
+/* =======================
+   GLOBAL
+======================= */
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--secondary);
+  font-family: 'Inter', sans-serif;
+}
+
+/* =======================
+   LAYOUT
+======================= */
 .dashboard-container {
   display: flex;
   min-height: 100vh;
-  width: 100%;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: var(--secondary);
+  padding: 24px; /* espace global */
+  box-sizing: border-box;
 }
 
+/* =======================
+   NAVBAR
+======================= */
 app-navbar {
-  width: 280px;
-  flex-shrink: 0;
+  width: 260px;
+  min-width: 260px;
+
+  height: calc(100vh - 48px);
   position: sticky;
-  top: 0;
-  height: 100vh;
-  z-index: 100;
+  top: 24px;
+
+  border-radius: 20px;
+  overflow: hidden;
+
+  margin-right: 24px; /* 👈 espace FORCÉ */
 }
 
+/* =======================
+   CONTENT
+======================= */
 .dashboard-content {
   flex: 1;
-  min-height: 100vh;
+
   padding: 2rem;
-  animation: fadeIn 0.6s ease;
+
+  max-width: 1400px;
+  margin: 0 auto;
+
+  /* 👇 FIX PRINCIPAL */
+  margin-left: 0;
+  margin-top: 90px;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* =======================
+   HEADER (CADRE)
+======================= */
+.dashboard-content > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 2rem;
+
+  padding: 25px 30px;
+
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+
+  border-radius: 25px;
+
+  border: 1px solid rgba(255, 215, 0, 0.4);
+
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+
+  /* 👇 SUPER IMPORTANT */
+  margin-left: 0;
 }
 
+/* =======================
+   TITLE
+======================= */
 .dashboard-content h1 {
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   font-weight: 700;
-  color: #0f172a;
-  margin: 0 0 0.5rem;
-  letter-spacing: -0.02em;
+  color: var(--primary);
+  margin: 0;
 }
 
 .dashboard-content h1::after {
   content: '';
   display: block;
-  width: 80px;
+  width: 70px;
   height: 4px;
-  background: linear-gradient(90deg, #2563eb, #7c3aed);
-  margin-top: 0.5rem;
-  border-radius: 2px;
+  background: var(--accent);
+  margin-top: 8px;
+  border-radius: 999px;
 }
 
 .dashboard-content p {
-  color: #475569;
-  font-size: 1.1rem;
-  margin-bottom: 2rem;
+  color: #64748b;
 }
 
-/* Stats Cards */
+/* =======================
+   GRID
+======================= */
 .stats-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1.5rem;
-  margin-top: 2rem;
 }
 
+/* =======================
+   CARDS
+======================= */
 .stat-card {
-  background: white;
-  border-radius: 20px;
-  padding: 2rem 1.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  border: 1px solid #e2e8f0;
-  position: relative;
-  overflow: hidden;
-}
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
 
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: linear-gradient(180deg, #2563eb, #7c3aed);
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  border-radius: 25px;
+  padding: 1.5rem;
+
+  border: 1px solid rgba(47,79,127,0.1);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+
+  text-decoration: none;
+  color: inherit;
+
+  transition: all 0.3s ease;
 }
 
 .stat-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 30px rgba(37, 99, 235, 0.15);
-  border-color: transparent;
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(47,79,127,0.15);
 }
 
-.stat-card:hover::before {
-  opacity: 1;
-}
-
+/* TEXT */
 .stat-card h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 0.95rem;
   color: #64748b;
-  margin-bottom: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  margin-bottom: 10px;
 }
 
-.stat-number {
-  font-size: 3rem;
-  font-weight: 700;
-  color: #0f172a;
-  line-height: 1.2;
-  margin: 0;
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.stat-number,
+.stat-value {
+  font-size: 2.2rem;
+  font-weight: bold;
+  color: var(--primary);
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .dashboard-content h1 {
-    font-size: 2rem;
-  }
-
-  .stats-cards {
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1rem;
-  }
+.stat-trend {
+  font-size: 0.85rem;
+  color: #94a3b8;
 }
 
-@media (max-width: 768px) {
-  .dashboard-container {
-    flex-direction: column;
-  }
-
-  app-navbar {
-    width: 100%;
-    height: auto;
-    position: relative;
-  }
-
-  .dashboard-content {
-    padding: 1.5rem;
-  }
-
-  .dashboard-content h1 {
-    font-size: 1.75rem;
-  }
-
-  .stats-cards {
-    grid-template-columns: 1fr;
-  }
-
-  .stat-card {
-    padding: 1.5rem;
-  }
-
-  .stat-number {
-    font-size: 2.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .dashboard-content {
-    padding: 1rem;
-  }
-
-  .dashboard-content h1 {
-    font-size: 1.5rem;
-  }
-
-  .stat-card {
-    padding: 1.25rem;
-  }
-
-  .stat-number {
-    font-size: 2rem;
-  }
-}
-
-/* Animation pour les cartes */
-.stat-card {
-  animation: cardAppear 0.5s ease;
-  animation-fill-mode: both;
-}
-
-.stat-card:nth-child(1) {
-  animation-delay: 0.1s;
-}
-
-.stat-card:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.stat-card:nth-child(3) {
-  animation-delay: 0.3s;
-}
-
-@keyframes cardAppear {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-/* Style spécial pour la carte des favoris */
+/* =======================
+   FAVORITES
+======================= */
 a.stat-card[routerLink="/touriste/favoris"]:hover {
-  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  background: rgba(255, 230, 230, 0.9);
   border-color: #ef4444;
 }
 
@@ -222,5 +178,28 @@ a.stat-card[routerLink="/touriste/favoris"] h3 {
 
 a.stat-card[routerLink="/touriste/favoris"] .stat-number {
   color: #dc2626;
-  font-size: 2rem;
+}
+
+/* =======================
+   RESPONSIVE
+======================= */
+@media (max-width: 768px) {
+  .dashboard-container {
+    flex-direction: column;
+    padding: 12px;
+  }
+
+  app-navbar {
+    width: 100%;
+    height: auto;
+    margin-bottom: 15px;
+  }
+
+  .dashboard-content {
+    padding: 1.5rem;
+  }
+
+  .stats-cards {
+    grid-template-columns: 1fr;
+  }
 }

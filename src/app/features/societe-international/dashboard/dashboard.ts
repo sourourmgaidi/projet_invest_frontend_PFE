@@ -1,3 +1,4 @@
+// dashboard.ts (societe-international)
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
@@ -5,13 +6,13 @@ import { NavbarComponent } from '../../../shared/navbar/navbar';
 import { NotificationBellComponent } from '../../../shared/notification-bell/notification-bell.component';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MessagerieService } from '../../../core/services/messagerie.service';
-import { AcquisitionService } from '../../../core/services/acquisition.service'; // ✅ Ajout
-import { ChatbotWidgetComponent } from "../../../shared/Agents/chatbot-widget.component"; // ✅ NOUVEL IMPORT
+import { AcquisitionService, ServiceAcquisition } from '../../../core/services/acquisition.service';
+import { ChatbotWidgetComponent } from "../../../shared/Agents/chatbot-widget.component";
 
 @Component({
   selector: 'app-international-company-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, NavbarComponent, NotificationBellComponent,ChatbotWidgetComponent],
+  imports: [CommonModule, RouterModule, NavbarComponent, NotificationBellComponent, ChatbotWidgetComponent],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css']
 })
@@ -19,21 +20,25 @@ export class DashboardComponent implements OnInit {
   collaborationCount = 0;
   investmentCount = 0;
   unreadCount = 0;
-  
+
   // Compteurs pour les favoris
   investmentFavCount = 0;
   collaborationFavCount = 0;
 
-  // ✅ NOUVEAUX COMPTEURS
+  // ✅ COMPTEURS INVESTMENT
   pendingRequestsCount = 0;
   takenServicesCount = 0;
+  pendingValidationCount = 0;
+
+  // ✅ COMPTEUR COLLABORATION
+  myCollaborationsCount = 0;
 
   private currentUserId: number | null = null;
 
   private http = inject(HttpClient);
   private messagerieService = inject(MessagerieService);
   private router = inject(Router);
-  private acquisitionService = inject(AcquisitionService); // ✅ Injection
+  private acquisitionService = inject(AcquisitionService);
 
   private getHeaders(): HttpHeaders {
     const token = localStorage.getItem('auth_token') || '';
@@ -54,9 +59,9 @@ export class DashboardComponent implements OnInit {
     return new Promise((resolve) => {
       const token = localStorage.getItem('auth_token');
       if (!token) { resolve(); return; }
-      
+
       this.http.get<any>('http://localhost:8089/api/auth/me', { headers: this.getHeaders() }).subscribe({
-        next: (profile) => { 
+        next: (profile) => {
           this.currentUserId = profile.id ?? profile.userId ?? null;
           resolve();
         },
@@ -70,99 +75,112 @@ export class DashboardComponent implements OnInit {
     this.loadStats();
     this.loadUnreadCount();
     this.loadFavoritesCount();
-    this.loadRequestsCount(); // ✅ Charger les compteurs de demandes
+    this.loadRequestsCount();
   }
 
   loadStats(): void {
-    // Compter les services de collaboration
     this.http.get<any[]>('http://localhost:8089/api/international-companies/services/collaboration',
       { headers: this.getHeaders() }
     ).subscribe({
-      next: (data) => this.collaborationCount = data.length,
+      next: (data: any[]) => this.collaborationCount = data.length,
       error: () => this.collaborationCount = 0
     });
 
-    // Compter les services d'investissement
     this.http.get<any[]>('http://localhost:8089/api/international-companies/services/investment',
       { headers: this.getHeaders() }
     ).subscribe({
-      next: (data) => this.investmentCount = data.length,
+      next: (data: any[]) => this.investmentCount = data.length,
       error: () => this.investmentCount = 0
     });
   }
 
   loadUnreadCount(): void {
     this.messagerieService.getUnreadMessages().subscribe({
-      next: (res) => this.unreadCount = res.unreadCount,
+      next: (res: any) => this.unreadCount = res.unreadCount,
       error: () => this.unreadCount = 0
     });
   }
 
-  // ✅ Méthode pour charger les compteurs de demandes
- loadRequestsCount(): void {
-  this.acquisitionService.getMyServices().subscribe({
-    next: (data) => {
-      this.pendingRequestsCount = data.filter(a =>
-        a.paymentStatus === 'PENDING_PARTNER_APPROVAL' ||
-        a.paymentStatus === 'AWAITING_PAYMENT'
-      ).length;
+  loadRequestsCount(): void {
+    this.acquisitionService.getMyAllAcquisitions().subscribe({
+      next: (data: ServiceAcquisition[]) => {
+        const investmentOnly    = data.filter((a: ServiceAcquisition) => a.serviceType === 'INVESTMENT');
+        const collaborationOnly = data.filter((a: ServiceAcquisition) => a.serviceType === 'COLLABORATION'); // ✅ NOUVEAU
 
-      this.takenServicesCount = data.filter(a =>
-        a.paymentStatus === 'COMPLETED'
-      ).length;
+        // PENDING_PARTNER_APPROVAL + AWAITING_VALIDATION
+        this.pendingRequestsCount = investmentOnly.filter((a: ServiceAcquisition) =>
+          a.paymentStatus === 'PENDING_PARTNER_APPROVAL' ||
+          a.paymentStatus === 'AWAITING_VALIDATION'
+        ).length;
 
-      console.log('✅ Requests count loaded:', {
-        pending: this.pendingRequestsCount,
-        taken: this.takenServicesCount
-      });
-    },
-    error: (err) => {
-      console.error('❌ Error loading requests count:', err);
-      this.pendingRequestsCount = 0;
-      this.takenServicesCount = 0;
-    }
-  });
-}
+        // Services COMPLETED
+       this.takenServicesCount = investmentOnly.filter((a: ServiceAcquisition) =>
+  a.paymentStatus === 'COMPLETED' ||
+  a.paymentStatus === 'PENDING_PARTNER_APPROVAL' ||
+  a.paymentStatus === 'RESERVED' ||
+  a.paymentStatus === 'AWAITING_VALIDATION'
+).length;
+        // En attente de validation uniquement
+        this.pendingValidationCount = investmentOnly.filter((a: ServiceAcquisition) =>
+          a.paymentStatus === 'AWAITING_VALIDATION'
+        ).length;
+
+        // ✅ NOUVEAU : total collaborations
+        this.myCollaborationsCount = collaborationOnly.length;
+
+        console.log('✅ Requests count loaded:', {
+          pending: this.pendingRequestsCount,
+          taken: this.takenServicesCount,
+          pendingValidation: this.pendingValidationCount,
+          collaborations: this.myCollaborationsCount
+        });
+      },
+      error: (err: any) => {
+        console.error('❌ Error loading requests count:', err);
+        this.pendingRequestsCount  = 0;
+        this.takenServicesCount    = 0;
+        this.pendingValidationCount = 0;
+        this.myCollaborationsCount = 0; // ✅ NOUVEAU
+      }
+    });
+  }
 
   loadFavoritesCount(): void {
-    // Compter les favoris investment
     this.http.get<any>('http://localhost:8089/api/international-companies/favorites/count',
       { headers: this.getHeaders() }
     ).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         this.investmentFavCount = res.count || 0;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('❌ Error loading investment favorites count:', err);
         this.investmentFavCount = 0;
       }
     });
 
-    // Compter les favoris collaboration
     this.http.get<any>('http://localhost:8089/api/international-companies/collaboration-favorites/count',
       { headers: this.getHeaders() }
     ).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         this.collaborationFavCount = res.count || 0;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('❌ Error loading collaboration favorites count:', err);
         this.collaborationFavCount = 0;
       }
     });
   }
 
-  // ✅ NAVIGATION VERS LES DEMANDES
+  // ── NAVIGATION ────────────────────────────────────
+
   navigateToMyRequests(): void {
     this.router.navigate(['/societe-international/my-requests']);
   }
 
-  // ✅ NAVIGATION VERS LES SERVICES ACQUIS
   navigateToMyTakenServices(): void {
     this.router.navigate(['/societe-international/my-taken-services']);
   }
 
-  // ✅ Navigation vers les services collaboration
   navigateToCollaborationServices(): void {
     this.router.navigate(['/societe-international/collaboration-services']);
   }
@@ -171,22 +189,23 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/societe-international/services']);
   }
 
-  // ✅ Navigation vers les favoris investment
   navigateToInvestmentFavorites(): void {
     this.router.navigate(['/societe-international/favorites']);
   }
 
-  // ✅ Navigation vers les favoris collaboration
   navigateToCollaborationFavorites(): void {
     this.router.navigate(['/societe-international/favorites-collaboration']);
   }
 
-  // ✅ Navigation vers la messagerie
   navigateToMessages(): void {
     this.router.navigate(['/societe-international/messagerie']);
   }
 
-  // ✅ Rafraîchir tous les compteurs
+  // ✅ NOUVEAU
+  navigateToMyCollaborations(): void {
+    this.router.navigate(['/societe-international/my-collaborations']);
+  }
+
   refreshCounts(): void {
     this.loadStats();
     this.loadUnreadCount();

@@ -424,4 +424,73 @@ confirmPayment(paymentId: string, transactionId?: string): Observable<{
     paymentId: string;
   }>(url, { headers: this.getHeaders() });
 }
+// ========================================
+// ABONNEMENT MENSUEL - KONNECT
+// ========================================
+
+/**
+ * 1. Vérifier l'abonnement actif
+ */
+checkSubscription(): Observable<{
+  hasActiveSubscription: boolean;
+  expiresAt?: string;
+  daysRemaining?: number;
+  requiresPayment?: boolean;
+  amount?: number;
+  currency?: string;
+}> {
+  return this.http.get<any>(
+    `${this.apiUrl}/subscription/check`,
+    { headers: this.getHeaders() }
+  );
+}
+
+/**
+ * 2. Initier le paiement Konnect
+ */
+initiateSubscription(): Observable<{
+  paymentId: string;
+  payUrl: string;
+  paymentRef: string;
+  amount: number;
+  description: string;
+}> {
+  return this.http.post<any>(
+    `${this.apiUrl}/subscription/subscribe`,
+    {},
+    { headers: this.getHeaders() }
+  );
+}
+
+/**
+ * 3. Confirmer le paiement après callback Konnect
+ */
+confirmSubscriptionPayment(
+  paymentId: string,
+  paymentRef: string,
+  transactionId?: string
+): Observable<{
+  success: boolean;
+  subscriberEmail: string;
+  expiresAt: string;
+  daysRemaining: number;
+  message: string;
+}> {
+  let url = `${this.apiUrl}/subscription/payment-success?paymentId=${paymentId}&paymentRef=${paymentRef}`;
+  if (transactionId) {
+    url += `&transaction_id=${transactionId}`;
+  }
+  return this.http.get<any>(url, { headers: this.getHeaders() });
+}
+
+/**
+ * 4. Callback si paiement échoué
+ */
+subscriptionPaymentFailed(paymentId?: string): Observable<any> {
+  let url = `${this.apiUrl}/subscription/payment-failed`;
+  if (paymentId) {
+    url += `?paymentId=${paymentId}`;
+  }
+  return this.http.get<any>(url, { headers: this.getHeaders() });
+}
 }

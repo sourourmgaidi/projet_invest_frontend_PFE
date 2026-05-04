@@ -43,6 +43,7 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy {
   maxConcurrentLoads = 5;
   imageQueue: { doc: any; docId: string; serviceId: number }[] = [];
   isLoading = false;
+   activeTab: string = 'collaboration';
 
   private apiBase = 'http://localhost:8089/api/admin/services';
   private apiBaseInvestment = 'http://localhost:8089/api/investment-services';

@@ -1,67 +1,59 @@
-<nav class="vertical-navbar" *ngIf="authService.isLoggedIn()">
-  
-  <!-- Brand / Logo -->
-  <div class="nav-brand" (click)="goToProfile()">
-    <span class="brand-name">Invest<strong>Platform</strong></span>
+<nav class="horizontal-navbar" *ngIf="authService.isLoggedIn()">
+
+  <!-- LEFT ICON -->
+  <div class="nav-left">
+    <div class="circle-icon"></div>
   </div>
-  
-  <!-- Navigation Links -->
-<div class="nav-links">
-  <ng-container *ngFor="let link of navLinks">
-    <a [routerLink]="link.route"
-       routerLinkActive="active"
-       class="nav-link"
-       [class.has-unread]="link.route.includes('messagerie') && messagerieCount > 0">
-      {{ link.label }}
-      <span class="unread-badge" 
-            *ngIf="link.route.includes('messagerie') && messagerieCount > 0">
-        {{ messagerieCount }}
-      </span>
-    </a>
-  </ng-container>
-</div>
-  
-  <!-- AJOUT: Messenger Icon -->
-  <div class="messenger-section">
-    <a [routerLink]="['/chat']" 
-       routerLinkActive="active"
-       class="messenger-link"
-       [class.has-unread]="unreadCount > 0">
-      <span class="messenger-icon">💬</span>
-      <span class="messenger-label">Messenger</span>
-      <span class="unread-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
-    </a>
+
+  <!-- CENTER LINKS -->
+  <div class="nav-center">
+    <ng-container *ngFor="let link of navLinks">
+      <a [routerLink]="link.route"
+         routerLinkActive="active"
+         class="nav-link"
+         [class.has-unread]="link.route.includes('messagerie') && messagerieCount > 0">
+
+        {{ link.route.includes('messagerie') ? 'Talk with Local Partner' : link.label }}
+
+        <span class="dot"
+              *ngIf="link.route.includes('messagerie') && messagerieCount > 0">
+        </span>
+      </a>
+    </ng-container>
   </div>
-  
-  <!-- User Profile Section (en bas) -->
-  <div class="nav-footer">
+
+  <!-- RIGHT -->
+  <div class="nav-right">
+
+    <!-- Talk to Admin -->
+    <a [routerLink]="['/chat']"
+       routerLinkActive="active"
+       class="nav-link">
+
+      Talk to Admin
+
+      <span class="dot" *ngIf="unreadCount > 0"></span>
+    </a>
+
+    <!-- PROFILE -->
     <div class="profile-section" (click)="goToProfile()">
       <div class="avatar-container">
-        <!-- Profile photo if available -->
-        <img *ngIf="getProfilePhoto()" 
-             [src]="getProfilePhoto()" 
+
+        <img *ngIf="getProfilePhoto()"
+             [src]="getProfilePhoto()"
              (error)="handleImageError($event)"
-             alt="Profile photo" 
-             class="avatar-image"
-             crossorigin="anonymous">
-        
-        <!-- Fallback with initials -->
-        <div class="avatar-fallback" 
-             [class.hidden]="getProfilePhoto()">
+             class="avatar-image">
+
+        <div class="avatar-fallback" [class.hidden]="getProfilePhoto()">
           {{ userInitials }}
         </div>
-      </div>
-      <div class="user-info">
-        <span class="user-name">{{ getDisplayName() }}</span>
-        <span class="user-email">{{ currentUser?.email }}</span>
-        <span class="user-role">{{ roleLabel }}</span>
+
       </div>
     </div>
-    
-    <button class="btn-logout" (click)="logout()">
-      Logout
-    </button>
-    
+
+    <!-- LOGOUT -->
+    <button class="btn-logout" (click)="logout()">Logout</button>
+
   </div>
 
 </nav>

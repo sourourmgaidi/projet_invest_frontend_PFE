@@ -48,6 +48,44 @@
         </div>
       </div>
 
+      <!-- ================================================ -->
+      <!-- ✅ TABS MENU                                      -->
+      <!-- ================================================ -->
+      <div class="tabs-container" *ngIf="!loading && totalPending > 0">
+        <div class="tabs-header">
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab === 'collaboration'"
+            (click)="activeTab = 'collaboration'">
+            <span class="tab-icon">🤝</span>
+            Collaboration
+            <span class="tab-count" *ngIf="pendingServices.collaboration.length > 0">
+              {{ pendingServices.collaboration.length }}
+            </span>
+          </button>
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab === 'investment'"
+            (click)="activeTab = 'investment'">
+            <span class="tab-icon">📈</span>
+            Investment
+            <span class="tab-count" *ngIf="pendingServices.investment.length > 0">
+              {{ pendingServices.investment.length }}
+            </span>
+          </button>
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab === 'tourist'"
+            (click)="activeTab = 'tourist'">
+            <span class="tab-icon">🌍</span>
+            Tourist
+            <span class="tab-count" *ngIf="pendingServices.tourist.length > 0">
+              {{ pendingServices.tourist.length }}
+            </span>
+          </button>
+        </div>
+      </div>
+
       <!-- Loading -->
       <div class="loading-state" *ngIf="loading">
         <div class="spinner"></div>
@@ -61,485 +99,425 @@
         <p>No services are waiting for review.</p>
       </div>
 
-      <!-- Services Sections -->
+      <!-- Services Sections avec TABS -->
       <div class="services-wrapper" *ngIf="!loading && totalPending > 0">
 
         <!-- ================================================ -->
-        <!-- COLLABORATION SERVICES - TOUS LES DÉTAILS        -->
+        <!-- ONGLET COLLABORATION                              -->
         <!-- ================================================ -->
-        <div class="service-section" *ngIf="pendingServices.collaboration.length > 0">
-          <div class="section-header collab-header">
-            <div class="section-title">
-              <span class="section-icon">🤝</span>
-              <h2>Collaboration Services</h2>
-              <span class="count-badge">{{ pendingServices.collaboration.length }}</span>
+        <div class="tab-content" *ngIf="activeTab === 'collaboration'">
+          <div class="service-section" *ngIf="pendingServices.collaboration.length > 0">
+            <div class="cards-grid">
+              <div class="service-card" *ngFor="let svc of pendingServices.collaboration">
+                <div class="card-top collab-accent">
+                  <div class="service-type-tag">Collaboration</div>
+                  <div class="service-date">{{ formatDate(svc.createdAt || svc.submittedAt) }}</div>
+                </div>
+                <div class="card-body">
+                  <h3 class="service-name">{{ svc.name || 'Untitled Service' }}</h3>
+                  <p class="service-desc">{{ svc.description || '—' }}</p>
+                  
+                  <!-- Provider Info -->
+                  <div class="details-section">
+                    <h4 class="details-title">👤 Provider Information</h4>
+                    <div class="details-grid">
+                      <div class="detail-item">
+                        <span class="detail-label">Name:</span>
+                        <span class="detail-value">{{ svc.provider?.firstName }} {{ svc.provider?.lastName }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Email:</span>
+                        <span class="detail-value">{{ svc.provider?.email || '—' }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Phone:</span>
+                        <span class="detail-value">{{ svc.provider?.phone || '—' }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Basic Info -->
+                  <div class="details-section">
+                    <h4 class="details-title">📋 Basic Information</h4>
+                    <div class="details-grid">
+                      <div class="detail-item">
+                        <span class="detail-label">Price:</span>
+                        <span class="detail-value">{{ svc.price | number:'1.0-0' }} TND</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Region:</span>
+                        <span class="detail-value">{{ svc.region?.name || '—' }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Availability:</span>
+                        <span class="detail-value">{{ svc.availability || '—' }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Contact Person:</span>
+                        <span class="detail-value">{{ svc.contactPerson || '—' }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Collaboration Details -->
+                  <div class="details-section">
+                    <h4 class="details-title">🤝 Collaboration Details</h4>
+                    <div class="details-grid">
+                      <div class="detail-item" *ngIf="svc.collaborationType">
+                        <span class="detail-label">Type:</span>
+                        <span class="detail-value">{{ svc.collaborationType }}</span>
+                      </div>
+                      <div class="detail-item" *ngIf="svc.activityDomain">
+                        <span class="detail-label">Domain:</span>
+                        <span class="detail-value">{{ svc.activityDomain }}</span>
+                      </div>
+                      <div class="detail-item" *ngIf="svc.collaborationDuration">
+                        <span class="detail-label">Duration:</span>
+                        <span class="detail-value">{{ svc.collaborationDuration }}</span>
+                      </div>
+                      <div class="detail-item" *ngIf="svc.address">
+                        <span class="detail-label">Address:</span>
+                        <span class="detail-value">{{ svc.address }}</span>
+                      </div>
+                      <div class="detail-item full-width" *ngIf="svc.expectedBenefits">
+                        <span class="detail-label">Expected Benefits:</span>
+                        <span class="detail-value">{{ svc.expectedBenefits }}</span>
+                      </div>
+                      <div class="detail-item full-width" *ngIf="svc.requiredSkills?.length">
+                        <span class="detail-label">Required Skills:</span>
+                        <div class="tags-container">
+                          <span class="tag" *ngFor="let skill of svc.requiredSkills">{{ skill }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Documents -->
+                  <div class="details-section" *ngIf="svc.documents && svc.documents.length > 0">
+                    <h4 class="details-title">📎 Documents & Images</h4>
+                    <div class="documents-grid">
+                      <div *ngFor="let doc of svc.documents" class="document-item">
+                        <div *ngIf="doc.fileType?.startsWith('image/')" class="image-container" (click)="openImage(doc)">
+                          <img [src]="getImageUrl(doc)" class="document-thumbnail" alt="{{ doc.fileName }}" loading="lazy">
+                          <div class="image-overlay"><span class="zoom-icon">🔍</span></div>
+                          <span class="primary-badge-small" *ngIf="doc.isPrimary">⭐</span>
+                        </div>
+                        <div *ngIf="doc.fileType === 'application/pdf'" class="pdf-container" (click)="downloadFile(doc)">
+                          <span class="document-icon">📄</span>
+                          <div class="file-overlay"><span class="download-icon">📥</span></div>
+                        </div>
+                        <div *ngIf="!doc.fileType?.startsWith('image/') && doc.fileType !== 'application/pdf'" 
+                             class="file-container" (click)="downloadFile(doc)">
+                          <span class="document-icon">📎</span>
+                          <div class="file-overlay"><span class="download-icon">📥</span></div>
+                        </div>
+                        <div class="document-info">
+                          <span class="document-name" title="{{ doc.fileName }}">{{ doc.fileName }}</span>
+                          <span class="document-size" *ngIf="doc.fileSize">{{ formatFileSize(doc.fileSize) }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <button class="btn-reject" (click)="rejectService('collaboration', svc.id)" [disabled]="processingId === svc.id">
+                    <span *ngIf="processingId !== svc.id">✕ Reject</span>
+                    <span *ngIf="processingId === svc.id">...</span>
+                  </button>
+                  <button class="btn-approve" (click)="approveService('collaboration', svc.id)" [disabled]="processingId === svc.id">
+                    <span *ngIf="processingId !== svc.id"> Approve</span>
+                    <span *ngIf="processingId === svc.id">...</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="cards-grid">
-            <div class="service-card" *ngFor="let svc of pendingServices.collaboration">
-              <div class="card-top collab-accent">
-                <div class="service-type-tag">Collaboration</div>
-                <div class="service-date">{{ formatDate(svc.createdAt || svc.submittedAt) }}</div>
-              </div>
-              <div class="card-body">
-                <h3 class="service-name">{{ svc.name || 'Untitled Service' }}</h3>
-                <p class="service-desc">{{ svc.description || '—' }}</p>
-                
-                <!-- Provider Info -->
-                <div class="details-section">
-                  <h4 class="details-title">👤 Provider Information</h4>
-                  <div class="details-grid">
-                    <div class="detail-item">
-                      <span class="detail-label">Name:</span>
-                      <span class="detail-value">{{ svc.provider?.firstName }} {{ svc.provider?.lastName }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Email:</span>
-                      <span class="detail-value">{{ svc.provider?.email || '—' }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Phone:</span>
-                      <span class="detail-value">{{ svc.provider?.phone || '—' }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Basic Info -->
-                <div class="details-section">
-                  <h4 class="details-title">📋 Basic Information</h4>
-                  <div class="details-grid">
-                    <div class="detail-item">
-                      <span class="detail-label">Price:</span>
-                      <span class="detail-value">{{ svc.price | number:'1.0-0' }} TND</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Region:</span>
-                      <span class="detail-value">{{ svc.region?.name || '—' }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Availability:</span>
-                      <span class="detail-value">{{ svc.availability || '—' }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Contact Person:</span>
-                      <span class="detail-value">{{ svc.contactPerson || '—' }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Collaboration Details -->
-                <div class="details-section">
-                  <h4 class="details-title">🤝 Collaboration Details</h4>
-                  <div class="details-grid">
-                    <div class="detail-item" *ngIf="svc.collaborationType">
-                      <span class="detail-label">Type:</span>
-                      <span class="detail-value">{{ svc.collaborationType }}</span>
-                    </div>
-                    <div class="detail-item" *ngIf="svc.activityDomain">
-                      <span class="detail-label">Domain:</span>
-                      <span class="detail-value">{{ svc.activityDomain }}</span>
-                    </div>
-                    <div class="detail-item" *ngIf="svc.collaborationDuration">
-                      <span class="detail-label">Duration:</span>
-                      <span class="detail-value">{{ svc.collaborationDuration }}</span>
-                    </div>
-                    <div class="detail-item" *ngIf="svc.address">
-                      <span class="detail-label">Address:</span>
-                      <span class="detail-value">{{ svc.address }}</span>
-                    </div>
-                    <div class="detail-item full-width" *ngIf="svc.expectedBenefits">
-                      <span class="detail-label">Expected Benefits:</span>
-                      <span class="detail-value">{{ svc.expectedBenefits }}</span>
-                    </div>
-                    <div class="detail-item full-width" *ngIf="svc.requiredSkills?.length">
-                      <span class="detail-label">Required Skills:</span>
-                      <div class="tags-container">
-                        <span class="tag" *ngFor="let skill of svc.requiredSkills">{{ skill }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- SECTION DOCUMENTS POUR COLLABORATION -->
-                <div class="details-section" *ngIf="svc.documents && svc.documents.length > 0">
-                  <h4 class="details-title">📎 Documents & Images</h4>
-                  <div class="documents-grid">
-                    <div *ngFor="let doc of svc.documents" class="document-item">
-                      
-                      <!-- Image -->
-                      <div *ngIf="doc.fileType?.startsWith('image/')" class="image-container" (click)="openImage(doc)">
-                        <img 
-                          [src]="getImageUrl(doc)" 
-                          class="document-thumbnail" 
-                          alt="{{ doc.fileName }}"
-                          loading="lazy"
-                        >
-                        <div class="image-overlay">
-                          <span class="zoom-icon">🔍</span>
-                        </div>
-                        <span class="primary-badge-small" *ngIf="doc.isPrimary">⭐</span>
-                      </div>
-                      
-                      <!-- PDF -->
-                      <div *ngIf="doc.fileType === 'application/pdf'" class="pdf-container" (click)="downloadFile(doc)">
-                        <span class="document-icon">📄</span>
-                        <div class="file-overlay">
-                          <span class="download-icon">📥</span>
-                        </div>
-                      </div>
-                      
-                      <!-- Autres fichiers -->
-                      <div *ngIf="!doc.fileType?.startsWith('image/') && doc.fileType !== 'application/pdf'" 
-                           class="file-container" (click)="downloadFile(doc)">
-                        <span class="document-icon">📎</span>
-                        <div class="file-overlay">
-                          <span class="download-icon">📥</span>
-                        </div>
-                      </div>
-                      
-                      <div class="document-info">
-                        <span class="document-name" title="{{ doc.fileName }}">{{ doc.fileName }}</span>
-                        <span class="document-size" *ngIf="doc.fileSize">{{ formatFileSize(doc.fileSize) }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-              <div class="card-actions">
-                <button class="btn-reject" (click)="rejectService('collaboration', svc.id)" [disabled]="processingId === svc.id">
-                  <span *ngIf="processingId !== svc.id">✕ Reject</span>
-                  <span *ngIf="processingId === svc.id">...</span>
-                </button>
-                <button class="btn-approve" (click)="approveService('collaboration', svc.id)" [disabled]="processingId === svc.id">
-                  <span *ngIf="processingId !== svc.id">✓ Approve</span>
-                  <span *ngIf="processingId === svc.id">...</span>
-                </button>
-              </div>
-            </div>
+          <div class="empty-tab" *ngIf="pendingServices.collaboration.length === 0">
+            <div class="empty-icon">🤝</div>
+            <p>No collaboration services pending</p>
           </div>
         </div>
 
         <!-- ================================================ -->
-        <!-- INVESTMENT SERVICES - TOUS LES DÉTAILS           -->
+        <!-- ONGLET INVESTMENT                                 -->
         <!-- ================================================ -->
-        <div class="service-section" *ngIf="pendingServices.investment.length > 0">
-          <div class="section-header invest-header">
-            <div class="section-title">
-              <span class="section-icon">📈</span>
-              <h2>Investment Services</h2>
-              <span class="count-badge">{{ pendingServices.investment.length }}</span>
+        <div class="tab-content" *ngIf="activeTab === 'investment'">
+          <div class="service-section" *ngIf="pendingServices.investment.length > 0">
+            <div class="cards-grid">
+              <div class="service-card" *ngFor="let svc of pendingServices.investment">
+                <div class="card-top invest-accent">
+                  <div class="service-type-tag">Investment</div>
+                  <div class="service-date">{{ formatDate(svc.createdAt || svc.submittedAt) }}</div>
+                </div>
+                <div class="card-body">
+                  <h3 class="service-name">{{ svc.name || svc.title || 'Untitled Service' }}</h3>
+                  <p class="service-desc">{{ svc.description || '—' }}</p>
+                  
+                  <!-- Provider Info -->
+                  <div class="details-section">
+                    <h4 class="details-title">👤 Provider Information</h4>
+                    <div class="details-grid">
+                      <div class="detail-item">
+                        <span class="detail-label">Name:</span>
+                        <span class="detail-value">{{ svc.provider?.firstName }} {{ svc.provider?.lastName }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Email:</span>
+                        <span class="detail-value">{{ svc.provider?.email || '—' }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Phone:</span>
+                        <span class="detail-value">{{ svc.provider?.phone || '—' }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Basic Info -->
+                  <div class="details-section">
+                    <h4 class="details-title">📋 Basic Information</h4>
+                    <div class="details-grid">
+                      <div class="detail-item">
+                        <span class="detail-label">Title:</span>
+                        <span class="detail-value">{{ svc.title || '—' }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Region:</span>
+                        <span class="detail-value">{{ svc.region?.name || '—' }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Zone:</span>
+                        <span class="detail-value">{{ svc.zone || '—' }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Availability:</span>
+                        <span class="detail-value">{{ svc.availability || '—' }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Contact Person:</span>
+                        <span class="detail-value">{{ svc.contactPerson || '—' }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Financial Details -->
+                  <div class="details-section">
+                    <h4 class="details-title">💰 Financial Details</h4>
+                    <div class="details-grid">
+                      <div class="detail-item" *ngIf="svc.totalAmount">
+                        <span class="detail-label">Total Amount:</span>
+                        <span class="detail-value">{{ svc.totalAmount | number:'1.0-0' }} TND</span>
+                      </div>
+                      <div class="detail-item" *ngIf="svc.minimumAmount">
+                        <span class="detail-label">Minimum Investment:</span>
+                        <span class="detail-value">{{ svc.minimumAmount | number:'1.0-0' }} TND</span>
+                      </div>
+                      <div class="detail-item" *ngIf="svc.deadlineDate">
+                        <span class="detail-label">Deadline:</span>
+                        <span class="detail-value">{{ svc.deadlineDate | date }}</span>
+                      </div>
+                      <div class="detail-item" *ngIf="svc.projectDuration">
+                        <span class="detail-label">Project Duration:</span>
+                        <span class="detail-value">{{ svc.projectDuration }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Sector Info -->
+                  <div class="details-section">
+                    <h4 class="details-title">🏭 Sector Information</h4>
+                    <div class="details-grid">
+                      <div class="detail-item" *ngIf="svc.economicSector?.name">
+                        <span class="detail-label">Economic Sector:</span>
+                        <span class="detail-value">{{ svc.economicSector.name }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Documents -->
+                  <div class="details-section" *ngIf="svc.documents && svc.documents.length > 0">
+                    <h4 class="details-title">📎 Documents & Images</h4>
+                    <div class="documents-grid">
+                      <div *ngFor="let doc of svc.documents" class="document-item">
+                        <div *ngIf="doc.fileType?.startsWith('image/')" class="image-container" (click)="openImage(doc)">
+                          <img [src]="getImageUrl(doc)" class="document-thumbnail" alt="{{ doc.fileName }}" loading="lazy">
+                          <div class="image-overlay"><span class="zoom-icon">🔍</span></div>
+                          <span class="primary-badge-small" *ngIf="doc.isPrimary">⭐</span>
+                        </div>
+                        <div *ngIf="doc.fileType === 'application/pdf'" class="pdf-container" (click)="downloadFile(doc)">
+                          <span class="document-icon">📄</span>
+                          <div class="file-overlay"><span class="download-icon">📥</span></div>
+                        </div>
+                        <div *ngIf="!doc.fileType?.startsWith('image/') && doc.fileType !== 'application/pdf'" 
+                             class="file-container" (click)="downloadFile(doc)">
+                          <span class="document-icon">📎</span>
+                          <div class="file-overlay"><span class="download-icon">📥</span></div>
+                        </div>
+                        <div class="document-info">
+                          <span class="document-name" title="{{ doc.fileName }}">{{ doc.fileName }}</span>
+                          <span class="document-size" *ngIf="doc.fileSize">{{ formatFileSize(doc.fileSize) }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <button class="btn-reject" (click)="rejectService('investment', svc.id)" [disabled]="processingId === svc.id">
+                    <span *ngIf="processingId !== svc.id"> Reject</span>
+                    <span *ngIf="processingId === svc.id">...</span>
+                  </button>
+                  <button class="btn-approve" (click)="approveService('investment', svc.id)" [disabled]="processingId === svc.id">
+                    <span *ngIf="processingId !== svc.id">✓ Approve</span>
+                    <span *ngIf="processingId === svc.id">...</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="cards-grid">
-            <div class="service-card" *ngFor="let svc of pendingServices.investment">
-              <div class="card-top invest-accent">
-                <div class="service-type-tag">Investment</div>
-                <div class="service-date">{{ formatDate(svc.createdAt || svc.submittedAt) }}</div>
-              </div>
-              <div class="card-body">
-                <h3 class="service-name">{{ svc.name || svc.title || 'Untitled Service' }}</h3>
-                <p class="service-desc">{{ svc.description || '—' }}</p>
-                
-                <!-- Provider Info -->
-                <div class="details-section">
-                  <h4 class="details-title">👤 Provider Information</h4>
-                  <div class="details-grid">
-                    <div class="detail-item">
-                      <span class="detail-label">Name:</span>
-                      <span class="detail-value">{{ svc.provider?.firstName }} {{ svc.provider?.lastName }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Email:</span>
-                      <span class="detail-value">{{ svc.provider?.email || '—' }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Phone:</span>
-                      <span class="detail-value">{{ svc.provider?.phone || '—' }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Basic Info -->
-                <div class="details-section">
-                  <h4 class="details-title">📋 Basic Information</h4>
-                  <div class="details-grid">
-                    <div class="detail-item">
-                      <span class="detail-label">Title:</span>
-                      <span class="detail-value">{{ svc.title || '—' }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Region:</span>
-                      <span class="detail-value">{{ svc.region?.name || '—' }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Zone:</span>
-                      <span class="detail-value">{{ svc.zone || '—' }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Availability:</span>
-                      <span class="detail-value">{{ svc.availability || '—' }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Contact Person:</span>
-                      <span class="detail-value">{{ svc.contactPerson || '—' }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Financial Details -->
-                <div class="details-section">
-                  <h4 class="details-title">💰 Financial Details</h4>
-                  <div class="details-grid">
-                    <div class="detail-item" *ngIf="svc.totalAmount">
-                      <span class="detail-label">Total Amount:</span>
-                      <span class="detail-value">{{ svc.totalAmount | number:'1.0-0' }} TND</span>
-                    </div>
-                    <div class="detail-item" *ngIf="svc.minimumAmount">
-                      <span class="detail-label">Minimum Investment:</span>
-                      <span class="detail-value">{{ svc.minimumAmount | number:'1.0-0' }} TND</span>
-                    </div>
-                    <div class="detail-item" *ngIf="svc.deadlineDate">
-                      <span class="detail-label">Deadline:</span>
-                      <span class="detail-value">{{ svc.deadlineDate | date }}</span>
-                    </div>
-                    <div class="detail-item" *ngIf="svc.projectDuration">
-                      <span class="detail-label">Project Duration:</span>
-                      <span class="detail-value">{{ svc.projectDuration }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Sector Info -->
-                <div class="details-section">
-                  <h4 class="details-title">🏭 Sector Information</h4>
-                  <div class="details-grid">
-                    <div class="detail-item" *ngIf="svc.economicSector?.name">
-                      <span class="detail-label">Economic Sector:</span>
-                      <span class="detail-value">{{ svc.economicSector.name }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- SECTION DOCUMENTS POUR INVESTMENT (CORRIGÉE) -->
-                <div class="details-section" *ngIf="svc.documents && svc.documents.length > 0">
-                  <h4 class="details-title">📎 Documents & Images</h4>
-                  <div class="documents-grid">
-                    <div *ngFor="let doc of svc.documents" class="document-item">
-                      
-                      <!-- Image -->
-                      <div *ngIf="doc.fileType?.startsWith('image/')" class="image-container" (click)="openImage(doc)">
-                        <img 
-                          [src]="getImageUrl(doc)" 
-                          class="document-thumbnail" 
-                          alt="{{ doc.fileName }}"
-                          loading="lazy"
-                        >
-                        <div class="image-overlay">
-                          <span class="zoom-icon">🔍</span>
-                        </div>
-                        <span class="primary-badge-small" *ngIf="doc.isPrimary">⭐</span>
-                      </div>
-                      
-                      <!-- PDF -->
-                      <div *ngIf="doc.fileType === 'application/pdf'" class="pdf-container" (click)="downloadFile(doc)">
-                        <span class="document-icon">📄</span>
-                        <div class="file-overlay">
-                          <span class="download-icon">📥</span>
-                        </div>
-                      </div>
-                      
-                      <!-- Autres fichiers -->
-                      <div *ngIf="!doc.fileType?.startsWith('image/') && doc.fileType !== 'application/pdf'" 
-                           class="file-container" (click)="downloadFile(doc)">
-                        <span class="document-icon">📎</span>
-                        <div class="file-overlay">
-                          <span class="download-icon">📥</span>
-                        </div>
-                      </div>
-                      
-                      <div class="document-info">
-                        <span class="document-name" title="{{ doc.fileName }}">{{ doc.fileName }}</span>
-                        <span class="document-size" *ngIf="doc.fileSize">{{ formatFileSize(doc.fileSize) }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-              <div class="card-actions">
-                <button class="btn-reject" (click)="rejectService('investment', svc.id)" [disabled]="processingId === svc.id">
-                  <span *ngIf="processingId !== svc.id">✕ Reject</span>
-                  <span *ngIf="processingId === svc.id">...</span>
-                </button>
-                <button class="btn-approve" (click)="approveService('investment', svc.id)" [disabled]="processingId === svc.id">
-                  <span *ngIf="processingId !== svc.id">✓ Approve</span>
-                  <span *ngIf="processingId === svc.id">...</span>
-                </button>
-              </div>
-            </div>
+          <div class="empty-tab" *ngIf="pendingServices.investment.length === 0">
+            <div class="empty-icon">📈</div>
+            <p>No investment services pending</p>
           </div>
         </div>
 
         <!-- ================================================ -->
-        <!-- TOURIST SERVICES - TOUS LES DÉTAILS              -->
+        <!-- ONGLET TOURIST                                    -->
         <!-- ================================================ -->
-        <div class="service-section" *ngIf="pendingServices.tourist.length > 0">
-          <div class="section-header tourist-header">
-            <div class="section-title">
-              <span class="section-icon">🌍</span>
-              <h2>Tourist Services</h2>
-              <span class="count-badge">{{ pendingServices.tourist.length }}</span>
+        <div class="tab-content" *ngIf="activeTab === 'tourist'">
+          <div class="service-section" *ngIf="pendingServices.tourist.length > 0">
+            <div class="cards-grid">
+              <div class="service-card" *ngFor="let svc of pendingServices.tourist">
+                <div class="card-top tourist-accent">
+                  <div class="service-type-tag">Tourist</div>
+                  <div class="service-date">{{ formatDate(svc.createdAt || svc.submittedAt) }}</div>
+                </div>
+                <div class="card-body">
+                  <h3 class="service-name">{{ svc.name || 'Untitled Service' }}</h3>
+                  <p class="service-desc">{{ svc.description || '—' }}</p>
+                  
+                  <!-- Provider Info -->
+                  <div class="details-section">
+                    <h4 class="details-title">👤 Provider Information</h4>
+                    <div class="details-grid">
+                      <div class="detail-item">
+                        <span class="detail-label">Name:</span>
+                        <span class="detail-value">{{ svc.provider?.firstName }} {{ svc.provider?.lastName }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Email:</span>
+                        <span class="detail-value">{{ svc.provider?.email || '—' }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Phone:</span>
+                        <span class="detail-value">{{ svc.provider?.phone || '—' }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Basic Info -->
+                  <div class="details-section">
+                    <h4 class="details-title">📋 Basic Information</h4>
+                    <div class="details-grid">
+                      <div class="detail-item">
+                        <span class="detail-label">Price per Person:</span>
+                        <span class="detail-value">{{ svc.price | number:'1.0-0' }} TND</span>
+                      </div>
+                      <div class="detail-item" *ngIf="svc.groupPrice">
+                        <span class="detail-label">Group Price:</span>
+                        <span class="detail-value">{{ svc.groupPrice | number:'1.0-0' }} TND</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Region:</span>
+                        <span class="detail-value">{{ svc.region?.name || '—' }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Category:</span>
+                        <span class="detail-value">{{ svc.category || '—' }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Availability:</span>
+                        <span class="detail-value">{{ svc.availability || '—' }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Contact Person:</span>
+                        <span class="detail-value">{{ svc.contactPerson || '—' }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Service Details -->
+                  <div class="details-section">
+                    <h4 class="details-title">🎯 Service Details</h4>
+                    <div class="details-grid">
+                      <div class="detail-item" *ngIf="svc.targetAudience">
+                        <span class="detail-label">Target Audience:</span>
+                        <span class="detail-value">{{ svc.targetAudience }}</span>
+                      </div>
+                      <div class="detail-item" *ngIf="svc.durationHours">
+                        <span class="detail-label">Duration:</span>
+                        <span class="detail-value">{{ svc.durationHours }} hours</span>
+                      </div>
+                      <div class="detail-item" *ngIf="svc.maxCapacity">
+                        <span class="detail-label">Max Capacity:</span>
+                        <span class="detail-value">{{ svc.maxCapacity }} people</span>
+                      </div>
+                      <div class="detail-item full-width" *ngIf="svc.includedServices?.length">
+                        <span class="detail-label">Included Services:</span>
+                        <div class="tags-container">
+                          <span class="tag" *ngFor="let item of svc.includedServices">{{ item }}</span>
+                        </div>
+                      </div>
+                      <div class="detail-item full-width" *ngIf="svc.availableLanguages?.length">
+                        <span class="detail-label">Languages:</span>
+                        <div class="tags-container">
+                          <span class="tag" *ngFor="let lang of svc.availableLanguages">{{ lang }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Documents -->
+                  <div class="details-section" *ngIf="svc.documents && svc.documents.length > 0">
+                    <h4 class="details-title">📸 Images & Documents</h4>
+                    <div class="documents-grid">
+                      <div *ngFor="let doc of svc.documents" class="document-item">
+                        <div *ngIf="doc.fileType?.startsWith('image/')" class="image-container" (click)="openImage(doc)">
+                          <img [src]="getImageUrl(doc)" class="document-thumbnail" alt="{{ doc.fileName }}" loading="lazy">
+                          <div class="image-overlay"><span class="zoom-icon">🔍</span></div>
+                          <span class="primary-badge-small" *ngIf="doc.isPrimary">⭐</span>
+                        </div>
+                        <div *ngIf="doc.fileType === 'application/pdf'" class="pdf-container" (click)="downloadFile(doc)">
+                          <span class="document-icon">📄</span>
+                          <div class="file-overlay"><span class="download-icon">📥</span></div>
+                        </div>
+                        <div *ngIf="!doc.fileType?.startsWith('image/') && doc.fileType !== 'application/pdf'" 
+                             class="file-container" (click)="downloadFile(doc)">
+                          <span class="document-icon">📎</span>
+                          <div class="file-overlay"><span class="download-icon">📥</span></div>
+                        </div>
+                        <div class="document-info">
+                          <span class="document-name" title="{{ doc.fileName }}">{{ doc.fileName }}</span>
+                          <span class="document-size" *ngIf="doc.fileSize">{{ formatFileSize(doc.fileSize) }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <button class="btn-reject" (click)="rejectService('tourist', svc.id)" [disabled]="processingId === svc.id">
+                    <span *ngIf="processingId !== svc.id">✕ Reject</span>
+                    <span *ngIf="processingId === svc.id">...</span>
+                  </button>
+                  <button class="btn-approve" (click)="approveService('tourist', svc.id)" [disabled]="processingId === svc.id">
+                    <span *ngIf="processingId !== svc.id">✓ Approve</span>
+                    <span *ngIf="processingId === svc.id">...</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="cards-grid">
-            <div class="service-card" *ngFor="let svc of pendingServices.tourist">
-              <div class="card-top tourist-accent">
-                <div class="service-type-tag">Tourist</div>
-                <div class="service-date">{{ formatDate(svc.createdAt || svc.submittedAt) }}</div>
-              </div>
-              <div class="card-body">
-                <h3 class="service-name">{{ svc.name || 'Untitled Service' }}</h3>
-                <p class="service-desc">{{ svc.description || '—' }}</p>
-                
-                <!-- Provider Info -->
-                <div class="details-section">
-                  <h4 class="details-title">👤 Provider Information</h4>
-                  <div class="details-grid">
-                    <div class="detail-item">
-                      <span class="detail-label">Name:</span>
-                      <span class="detail-value">{{ svc.provider?.firstName }} {{ svc.provider?.lastName }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Email:</span>
-                      <span class="detail-value">{{ svc.provider?.email || '—' }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Phone:</span>
-                      <span class="detail-value">{{ svc.provider?.phone || '—' }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Basic Info -->
-                <div class="details-section">
-                  <h4 class="details-title">📋 Basic Information</h4>
-                  <div class="details-grid">
-                    <div class="detail-item">
-                      <span class="detail-label">Price per Person:</span>
-                      <span class="detail-value">{{ svc.price | number:'1.0-0' }} TND</span>
-                    </div>
-                    <div class="detail-item" *ngIf="svc.groupPrice">
-                      <span class="detail-label">Group Price:</span>
-                      <span class="detail-value">{{ svc.groupPrice | number:'1.0-0' }} TND</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Region:</span>
-                      <span class="detail-value">{{ svc.region?.name || '—' }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Category:</span>
-                      <span class="detail-value">{{ svc.category || '—' }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Availability:</span>
-                      <span class="detail-value">{{ svc.availability || '—' }}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Contact Person:</span>
-                      <span class="detail-value">{{ svc.contactPerson || '—' }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Service Details -->
-                <div class="details-section">
-                  <h4 class="details-title">🎯 Service Details</h4>
-                  <div class="details-grid">
-                    <div class="detail-item" *ngIf="svc.targetAudience">
-                      <span class="detail-label">Target Audience:</span>
-                      <span class="detail-value">{{ svc.targetAudience }}</span>
-                    </div>
-                    <div class="detail-item" *ngIf="svc.durationHours">
-                      <span class="detail-label">Duration:</span>
-                      <span class="detail-value">{{ svc.durationHours }} hours</span>
-                    </div>
-                    <div class="detail-item" *ngIf="svc.maxCapacity">
-                      <span class="detail-label">Max Capacity:</span>
-                      <span class="detail-value">{{ svc.maxCapacity }} people</span>
-                    </div>
-                    <div class="detail-item full-width" *ngIf="svc.includedServices?.length">
-                      <span class="detail-label">Included Services:</span>
-                      <div class="tags-container">
-                        <span class="tag" *ngFor="let item of svc.includedServices">{{ item }}</span>
-                      </div>
-                    </div>
-                    <div class="detail-item full-width" *ngIf="svc.availableLanguages?.length">
-                      <span class="detail-label">Languages:</span>
-                      <div class="tags-container">
-                        <span class="tag" *ngFor="let lang of svc.availableLanguages">{{ lang }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- SECTION DOCUMENTS POUR TOURIST -->
-                <div class="details-section" *ngIf="svc.documents && svc.documents.length > 0">
-                  <h4 class="details-title">📸 Images & Documents</h4>
-                  <div class="documents-grid">
-                    <div *ngFor="let doc of svc.documents" class="document-item">
-                      
-                      <!-- Image -->
-                      <div *ngIf="doc.fileType?.startsWith('image/')" class="image-container" (click)="openImage(doc)">
-                        <img 
-                          [src]="getImageUrl(doc)" 
-                          class="document-thumbnail" 
-                          alt="{{ doc.fileName }}"
-                          loading="lazy"
-                        >
-                        <div class="image-overlay">
-                          <span class="zoom-icon">🔍</span>
-                        </div>
-                        <span class="primary-badge-small" *ngIf="doc.isPrimary">⭐</span>
-                      </div>
-                      
-                      <!-- PDF -->
-                      <div *ngIf="doc.fileType === 'application/pdf'" class="pdf-container" (click)="downloadFile(doc)">
-                        <span class="document-icon">📄</span>
-                        <div class="file-overlay">
-                          <span class="download-icon">📥</span>
-                        </div>
-                      </div>
-                      
-                      <!-- Autres fichiers -->
-                      <div *ngIf="!doc.fileType?.startsWith('image/') && doc.fileType !== 'application/pdf'" 
-                           class="file-container" (click)="downloadFile(doc)">
-                        <span class="document-icon">📎</span>
-                        <div class="file-overlay">
-                          <span class="download-icon">📥</span>
-                        </div>
-                      </div>
-                      
-                      <div class="document-info">
-                        <span class="document-name" title="{{ doc.fileName }}">{{ doc.fileName }}</span>
-                        <span class="document-size" *ngIf="doc.fileSize">{{ formatFileSize(doc.fileSize) }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-              <div class="card-actions">
-                <button class="btn-reject" (click)="rejectService('tourist', svc.id)" [disabled]="processingId === svc.id">
-                  <span *ngIf="processingId !== svc.id">✕ Reject</span>
-                  <span *ngIf="processingId === svc.id">...</span>
-                </button>
-                <button class="btn-approve" (click)="approveService('tourist', svc.id)" [disabled]="processingId === svc.id">
-                  <span *ngIf="processingId !== svc.id">✓ Approve</span>
-                  <span *ngIf="processingId === svc.id">...</span>
-                </button>
-              </div>
-            </div>
+          <div class="empty-tab" *ngIf="pendingServices.tourist.length === 0">
+            <div class="empty-icon">🌍</div>
+            <p>No tourist services pending</p>
           </div>
         </div>
 

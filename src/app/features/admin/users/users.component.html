@@ -46,12 +46,12 @@
   <div class="filters-bar">
     <div class="search-box">
       <input
-        type="text"
-        [(ngModel)]="searchTerm"
-        (keyup.enter)="searchUsers()"
-        placeholder="Search by first name, last name, or email..."
-        class="search-input"
-      />
+  type="text"
+  [(ngModel)]="searchTerm"
+  (ngModelChange)="searchUsers()"
+  placeholder="Search by first name, last name, or email..."
+  class="search-input"
+/>
       <button class="search-btn" (click)="searchUsers()" [disabled]="loading">Search</button>
     </div>
 

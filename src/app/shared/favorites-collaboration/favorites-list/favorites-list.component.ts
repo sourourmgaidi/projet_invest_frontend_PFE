@@ -13,8 +13,7 @@ import { NavbarComponent } from '../../navbar/navbar';
   standalone: true,
   imports: [
     CommonModule,
-    RouterModule,
-    NavbarComponent
+    RouterModule
   ],
   templateUrl: './favorites-list.component.html',
   styleUrls: ['./favorites-list.component.css']

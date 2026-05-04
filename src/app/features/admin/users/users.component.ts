@@ -157,26 +157,26 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
     });
   }
 
-  searchUsers() {
-    const term = this.searchTerm.trim().toLowerCase();
+ searchUsers() {
+  const term = this.searchTerm.trim().toLowerCase();
 
-    if (term) {
-      this.filteredUsers = this.users.filter(user =>
-        user.firstName?.toLowerCase() === term ||
-        user.lastName?.toLowerCase() === term ||
-        user.email?.toLowerCase() === term
-      );
+  if (term) {
+    this.filteredUsers = this.users.filter(user =>
+      user.firstName?.toLowerCase().includes(term) ||
+      user.lastName?.toLowerCase().includes(term) ||
+      user.email?.toLowerCase().includes(term)
+    );
 
-      if (this.selectedRole !== 'ALL') {
-        this.filteredUsers = this.filteredUsers.filter(u => u.role === this.selectedRole);
-      }
-
-      this.totalPages = Math.ceil(this.filteredUsers.length / this.itemsPerPage);
-      this.currentPage = 1;
-    } else {
-      this.applyFilter();
+    if (this.selectedRole !== 'ALL') {
+      this.filteredUsers = this.filteredUsers.filter(u => u.role === this.selectedRole);
     }
+
+    this.totalPages = Math.ceil(this.filteredUsers.length / this.itemsPerPage);
+    this.currentPage = 1;
+  } else {
+    this.applyFilter();
   }
+}
 
   applyFilter() {
     if (this.selectedRole === 'ALL') {

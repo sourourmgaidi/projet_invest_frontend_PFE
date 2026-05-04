@@ -7,7 +7,6 @@ import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 
-
 interface RoleOption {
   value: Role;
   label: string;
@@ -43,7 +42,7 @@ interface Region {
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, HttpClientModule,TranslateModule],
+  imports: [CommonModule, FormsModule, HttpClientModule, TranslateModule],
   templateUrl: './register.html',
   styleUrls: ['./register.css']
 })
@@ -59,6 +58,11 @@ export class RegisterComponent {
   confirmPassword = '';
   phoneError = '';
   emailError = '';
+  websiteError = '';
+  linkedinError = '';
+  businessRegError = '';
+  taxNumberError = '';
+  siretError = '';
 
   form: RegisterRequest = {
     nom: '',
@@ -85,7 +89,6 @@ export class RegisterComponent {
     interetPrincipal: ''
   };
 
-  // Liste des indicatifs téléphoniques par pays
   countryCodes: CountryCode[] = [
     { code: 'TN', name: 'Tunisia', dialCode: '+216', flag: '🇹🇳' },
     { code: 'FR', name: 'France', dialCode: '+33', flag: '🇫🇷' },
@@ -119,7 +122,6 @@ export class RegisterComponent {
     { code: 'AU', name: 'Australia', dialCode: '+61', flag: '🇦🇺' },
   ];
 
-  // Liste des nationalités
   nationalities: Nationality[] = [
     { code: 'TN', name: 'Tunisian' },
     { code: 'FR', name: 'French' },
@@ -153,7 +155,6 @@ export class RegisterComponent {
     { code: 'AU', name: 'Australian' },
   ];
 
-  // Liste des régions de Tunisie
   tunisianRegions: Region[] = [
     { value: 'TUNIS', label: 'Tunis', governorate: 'Tunis' },
     { value: 'ARIANA', label: 'Ariana', governorate: 'Ariana' },
@@ -184,9 +185,7 @@ export class RegisterComponent {
     { value: 'ZARZIS', label: 'Zarzis', governorate: 'Médenine' },
   ];
 
-  // Liste des secteurs d'activité basée sur ActivityDomain enum
   activitySectors: ActivityOption[] = [
-    // Tourism
     { value: 'HOTEL', label: 'Hotel', category: 'Tourism' },
     { value: 'GUEST_HOUSE', label: 'Guest House', category: 'Tourism' },
     { value: 'TRAVEL_AGENCY', label: 'Travel Agency', category: 'Tourism' },
@@ -194,8 +193,6 @@ export class RegisterComponent {
     { value: 'TRANSPORT', label: 'Transport', category: 'Tourism' },
     { value: 'RESTAURANT', label: 'Restaurant', category: 'Tourism' },
     { value: 'CRAFTS', label: 'Crafts', category: 'Tourism' },
-    
-    // Investment
     { value: 'AGRICULTURE', label: 'Agriculture', category: 'Investment' },
     { value: 'AGRI_FOOD', label: 'Agri-food', category: 'Investment' },
     { value: 'INDUSTRY', label: 'Industry', category: 'Investment' },
@@ -209,8 +206,6 @@ export class RegisterComponent {
     { value: 'CONSTRUCTION', label: 'Construction', category: 'Investment' },
     { value: 'TRADE', label: 'Trade', category: 'Investment' },
     { value: 'SERVICES', label: 'Services', category: 'Investment' },
-    
-    // Other
     { value: 'OTHER', label: 'Other', category: 'Other' }
   ];
 
@@ -281,47 +276,30 @@ export class RegisterComponent {
     return this.activitySectors.filter(s => s.category === category);
   }
 
-  // ✅ VALIDATION GMAIL
   validateGmail(email: string): boolean {
     if (!email) return false;
-    
     const domain = email.substring(email.indexOf('@') + 1).toLowerCase();
-    
-    // Liste des domaines Gmail acceptés
     const gmailDomains = [
-      'gmail.com',
-      'googlemail.com',
-      'gmail.co.uk',
-      'gmail.fr',
-      'gmail.de',
-      'gmail.it',
-      'gmail.es',
-      'gmail.ca',
-      'gmail.com.au',
-      'gmail.co.in'
+      'gmail.com', 'googlemail.com', 'gmail.co.uk', 'gmail.fr',
+      'gmail.de', 'gmail.it', 'gmail.es', 'gmail.ca', 'gmail.com.au', 'gmail.co.in'
     ];
-    
     return gmailDomains.includes(domain);
   }
 
-  // ✅ Validation de l'email avec message d'erreur
   validateEmail(): boolean {
     if (!this.form.email || this.form.email.trim() === '') {
       this.emailError = 'Email is required';
       return false;
     }
-    
     if (!this.validateGmail(this.form.email)) {
-      this.emailError = 'Only Gmail addresses are allowed. Please use a valid Gmail address (e.g., @gmail.com, @gmail.fr, etc.)';
+      this.emailError = 'Only Gmail addresses are allowed (e.g., @gmail.com, @gmail.fr, etc.)';
       return false;
     }
-    
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(this.form.email)) {
       this.emailError = 'Invalid email format';
       return false;
     }
-    
     this.emailError = '';
     return true;
   }
@@ -331,26 +309,61 @@ export class RegisterComponent {
       this.phoneError = 'Phone number is required';
       return false;
     }
-    
     const digitsOnly = this.phoneNumber.replace(/\D/g, '');
-    
     if (digitsOnly.length === 0) {
       this.phoneError = 'Phone number must contain only digits';
       return false;
     }
-    
-    if (digitsOnly.length < 8) {
-      this.phoneError = 'Phone number must have at least 8 digits';
+    const phoneLengthByDialCode: { [key: string]: number } = {
+      '+216': 8,  '+33': 9,   '+213': 9,  '+212': 9,  '+218': 9,
+      '+20': 10,  '+966': 9,  '+971': 9,  '+974': 8,  '+965': 8,
+      '+1': 10,   '+44': 10,  '+49': 10,  '+39': 10,  '+34': 9,
+      '+32': 9,   '+41': 9,   '+31': 9,   '+46': 9,   '+47': 8,
+      '+45': 8,   '+358': 9,  '+7': 10,   '+86': 11,  '+81': 10,
+      '+82': 10,  '+91': 10,  '+55': 11,  '+61': 9
+    };
+    const expectedLength = phoneLengthByDialCode[this.selectedCountryCode];
+    if (expectedLength !== undefined && digitsOnly.length !== expectedLength) {
+      this.phoneError = `Phone number for ${this.selectedCountryCode} must have exactly ${expectedLength} digits (got ${digitsOnly.length}).`;
       return false;
     }
-    
-    if (digitsOnly.length > 15) {
-      this.phoneError = 'Phone number must not exceed 15 digits';
-      return false;
+    if (expectedLength === undefined) {
+      if (digitsOnly.length < 8) {
+        this.phoneError = 'Phone number must have at least 8 digits';
+        return false;
+      }
+      if (digitsOnly.length > 15) {
+        this.phoneError = 'Phone number must not exceed 15 digits';
+        return false;
+      }
     }
-    
     this.phoneError = '';
     return true;
+  }
+
+  validateWebsite(url: string): boolean {
+    if (!url || url.trim() === '') return true;
+    const urlPattern = /^(https?:\/\/)([\w\-]+\.)+[\w]{2,}(\/.*)?$/;
+    return urlPattern.test(url.trim());
+  }
+
+  validateLinkedin(url: string): boolean {
+    if (!url || url.trim() === '') return true;
+    const linkedinPattern = /^(https?:\/\/)?(www\.)?linkedin\.com\/in\/[\w\-]+\/?$/;
+    return linkedinPattern.test(url.trim());
+  }
+
+  // ✅ Méthodes appelées depuis le HTML sur (blur)
+  onWebsiteBlur(): void {
+    this.websiteError = (this.form.siteWeb && !this.validateWebsite(this.form.siteWeb))
+      ? 'Invalid website URL. Expected: https://www.example.com'
+      : '';
+  }
+
+  onLinkedinBlur(): void {
+    this.linkedinError = (this.form.linkedinProfile && !this.validateLinkedin(this.form.linkedinProfile))
+      ? 'Invalid LinkedIn URL. Expected: https://www.linkedin.com/in/your-profile'
+      : '';
   }
 
   updatePhoneNumber(): void {
@@ -382,9 +395,6 @@ export class RegisterComponent {
       role: this.form.role
     };
 
-    console.log('🔍 Préparation des données pour le rôle:', this.selectedRole);
-    console.log('🔍 Secteur activité brut:', this.form.secteurActivite, 'Type:', typeof this.form.secteurActivite);
-
     switch (this.selectedRole) {
       case Role.TOURIST:
         userData.lastName = this.form.nom;
@@ -392,7 +402,6 @@ export class RegisterComponent {
         userData.phone = this.form.telephone;
         userData.nationality = this.form.nationality;
         break;
-
       case Role.INVESTOR:
         userData.firstName = this.form.prenom;
         userData.lastName = this.form.nom;
@@ -404,23 +413,20 @@ export class RegisterComponent {
         userData.website = this.form.siteWeb;
         userData.linkedinProfile = this.form.linkedinProfile;
         break;
-
       case Role.PARTNER:
         userData.firstName = this.form.prenom;
         userData.lastName = this.form.nom;
         userData.phone = this.form.telephone;
-        // ❌ companyName SUPPRIMÉ pour le partenaire économique
         userData.businessSector = this.form.secteurActivite;
         userData.countryOfOrigin = this.form.paysOrigine;
         userData.headquartersAddress = this.form.adresse;
         userData.website = this.form.siteWeb;
         userData.linkedinProfile = this.form.linkedinProfile;
         break;
-
       case Role.LOCAL_PARTNER:
         userData.firstName = this.form.prenom;
         userData.lastName = this.form.nom;
-        userData.telephone = this.form.telephone;  // ✅ CORRIGÉ: "telephone" au lieu de "phone"
+        userData.telephone = this.form.telephone;
         userData.domaineActivite = this.form.secteurActivite;
         userData.region = this.form.region;
         userData.adresse = this.form.adresse;
@@ -429,7 +435,6 @@ export class RegisterComponent {
         userData.taxeProfessionnelle = this.form.taxeProfessionnelle;
         userData.linkedinProfile = this.form.linkedinProfile;
         break;
-
       case Role.INTERNATIONAL_COMPANY:
         userData.companyName = this.form.companyName;
         userData.originCountry = this.form.paysOrigine;
@@ -441,15 +446,12 @@ export class RegisterComponent {
         userData.activitySector = this.form.secteurActivite;
         userData.linkedinProfile = this.form.linkedinProfile;
         break;
-
       case Role.ADMIN:
         userData.firstName = this.form.prenom;
         userData.lastName = this.form.nom;
         userData.phone = this.form.telephone;
         break;
     }
-
-    console.log('📤 Données préparées:', userData);
     return userData;
   }
 
@@ -458,24 +460,31 @@ export class RegisterComponent {
       this.errorMsg = 'Please choose a role.';
       return;
     }
-
-    // ✅ Validation de l'email avant soumission
     if (!this.validateEmail()) {
       this.errorMsg = this.emailError;
       return;
     }
-
     if (!this.validateRequiredFields()) {
       return;
     }
-
     if (!this.validatePhoneNumber()) {
       this.errorMsg = this.phoneError;
       return;
     }
-
     if (this.form.motDePasse !== this.confirmPassword) {
       this.errorMsg = 'Passwords do not match.';
+      return;
+    }
+
+    // ✅ Validation website et linkedin pour TOUS les rôles avant soumission
+    if (this.form.siteWeb && !this.validateWebsite(this.form.siteWeb)) {
+      this.websiteError = 'Invalid website URL. Expected format: https://www.example.com';
+      this.errorMsg = this.websiteError;
+      return;
+    }
+    if (this.form.linkedinProfile && !this.validateLinkedin(this.form.linkedinProfile)) {
+      this.linkedinError = 'Invalid LinkedIn URL. Expected format: https://www.linkedin.com/in/your-profile';
+      this.errorMsg = this.linkedinError;
       return;
     }
 
@@ -486,26 +495,12 @@ export class RegisterComponent {
     try {
       const url = this.roleEndpoints[this.selectedRole];
       const userData = this.prepareUserData();
-
-      console.log('📤 Envoi des données à:', url);
-      console.log('📤 Payload:', userData);
-      
-      const response = await lastValueFrom(
-        this.http.post(url, userData)
-      );
-
-      console.log('✅ Réponse:', response);
+      const response = await lastValueFrom(this.http.post(url, userData));
       this.loading = false;
       this.successMsg = 'Registration successful! Redirecting to login...';
-      
-      setTimeout(() => {
-        this.router.navigate(['/login']);
-      }, 2000);
-
+      setTimeout(() => this.router.navigate(['/login']), 2000);
     } catch (error: any) {
       this.loading = false;
-      console.error('❌ Erreur:', error);
-      
       if (error.error) {
         if (typeof error.error === 'string') {
           this.errorMsg = error.error;
@@ -526,105 +521,248 @@ export class RegisterComponent {
     }
   }
 
-  validateRequiredFields(): boolean {
-    if (!this.form.email) {
-      this.errorMsg = 'Email is required.';
-      return false;
-    }
+validateRequiredFields(): boolean {
+  if (!this.form.email) {
+    this.errorMsg = 'Email is required.';
+    return false;
+  }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(this.form.email)) {
-      this.errorMsg = 'Invalid email format.';
-      return false;
-    }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(this.form.email)) {
+    this.errorMsg = 'Invalid email format.';
+    return false;
+  }
 
-    if (!this.form.motDePasse || this.form.motDePasse.length < 6) {
-      this.errorMsg = 'Password must be at least 6 characters.';
-      return false;
-    }
+  if (!this.form.motDePasse) {
+    this.errorMsg = 'Password is required.';
+    return false;
+  }
+  if (this.form.motDePasse.length < 6) {
+    this.errorMsg = 'Password must be at least 6 characters.';
+    return false;
+  }
 
-    switch (this.selectedRole) {
-      case Role.TOURIST:
-        if (!this.form.nom || !this.form.prenom) {
-          this.errorMsg = 'Last name and first name are required.';
-          return false;
-        }
-        break;
+  //  Validation website et linkedin pour TOUS les rôles
+  if (this.form.siteWeb && !this.validateWebsite(this.form.siteWeb)) {
+    this.websiteError = 'Invalid website URL. Expected format: https://www.example.com';
+    this.errorMsg = this.websiteError;
+    return false;
+  }
+  if (this.form.linkedinProfile && !this.validateLinkedin(this.form.linkedinProfile)) {
+    this.linkedinError = 'Invalid LinkedIn URL. Expected format: https://www.linkedin.com/in/your-profile';
+    this.errorMsg = this.linkedinError;
+    return false;
+  }
 
-      case Role.INVESTOR:
-        if (!this.form.nom || !this.form.prenom) {
-          this.errorMsg = 'Last name and first name are required.';
-          return false;
-        }
-        if (!this.form.companyName) {
-          this.errorMsg = 'Company name is required.';
-          return false;
-        }
-        if (!this.form.paysOrigine) {
-          this.errorMsg = 'Country of origin is required.';
-          return false;
-        }
-        if (!this.form.secteurActivite) {
-          this.errorMsg = 'Activity sector is required.';
-          return false;
-        }
-        break;
+  switch (this.selectedRole) {
+    case Role.TOURIST:
+      if (!this.form.nom || !this.form.prenom) {
+        this.errorMsg = 'Last name and first name are required.';
+        return false;
+      }
 
-      case Role.PARTNER:
-        if (!this.form.nom || !this.form.prenom) {
-          this.errorMsg = 'Last name and first name are required.';
-          return false;
-        }
-        // ❌ VALIDATION DE companyName SUPPRIMÉE pour le partenaire économique
-        if (!this.form.paysOrigine) {
-          this.errorMsg = 'Country of origin is required.';
-          return false;
-        }
-        if (!this.form.secteurActivite) {
-          this.errorMsg = 'Business sector is required.';
-          return false;
-        }
-        break;
+      break;
 
-      case Role.LOCAL_PARTNER:
-        if (!this.form.nom || !this.form.prenom) {
-          this.errorMsg = 'Last name and first name are required.';
+    case Role.INVESTOR:
+      if (!this.form.nom || !this.form.prenom) {
+        this.errorMsg = 'Last name and first name are required.';
+        return false;
+      }
+      if (!this.form.companyName) {
+        this.errorMsg = 'Company name is required.';
+        return false;
+      }
+      if (this.form.companyName.trim().length < 2 || this.form.companyName.trim().length > 100) {
+        this.errorMsg = 'Company name must be between 2 and 100 characters.';
+        return false;
+      }
+      if (!this.form.paysOrigine) {
+        this.errorMsg = 'Country of origin is required.';
+        return false;
+      }
+      if (!this.form.secteurActivite) {
+        this.errorMsg = 'Activity sector is required.';
+        return false;
+      }
+      if (this.form.nationality) {
+        if (this.form.nationality.trim().length < 2 || this.form.nationality.trim().length > 60) {
+          this.errorMsg = 'Nationality must be between 2 and 60 characters.';
           return false;
         }
-        if (!this.form.telephone) {
-          this.errorMsg = 'Phone number is required.';
-          return false;
-        }
-        break;
+      }
+      //  website et linkedin déjà validés
+      break;
 
-      case Role.INTERNATIONAL_COMPANY:
-        if (!this.form.companyName) {
-          this.errorMsg = 'Company name is required.';
-          return false;
-        }
-        if (!this.form.nom || !this.form.prenom) {
-          this.errorMsg = 'Contact last name and first name are required.';
-          return false;
-        }
-        if (!this.form.siret) {
-          this.errorMsg = 'SIRET number is required.';
-          return false;
-        }
-        if (!this.form.telephone) {
-          this.errorMsg = 'Phone number is required.';
-          return false;
-        }
-        if (!this.form.paysOrigine) {
-          this.errorMsg = 'Country of origin is required.';
-          return false;
-        }
-        if (!this.form.secteurActivite) {
-          this.errorMsg = 'Activity sector is required.';
-          return false;
-        }
-        break;
-    }
+    case Role.PARTNER:
+      if (!this.form.nom || !this.form.prenom) {
+        this.errorMsg = 'Last name and first name are required.';
+        return false;
+      }
+      if (!this.form.paysOrigine) {
+        this.errorMsg = 'Country of origin is required.';
+        return false;
+      }
+      if (!this.form.secteurActivite) {
+        this.errorMsg = 'Business sector is required.';
+        return false;
+      }
+      //  website et linkedin déjà validés
+      break;
 
+    case Role.LOCAL_PARTNER:
+      if (!this.form.nom || !this.form.prenom) {
+        this.errorMsg = 'Last name and first name are required.';
+        return false;
+      }
+      if (!this.form.telephone) {
+        this.errorMsg = 'Phone number is required.';
+        return false;
+      }
+      if (!this.validateBusinessRegistrationNumber()) {
+    this.errorMsg = this.businessRegError;
+    return false;
+  }
+  if (!this.validateTaxNumber()) {
+    this.errorMsg = this.taxNumberError;
+    return false;
+  }
+      break;
+
+    case Role.INTERNATIONAL_COMPANY:
+      if (!this.form.companyName) {
+        this.errorMsg = 'Company name is required.';
+        return false;
+      }
+      if (!this.form.nom || !this.form.prenom) {
+        this.errorMsg = 'Contact last name and first name are required.';
+        return false;
+      }
+      if (!this.validateSiret()) {
+    this.errorMsg = this.siretError;
+    return false;
+  }
+      if (!this.form.telephone) {
+        this.errorMsg = 'Phone number is required.';
+        return false;
+      }
+      if (!this.form.paysOrigine) {
+        this.errorMsg = 'Country of origin is required.';
+        return false;
+      }
+      if (!this.form.secteurActivite) {
+        this.errorMsg = 'Activity sector is required.';
+        return false;
+      }
+
+  
+      break;
+  }
+
+  return true;
+}
+// Ajoutez ces méthodes après validateLinkedin() (vers ligne 520)
+
+// Validation Business Registration Number (numéro registre commerce)
+validateBusinessRegistrationNumber(): boolean {
+  const value = this.form.numeroRegistreCommerce;
+  
+  // Champ optionnel
+  if (!value || value.trim() === '') {
+    this.businessRegError = '';
     return true;
   }
+  
+  const trimmed = value.trim();
+  
+  // Longueur : 3 à 30 caractères
+  if (trimmed.length < 3) {
+    this.businessRegError = 'Business registration number must be at least 3 characters';
+    return false;
+  }
+  if (trimmed.length > 30) {
+    this.businessRegError = 'Business registration number must not exceed 30 characters';
+    return false;
+  }
+  
+  // Format : lettres majuscules, chiffres, tirets
+  const regex = /^[A-Z0-9\-]+$/;
+  if (!regex.test(trimmed)) {
+    this.businessRegError = 'Business registration number can only contain uppercase letters, numbers, and hyphens';
+    return false;
+  }
+  
+  this.businessRegError = '';
+  return true;
+}
+
+// Validation Professional Tax Number (numéro taxe professionnelle)
+validateTaxNumber(): boolean {
+  const value = this.form.taxeProfessionnelle;
+  
+  // Champ optionnel
+  if (!value || value.trim() === '') {
+    this.taxNumberError = '';
+    return true;
+  }
+  
+  const trimmed = value.trim();
+  
+  // Longueur : 5 à 25 caractères
+  if (trimmed.length < 5) {
+    this.taxNumberError = 'Professional tax number must be at least 5 characters';
+    return false;
+  }
+  if (trimmed.length > 25) {
+    this.taxNumberError = 'Professional tax number must not exceed 25 characters';
+    return false;
+  }
+  
+  // Format : lettres majuscules, chiffres, tirets
+  const regex = /^[A-Z0-9\-]+$/;
+  if (!regex.test(trimmed)) {
+    this.taxNumberError = 'Professional tax number can only contain uppercase letters, numbers, and hyphens';
+    return false;
+  }
+  
+  this.taxNumberError = '';
+  return true;
+}
+
+// Méthodes appelées depuis le HTML (blur)
+onBusinessRegBlur(): void {
+  this.validateBusinessRegistrationNumber();
+}
+
+onTaxNumberBlur(): void {
+  this.validateTaxNumber();
+}
+// Ajoutez cette méthode après validateTaxNumber() (vers ligne 650)
+
+// Validation SIRET (14 chiffres exactement)
+validateSiret(): boolean {
+  const value = this.form.siret;
+  
+  // Champ obligatoire pour INTERNATIONAL_COMPANY
+  if (!value || value.trim() === '') {
+    this.siretError = 'SIRET number is required';
+    return false;
+  }
+  
+  const trimmed = value.trim();
+  
+  // Le SIRET doit contenir exactement 14 chiffres
+  const siretRegex = /^\d{14}$/;
+  if (!siretRegex.test(trimmed)) {
+    this.siretError = 'SIRET number must be exactly 14 digits';
+    return false;
+  }
+  
+  this.siretError = '';
+  return true;
+}
+
+// Méthode appelée depuis le HTML (blur)
+onSiretBlur(): void {
+  this.validateSiret();
+}
 }

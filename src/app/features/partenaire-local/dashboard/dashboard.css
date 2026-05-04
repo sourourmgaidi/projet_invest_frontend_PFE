@@ -1,23 +1,24 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
 
 /* ── Layout ──────────────────────────────────────────────── */
-.lp-layout {
+.lp-container {
   display: flex;
   min-height: 100vh;
-  background: #f4f6fb;
+  background: var(--secondary, #f4f6fb);
   font-family: 'DM Sans', sans-serif;
 }
 
-app-navbar {
-  width: 260px;
+.lp-navbar {
+  width: 280px;
   flex-shrink: 0;
 }
 
-.lp-content {
+.lp-main {
   flex: 1;
-  padding: 2.5rem 2rem;
+  padding: 2rem;
+  margin-top: 80px;
   overflow-y: auto;
-  max-width: calc(100vw - 260px);
+  max-width: calc(100vw - 280px);
 }
 
 /* ── Page Header ─────────────────────────────────────────── */
@@ -2736,4 +2737,29 @@ textarea.form-control {
   .image-modal-footer .btn-download {
     justify-content: center;
   }
+}
+
+/* =======================
+   FIX FULL BACKGROUND (NO WHITE AREA)
+======================= */
+.dashboard-layout {
+  min-height: 100vh;
+  background: var(--secondary);
+}
+/* =======================
+   FIX NOTIFICATION Z-INDEX
+======================= */
+.dashboard-header {
+  position: relative;
+  z-index: 100;
+}
+
+.stats-grid {
+  position: relative;
+  z-index: 1;
+}
+
+.stat-card {
+  position: relative;
+  z-index: 1;
 }

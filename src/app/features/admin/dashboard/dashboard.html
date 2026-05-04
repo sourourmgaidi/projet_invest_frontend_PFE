@@ -1,27 +1,19 @@
 <div class="dashboard-layout">
-  <app-navbar></app-navbar>
+  <app-navbar class="dashboard-navbar"></app-navbar>
 
-  <div class="dashboard">
+  <main class="dashboard-main">
     <div class="dashboard-content">
 
-      <!-- Top Bar with Notification Bell (Admin) -->
-      <div class="top-bar">
-        <div class="top-bar-left">
+      <header class="dashboard-header">
+        <div>
           <h1>Admin Dashboard</h1>
-          <p>Select what you want to manage</p>
+          <p class="welcome-text">Select what you want to manage</p>
         </div>
-        <div class="top-bar-right">
-          <!-- Notification Bell pour l'admin -->
-          <div class="notification-wrapper" (click)="toggleNotificationPanel()">
-            <app-notification-bell></app-notification-bell>
-            <!-- Badge optionnel -->
-            <span class="notif-badge" *ngIf="notificationCount > 0">{{ notificationCount > 99 ? '99+' : notificationCount }}</span>
-          </div>
-        </div>
-      </div>
+        <!-- ✅ Exactement comme l'investor, pas de wrapper, pas de badge custom -->
+        <app-notification-bell></app-notification-bell>
+      </header>
 
       <div class="admin-cards">
-        <!-- Manage Users Card -->
         <a routerLink="/admin/users" class="admin-card">
           <div class="card-content">
             <h3>Manage Users</h3>
@@ -30,7 +22,6 @@
           </div>
         </a>
 
-        <!-- Manage Opportunities Card -->
         <a routerLink="/admin/opportunities" class="admin-card">
           <div class="card-content">
             <h3>Manage Opportunities</h3>
@@ -39,15 +30,15 @@
           </div>
         </a>
 
-        <!-- Manage Appointments Card -->
-  <a routerLink="/admin/admin-stats" class="admin-card">
-  <div class="card-content">
-    <h3>Statistics</h3>
-    <p>View platform analytics and user activity</p>
-    <span class="card-link">Access →</span>
-  </div>
-</a>
-<a routerLink="/my-stats" class="stat-card" style="text-decoration: none; display: block; cursor: pointer;">
+        <a routerLink="/admin/admin-stats" class="admin-card">
+          <div class="card-content">
+            <h3>Statistics</h3>
+            <p>View platform analytics and user activity</p>
+            <span class="card-link">Access →</span>
+          </div>
+        </a>
+
+        <a routerLink="/my-stats" class="stat-card" style="text-decoration: none; display: block; cursor: pointer;">
           <div class="stat-details">
             <h3>My Activity</h3>
             <p class="stat-value">Stats</p>
@@ -55,33 +46,31 @@
           </div>
         </a>
 
-          <a routerLink="/admin/stats" class="admin-card stats-card">
-    <div class="card-content">
-      <div class="stats-card-header">
-        <h3>Statistics</h3>
-        <span class="stats-icon">📊</span>
-      </div>
-      <p>View platform analytics, user registrations, and service statistics</p>
-      <div class="stats-preview" *ngIf="!isLoadingStats">
-        <div class="stat-preview-item">
-          <span class="stat-preview-value">{{ totalUsers }}</span>
-          <span class="stat-preview-label">Total Users</span>
-        </div>
-        <div class="stat-preview-item">
-          <span class="stat-preview-value">{{ totalServices }}</span>
-          <span class="stat-preview-label">Total Services</span>
-        </div>
-        <div class="stat-preview-item">
-          <span class="stat-preview-value trend-{{ monthlyTrend }}">{{ monthlyTrend }}%</span>
-          <span class="stat-preview-label">Monthly Trend</span>
-        </div>
-      </div>
-      <span class="card-link">View Analytics →</span>
-    </div>
-  </a>
+        <a routerLink="/admin/stats" class="admin-card stats-card">
+          <div class="card-content">
+            <div class="stats-card-header">
+              <h3>Statistics</h3>
+              <span class="stats-icon">📊</span>
+            </div>
+            <p>View platform analytics, user registrations, and service statistics</p>
+            <div class="stats-preview" *ngIf="!isLoadingStats">
+              <div class="stat-preview-item">
+                <span class="stat-preview-value">{{ totalUsers }}</span>
+                <span class="stat-preview-label">Total Users</span>
+              </div>
+              <div class="stat-preview-item">
+                <span class="stat-preview-value">{{ totalServices }}</span>
+                <span class="stat-preview-label">Total Services</span>
+              </div>
+              <div class="stat-preview-item">
+                <span class="stat-preview-value trend-{{ monthlyTrend }}">{{ monthlyTrend }}%</span>
+                <span class="stat-preview-label">Monthly Trend</span>
+              </div>
+            </div>
+            <span class="card-link">View Analytics →</span>
+          </div>
+        </a>
 
-
-        <!-- Manage Services Card (fusionnée) -->
         <a routerLink="/admin/notifications" class="admin-card services-card">
           <div class="card-content">
             <div class="notif-card-header">
@@ -89,66 +78,42 @@
               <span class="pending-pill" *ngIf="pendingServicesCount > 0">{{ pendingServicesCount }} pending</span>
             </div>
             <p>Review and approve all services submitted by local partners</p>
-            
-            <!-- Sous-compteurs pour chaque type de service -->
             <div class="services-subcounts" *ngIf="pendingServicesCount > 0">
-              <span class="investment-badge" *ngIf="pendingInvestmentCount > 0">
-                📈 Investment: {{ pendingInvestmentCount }}
-              </span>
-              <span class="collaboration-badge" *ngIf="pendingCollaborationCount > 0">
-                🤝 Collaboration: {{ pendingCollaborationCount }}
-              </span>
-              <span class="tourist-badge" *ngIf="pendingTouristCount > 0">
-                🌍 Tourism: {{ pendingTouristCount }}
-              </span>
+              <span class="investment-badge" *ngIf="pendingInvestmentCount > 0">📈 Investment: {{ pendingInvestmentCount }}</span>
+              <span class="collaboration-badge" *ngIf="pendingCollaborationCount > 0">🤝 Collaboration: {{ pendingCollaborationCount }}</span>
+              <span class="tourist-badge" *ngIf="pendingTouristCount > 0">🌍 Tourism: {{ pendingTouristCount }}</span>
             </div>
-            
             <span class="card-link">Review →</span>
           </div>
         </a>
 
-        <!-- Partner Requests Card (avec badge corrigé) -->
         <a routerLink="/admin/requests" class="admin-card request-card">
           <div class="card-content">
             <div class="request-card-header">
-              <h3>Partner Requests</h3>
-              <!-- ✅ Badge avec "request(s)" -->
+              <h3> Manage Partner Requests</h3>
               <span class="request-badge" *ngIf="totalRequestsCount > 0">
                 {{ totalRequestsCount }} pending request{{ totalRequestsCount > 1 ? 's' : '' }}
               </span>
             </div>
             <p>Manage modification and deletion requests from local partners</p>
-            
-            <!-- Sous-compteurs par type de service -->
             <div class="request-service-subcounts" *ngIf="totalRequestsCount > 0">
-              <span class="investment-badge" *ngIf="investmentRequestsCount > 0">
-                📈 Investment: {{ investmentRequestsCount }}
-              </span>
-              <span class="collaboration-badge" *ngIf="collaborationRequestsCount > 0">
-                🤝 Collaboration: {{ collaborationRequestsCount }}
-              </span>
-              <span class="tourist-badge" *ngIf="touristRequestsCount > 0">
-                🌍 Tourism: {{ touristRequestsCount }}
-              </span>
+              <span class="investment-badge" *ngIf="investmentRequestsCount > 0">📈 Investment: {{ investmentRequestsCount }}</span>
+              <span class="collaboration-badge" *ngIf="collaborationRequestsCount > 0">🤝 Collaboration: {{ collaborationRequestsCount }}</span>
+              <span class="tourist-badge" *ngIf="touristRequestsCount > 0">🌍 Tourism: {{ touristRequestsCount }}</span>
             </div>
-            
-            <!-- Sous-compteurs par type de demande (edit/delete) -->
             <div class="request-subcounts" *ngIf="totalRequestsCount > 0">
-              <span class="edit-badge" *ngIf="pendingEditRequestsCount > 0">
-                ✏️ Edit: {{ pendingEditRequestsCount }}
-              </span>
-              <span class="delete-badge" *ngIf="pendingDeleteRequestsCount > 0">
-                🗑️ Delete: {{ pendingDeleteRequestsCount }}
-              </span>
+              <span class="edit-badge" *ngIf="pendingEditRequestsCount > 0">✏️ Edit: {{ pendingEditRequestsCount }}</span>
+              <span class="delete-badge" *ngIf="pendingDeleteRequestsCount > 0">🗑️ Delete: {{ pendingDeleteRequestsCount }}</span>
             </div>
-            
             <span class="card-link">Manage →</span>
           </div>
         </a>
       </div>
+
     </div>
-  </div>
+  </main>
 </div>
+<!-- ✅ Panneau custom supprimé, app-notification-bell gère tout -->
 
 <!-- Panneau de notifications -->
 <div class="notification-panel" *ngIf="showNotifications" (click)="closeNotificationPanel()">
